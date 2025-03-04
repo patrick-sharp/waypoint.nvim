@@ -3,6 +3,10 @@ local state = require("waypoint.state")
 local utils = require("waypoint.utils")
 local constants = require("waypoint.constants")
 
+function M.add_waypoint()
+
+end
+
 function M.remove_waypoint(bufnr, file_path, cur_line_nr)
   local extmark_id = utils.get_in(state.waypoints, {file_path, cur_line_nr}).extmark_id
   vim.api.nvim_buf_del_extmark(bufnr, constants.waypoint_ns, extmark_id)
@@ -10,8 +14,8 @@ function M.remove_waypoint(bufnr, file_path, cur_line_nr)
 
   ---@type table<Waypoint>
   local new_waypoints = {}
-  for waypoint in pairs(state.window.waypoints) do
-    if not (waypoint.file_path == file_path and waypoint.line_nr == cur_line_nr) then
+  for _, waypoint in pairs(state.window.waypoints) do
+    if not (waypoint.filepath == file_path and waypoint.line_nr == cur_line_nr) then
       table.insert(new_waypoints, waypoint)
     end
   end

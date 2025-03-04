@@ -139,7 +139,7 @@ function M.open()
 
   -- Get editor width and height
   local width = vim.api.nvim_get_option("columns")
-  local height = vim.api.nvim_get_option("lines")
+  local height = vim.api.nvim_get_option("lines") - 2
 
   -- Calculate floating window size
   local win_width = math.ceil(width * constants.float_width)
@@ -149,6 +149,7 @@ function M.open()
   local row = math.ceil((height - win_height) / 2)
   local col = math.ceil((width - win_width) / 2)
 
+
   -- Set window options
   local opts = {
     relative = "editor",
@@ -157,9 +158,10 @@ function M.open()
     row = row,
     col = col,
     style = "minimal",
-    --border = "rounded",
   }
   local bg_win_opts = utils.shallow_copy(opts)
+
+  print(vim.inspect(opts))
 
   -- Create the background
   -- Create the window
@@ -170,14 +172,22 @@ function M.open()
   bg_win_opts.width = opts.width + hpadding * 2
   bg_win_opts.height = opts.height + vpadding * 2
   bg_win_opts.border = "rounded"
-  print(vim.inspect(opts))
-  print(vim.inspect(bg_win_opts))
+  bg_win_opts.title = "Waypoints"
+  bg_win_opts.title_pos = "center"
   local bg_winnr = vim.api.nvim_open_win(bg_bufnr, true, bg_win_opts)
   local winnr = vim.api.nvim_open_win(bufnr, true, opts)
 
   function CloseFloat()
     vim.api.nvim_win_close(bg_winnr, true)
     vim.api.nvim_win_close(winnr, true)
+  end
+
+  function GotoWaypoint()
+    CloseFloat()
+    local cur_waypoint = state.window.waypoints[state.window.current_waypoint or 1]
+    local bufnr = vim.fn.bufnr(cur_waypoint.filepath)
+    vim.api.nvim_set_current_buf(bufnr)
+    vim.api.nvim_win_set_cursor(0, {cur_waypoint.line_nr, 0})
   end
 
   -- Add a mapping to close the window
@@ -189,6 +199,7 @@ function M.open()
   vim.api.nvim_buf_set_keymap(bufnr, "n", "h", ":lua IndentLine(false)<CR>", { noremap = true, silent = true })
   vim.api.nvim_buf_set_keymap(bufnr, "n", "K", ":lua MoveLineUp()<CR>", { noremap = true, silent = true })
   vim.api.nvim_buf_set_keymap(bufnr, "n", "J", ":lua MoveLineDown()<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "<CR>", ":lua GotoWaypoint()<CR>", { noremap = true, silent = true })
 
   -- other keybinds
   -- o to createw blank line below

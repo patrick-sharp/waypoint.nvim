@@ -19,6 +19,9 @@
 ---@field waypoints table<string, table<integer, Waypoint>> The keys are filepaths relative to the current directory, the values are tables. In those tables, the keys are line numbers and the values are waypoints
 ---@field window WindowState
 
+-- TODO:
+-- state should be a table of extmark ids, and just use the extmarks to maintain state
+
 ---@type State
 local M = {
   waypoints = {},
