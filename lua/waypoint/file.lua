@@ -1,0 +1,75 @@
+local M = {}
+
+local constants = require("waypoint.constants")
+local state = require("waypoint.state")
+local utils = require("waypoint.utils")
+
+local function write_file(path, content)
+  local uv = vim.uv or vim.loop  -- Compatibility for different Neovim versions
+  local fd = uv.fs_open(path, "w", 438)  -- 438 is octal 0666
+  assert(fd)
+  local stat = uv.fs_fstat(fd)
+  assert(stat)
+  vim.uv.fs_write(fd, content, -1)
+  uv.fs_close(fd)
+end
+
+
+local function read_file(path)
+  local uv = vim.uv or vim.loop  -- Compatibility for different Neovim versions
+  local fd = uv.fs_open(path, "r", 438)  -- 438 is octal 0666
+  assert(fd)
+  local stat = uv.fs_fstat(fd)
+  assert(stat)
+  local data = uv.fs_read(fd, stat.size, 0)
+  uv.fs_close(fd)
+  assert(data)
+  return data
+end
+
+local function encode()
+  local waypoints_copy = utils.shallow_copy(state.waypoints)
+  for _, waypoint in pairs(waypoints_copy) do
+    local extmark = utils.extmark_for_waypoint(waypoint)
+    waypoint.extmark_id = nil
+    waypoint.line_number = extmark[1]
+  end
+
+  local state_copy = utils.shallow_copy(state)
+  state_copy.waypoints = waypoints_copy
+
+  local data = vim.json.encode(state_copy)
+  return data
+end
+
+function M.save()
+  local data = encode()
+  write_file(constants.file, data)
+end
+
+function M.load()
+  local data = read_file(constants.file)
+  local decoded = vim.json.decode(data)
+  print(vim.inspect(decoded))
+  for _,waypoint in pairs(decoded.waypoints) do
+    local bufnr = vim.fn.bufnr(waypoint.filepath)
+    local line_nr = waypoint.line_number
+    local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, line_nr, -1, {
+      id = line_nr,
+      sign_text = ">",
+      priority = 1,
+      sign_hl_group = constants.hl_group,
+      virt_text = { {"  " .. waypoint.annotation, constants.hl_group} },  -- "Error" is a predefined highlight group
+      virt_text_pos = "eol",  -- Position at end of line
+    })
+    waypoint.line_number = nil
+    waypoint.extmark_id = extmark_id
+  end
+  vim.cmd("highlight " .. constants.hl_group .. " guifg=" .. constants.color .. " guibg=NONE") -- Blue text, no background
+
+  for k,v in pairs(decoded) do
+    state[k] = v
+  end
+end
+
+return M
