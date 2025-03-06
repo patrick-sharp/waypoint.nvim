@@ -2,7 +2,7 @@ local M = {}
 
 local constants = require("waypoint.constants")
 local state = require("waypoint.state")
-local utils = require("waypoint.utils")
+local u = require("waypoint.utils")
 
 
 local prev_window_handle
@@ -18,41 +18,85 @@ local function set_modifiable(is_modifiable)
 end
 
 
-local function draw()
+local function draw(center)
   set_modifiable(true)
   vim.api.nvim_buf_clear_namespace(bufnr, constants.ns, 0, -1)
-  local lines = {}
+  local rows = {}
 
-  for _, waypoint in pairs(state.waypoints) do
-    local extmark = utils.extmark_for_waypoint(waypoint)
-    local line_parts = {}
-    for _=1,waypoint.indent do
-      table.insert(line_parts, "  ")
+  local cursor_line
+  local highlight_start
+  local highlight_end
+
+  -- note this fucks up with unicode
+  local annotation_width = 0
+  for i, waypoint in ipairs(state.waypoints) do
+    if waypoint.annotation then
+      annotation_width = math.max(annotation_width, #waypoint.annotation)
     end
-    table.insert(line_parts, waypoint.filepath)
-    table.insert(line_parts, " | ")
-    table.insert(line_parts, tostring(extmark[1] + 1))
-    table.insert(line_parts, " | ")
-    table.insert(line_parts, waypoint.annotation)
-    table.insert(line_parts, " | ")
-    local _, line_text = utils.extmark_line_for_waypoint(waypoint)
-    table.insert(line_parts, line_text)
-
-    local line = table.concat(line_parts, "")
-    table.insert(lines, line)
   end
 
+  for i, waypoint in ipairs(state.waypoints) do
+    local _, extmark_lines, extmark_line_0i, context_start_line_nr_0i = u.extmark_lines_for_waypoint(waypoint)
+    assert(extmark_lines)
+
+    if i == state.wpi then
+      highlight_start = #rows
+      cursor_line = #rows + extmark_line_0i
+    end
+
+    for j, line_text in ipairs(extmark_lines) do
+      local path_parts = {}
+      for _=1,waypoint.indent do
+        table.insert(path_parts, "  ")
+      end
+      table.insert(path_parts, waypoint.filepath)
+
+      local row = {}
+      table.insert(row, table.concat(path_parts))
+      table.insert(row, tostring(context_start_line_nr_0i + j))
+      if j == extmark_line_0i + 1 and waypoint.annotation then
+        table.insert(row, waypoint.annotation)
+      else
+        table.insert(row, "")
+      end
+      table.insert(row, line_text)
+
+      for _,v in pairs(row) do
+        if v == nil then
+          print(vim.inspect(row))
+        end
+      end
+
+      table.insert(rows, row)
+    end
+    if i == state.wpi then
+      highlight_end = #rows
+    end
+    if #extmark_lines > 1 and i < #state.waypoints then
+      local empty_row = {"", "", "", ""}
+      table.insert(rows, empty_row)
+    end
+  end
+
+  local aligned = u.align_table(rows)
+
   -- Set some text in the buffer
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, aligned)
 
   -- Define highlight group
   --local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1  -- Convert to 0-indexed
-  if state.wpi then
-    vim.api.nvim_win_set_cursor(0, { state.wpi, 0 })
+  if state.wpi and highlight_start and highlight_end and cursor_line then
+    vim.api.nvim_win_set_cursor(0, { cursor_line + 1, 0 })
     vim.cmd("highlight " .. constants.hl_selected .. " guibg=DarkGray guifg=White")
-    vim.api.nvim_buf_add_highlight(bufnr, constants.ns, constants.hl_selected, state.wpi - 1, 0, -1)
+    for i=highlight_start,highlight_end-1 do
+      vim.api.nvim_buf_add_highlight(bufnr, constants.ns, constants.hl_selected, i, 0, -1)
+    end
+
   end
   set_modifiable(false)
+  if center then
+    vim.api.nvim_command("normal! zz")
+  end
 end
 
 
@@ -60,13 +104,14 @@ end
 -- Function to indent or unindent the current line by 2 spaces
 -- if doIndent is true, indent. otherwise unindent
 function IndentLine(do_indent)
+  if state.wpi == nil then return end
   local indent = state.waypoints[state.wpi].indent
   if do_indent then
     indent = indent + 1
   else
     indent = indent - 1
   end
-  state.waypoints[state.wpi].indent = utils.clamp(indent, 0, 20)
+  state.waypoints[state.wpi].indent = u.clamp(indent, 0, 20)
   draw()
 end
 
@@ -96,7 +141,7 @@ end
 
 function NextWaypoint()
   if state.wpi == nil then return end
-  state.wpi = utils.clamp(
+  state.wpi = u.clamp(
     state.wpi + 1,
     1,
     #state.waypoints
@@ -108,7 +153,7 @@ end
 
 function PrevWaypoint()
   if state.wpi == nil then return end
-  state.wpi = utils.clamp(
+  state.wpi = u.clamp(
     state.wpi - 1,
     1,
     #state.waypoints
@@ -125,19 +170,43 @@ function GoToWaypoint()
   --- @type Waypoint | nil 
   local waypoint = state.waypoints[state.wpi]
   if waypoint == nil then vim.api.nvim_err_writeln("waypoint should not be nil") return end
-  local extmark = utils.extmark_for_waypoint(waypoint)
+  local extmark = u.extmark_for_waypoint(waypoint)
 
   local waypoint_bufnr = vim.fn.bufnr(waypoint.filepath)
-  vim.api.nvim_set_current_win(prev_window_handle)
   vim.api.nvim_win_set_buf(0, waypoint_bufnr)
   vim.api.nvim_win_set_cursor(0, { extmark[1] + 1, 0 })
 end
 
 
+function IncreaseContext(increment)
+  state.context = u.clamp(state.context + increment, 0)
+  draw(true)
+end
+
+
+function IncreaseBeforeContext(increment)
+  state.before_context = u.clamp(state.before_context + increment, 0)
+  draw(true)
+end
+
+
+function IncreaseAfterContext(increment)
+  state.after_context = u.clamp(state.after_context + increment, 0)
+  draw(true)
+end
+
+
+function ResetContext()
+  state.context = 0
+  state.before_context = 0
+  state.after_context = 0
+  draw()
+end
+
 
 function M.open()
   prev_window_handle = vim.api.nvim_get_current_win()
-  if state.wpi == nil then
+  if state.wpi == nil and #state.waypoints > 0 then
     state.wpi = 1
   end
   local is_listed = false
@@ -180,7 +249,7 @@ function M.open()
     col = col,
     style = "minimal",
   }
-  local bg_win_opts = utils.shallow_copy(opts)
+  local bg_win_opts = u.shallow_copy(opts)
 
   local hpadding = 3
   local vpadding = 2
@@ -199,7 +268,6 @@ function M.open()
 
   draw()
 
-  -- Add a mapping to close the window
   vim.api.nvim_buf_set_keymap(bufnr, 'n', 'q',     ':lua Close()<CR>', {noremap = true, silent = true})
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<esc>', ':lua Close()<CR>', {noremap = true, silent = true})
 
@@ -215,22 +283,33 @@ function M.open()
   vim.api.nvim_buf_set_keymap(bufnr, "n", "J", ":lua MoveWaypointDown()<CR>", { noremap = true, silent = true })
   vim.api.nvim_buf_set_keymap(bufnr, "n", "<CR>", ":lua GoToWaypoint()<CR>", { noremap = true, silent = true })
 
-  -- other keybinds
-  -- o to createw blank line below
-  -- O to createw blank line above
-  -- dd to delete line
-  -- u     to undo
-  -- <c-r> to redo
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "C", ":lua IncreaseContext(1)<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "c", ":lua IncreaseContext(-1)<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "B", ":lua IncreaseBeforeContext(1)<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "b", ":lua IncreaseBeforeContext(-1)<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "A", ":lua IncreaseAfterContext(1)<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "a", ":lua IncreaseAfterContext(-1)<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "0", ":lua ResetContext()<CR>", { noremap = true, silent = true })
+
+  -- done keybinds
   -- C     to increase the size of the total context window
   -- c     to decrease context
   -- A     to increase after context
   -- a     to decrease after context
   -- B     to increase before context
   -- b     to decrease before context
+  --
+  -- todo keybinds
+  -- dd to delete line
+  -- u     to undo
+  -- <c-r> to redo
   -- t     to add a title
   -- T     to remove a title
+  -- f     to toggle full file paths
+  --
   --
   -- visual mode delete to delete groups of lines
+  -- visual mode + J/K to move groups of waypoints
   -- making new groups (tabs)
   -- navigating between groups
   -- combining groups
@@ -252,11 +331,23 @@ function M.open()
   -- line/col
   -- text at line/col
   -- bookmark
+  --
+  -- other ideas:
+  -- if a waypoint has a waypoint under it that has more indentation, then put a
+  --   blank line between last waypoint under it with less indentation and the 
+  --   next waypoint with equal indentation
+  -- show everything in a column aligned table. leftmost column can be filename + indentation
+  -- syntax highlight the partss that come from actual files
+  -- figure out how to more gracefully make sure the window open state never gets weird.
+  -- make saving and loading waypoints to file automatic
+  -- if the cursor movement wouldn't make all of a waypoint visible, try to move the screen so it's all visible
+
 end
 
 function Close()
   vim.api.nvim_win_close(bg_winnr, true)
   vim.api.nvim_win_close(winnr, true)
+  vim.api.nvim_set_current_win(prev_window_handle)
 end
 
 return M

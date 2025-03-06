@@ -5,7 +5,7 @@ local constants = require("waypoint.constants")
 
 function M.add_waypoint(filepath, line_nr)
   local bufnr = vim.fn.bufnr(filepath)
-  local annotation = "<===■■===> Highlighted Text"
+  local annotation = "<======> Highlighted Text"
   local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, line_nr - 1, -1, {
     id = line_nr,
     sign_text = ">",

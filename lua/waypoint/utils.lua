@@ -81,25 +81,67 @@ function M.extmark_for_waypoint(waypoint)
 end
 
 --- @param waypoint Waypoint
---- @return { [1]: integer, [2]: integer }, string
-function M.extmark_line_for_waypoint(waypoint)
+--- @return { [1]: integer, [2]: integer }, table<string>, integer, integer
+function M.extmark_lines_for_waypoint(waypoint)
   local bufnr = vim.fn.bufnr(waypoint.filepath)
   --- @type { [1]: integer, [2]: integer }
   local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {})
-  local lines = vim.api.nvim_buf_get_lines(bufnr, extmark[1], extmark[1] + 1, true)
-  local line = lines[1]
-  return extmark, line
+
+  local extmark_line_nr_i0 = extmark[1]
+
+  local start_line_nr_i0 = M.clamp(extmark[1] - state.context - state.before_context, 0)
+  local line_count = vim.api.nvim_buf_line_count(bufnr)
+  local end_line_nr_i0 = M.clamp(extmark[1] + 1 + state.context + state.after_context, 0, line_count)
+
+  local marked_line_idx_0i = extmark_line_nr_i0 - start_line_nr_i0
+  local lines = vim.api.nvim_buf_get_lines(bufnr, start_line_nr_i0, end_line_nr_i0, false)
+  return extmark, lines, marked_line_idx_0i, start_line_nr_i0
 end
+
 
 function M.clamp(x, min, max)
   if x < min then
     return min
-  elseif x > max then
+  elseif max and x > max then
     return max
   end
   return x
 end
 
+--- @param t table<table<string>>
+--- @return table<string>
+function M.align_table(t)
+  if #t == 0 then
+    return {}
+  end
+  local nrows = #t
+  local ncols = #t[1]
+
+  local widths = {}
+  for i=1,ncols do
+    local max_width = 0
+    for j=1,nrows do
+      local field = t[j][i]
+      if field == nil then
+        print(vim.inspect(t[j]))
+      end
+      max_width = math.max(#field, max_width)
+    end
+    table.insert(widths, max_width)
+  end
+
+  local result = {}
+  for i=1,nrows do
+    local fields = {}
+    for j=1,ncols do
+      local field = t[i][j]
+      local padded = field .. string.rep(" ", widths[j] - #field)
+      table.insert(fields, padded)
+    end
+    table.insert(result, table.concat(fields, " | "))
+  end
+  return result
+end
 
 
 return M

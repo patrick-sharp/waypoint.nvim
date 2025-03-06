@@ -1,7 +1,7 @@
 -- This file keeps track of where all the waypoints are and the state of the floating window
 
 ---@class Waypoint
----@field annotation string
+---@field annotation string | nil
 ---@field extmark_id integer
 ---@field filepath string
 ---@field indent integer

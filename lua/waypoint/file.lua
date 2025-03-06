@@ -50,16 +50,28 @@ end
 function M.load()
   local data = read_file(constants.file)
   local decoded = vim.json.decode(data)
-  print(vim.inspect(decoded))
+  for _,waypoint in pairs(state.waypoints) do
+    local bufnr = vim.fn.bufnr(waypoint.filepath)
+    vim.api.nvim_buf_del_extmark(bufnr, constants.ns, waypoint.extmark_id)
+  end
   for _,waypoint in pairs(decoded.waypoints) do
     local bufnr = vim.fn.bufnr(waypoint.filepath)
+    if bufnr == -1 then
+      bufnr = vim.api.nvim_create_buf(true, false)
+      vim.api.nvim_buf_set_name(bufnr, waypoint.filepath)
+      vim.api.nvim_buf_call(bufnr, vim.cmd.edit)
+    end
     local line_nr = waypoint.line_number
+    local virt_text = nil
+    if waypoint.annotation then
+      virt_text = { {"  " .. waypoint.annotation, constants.hl_group} }
+    end
     local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, line_nr, -1, {
       id = line_nr,
       sign_text = ">",
       priority = 1,
       sign_hl_group = constants.hl_group,
-      virt_text = { {"  " .. waypoint.annotation, constants.hl_group} },  -- "Error" is a predefined highlight group
+      virt_text = virt_text,
       virt_text_pos = "eol",  -- Position at end of line
     })
     waypoint.line_number = nil
