@@ -23,6 +23,7 @@ local M = {
   context = 0,
   before_context = 0,
   after_context = 0,
+  scroll_col = 0,
 }
 
 return M

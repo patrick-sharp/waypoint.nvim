@@ -36,7 +36,7 @@ local function draw(center)
     end
   end
 
-  --TODO: use vim.fn.winsaveview and vim.fn.winrestview to scroll cur waypoint into view
+  --TODO: fix jk with winrestview to scroll in a more reasonable manner
 
   for i, waypoint in ipairs(state.waypoints) do
     local _, extmark_lines, extmark_line_0i, context_start_line_nr_0i = u.extmark_lines_for_waypoint(waypoint)
@@ -69,7 +69,7 @@ local function draw(center)
 
       for _,v in pairs(row) do
         if v == nil then
-          print(vim.inspect(row))
+          u.p(row)
         end
       end
 
@@ -98,22 +98,27 @@ local function draw(center)
   if state.wpi and highlight_start and highlight_end and cursor_line then
     vim.api.nvim_win_set_cursor(0, { cursor_line + 1, 0 })
     local view = vim.fn.winsaveview()
+    view.leftcol = state.scroll_col
+    view.coladd = state.scroll_col
+    view.col = state.scroll_col
     local topline = view.topline
 
     local height = vim.api.nvim_get_option("lines") - 2
     local win_height = math.ceil(height * constants.float_height)
 
-    local waypoint_topline = cursor_line - state.context - state.before_context
-    local waypoint_bottomline = cursor_line + state.context + state.after_context
+    local waypoint_topline = cursor_line - state.context - state.before_context + 1
+    local waypoint_bottomline = cursor_line + state.context + state.after_context + 2
 
-    print(topline, topline + win_height, waypoint_topline, waypoint_bottomline)
     if waypoint_topline < topline then
+      -- u.p("TOPP", topline, topline + win_height, waypoint_topline, waypoint_bottomline)
       view.topline = waypoint_topline
-      vim.fn.winrestview(view)
     elseif topline + win_height < waypoint_bottomline then
+      -- u.p("BOTT", topline, topline + win_height, waypoint_topline, waypoint_bottomline)
       view.topline = waypoint_bottomline - win_height
-      vim.fn.winrestview(view)
+    else
+      -- u.p("NONE", topline, topline + win_height, waypoint_topline, waypoint_bottomline)
     end
+    vim.fn.winrestview(view)
     vim.cmd("highlight " .. constants.hl_selected .. " guibg=DarkGray guifg=White")
     for i=highlight_start,highlight_end-1 do
       vim.api.nvim_buf_add_highlight(bufnr, constants.ns, constants.hl_selected, i, 0, -1)
@@ -121,9 +126,9 @@ local function draw(center)
 
   end
   set_modifiable(false)
-  -- if center then
-  --   vim.api.nvim_command("normal! zz")
-  -- end
+  if center then
+    vim.api.nvim_command("normal! zz")
+  end
 end
 
 
@@ -231,6 +236,12 @@ function ResetContext()
 end
 
 
+function Scroll(increment)
+  state.scroll_col = u.clamp(state.scroll_col + increment, 0, 999)
+  draw()
+end
+
+
 function M.open()
   prev_window_handle = vim.api.nvim_get_current_win()
   if state.wpi == nil and #state.waypoints > 0 then
@@ -295,28 +306,29 @@ function M.open()
 
   draw()
 
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'q',     ':lua Close()<CR>', {noremap = true, silent = true})
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<esc>', ':lua Close()<CR>', {noremap = true, silent = true})
+  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'q',     ":lua Close()<CR>", {noremap = true, silent = true})
+  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<esc>', ":lua Close()<CR>", {noremap = true, silent = true})
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", ">", ":lua IndentLine(true)<CR>", { noremap = true, silent = true })
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "l", ":lua IndentLine(true)<CR>", { noremap = true, silent = true })
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<", ":lua IndentLine(false)<CR>", { noremap = true, silent = true })
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "h", ":lua IndentLine(false)<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", ">",     ":lua IndentLine(true)<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "<",     ":lua IndentLine(false)<CR>", { noremap = true, silent = true })
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "j", ":lua NextWaypoint()<CR>", { noremap = true, silent = true })
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "k", ":lua PrevWaypoint()<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "l",     ":lua Scroll(4)<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "h",     ":lua Scroll(-4)<CR>", { noremap = true, silent = true })
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "K", ":lua MoveWaypointUp()<CR>", { noremap = true, silent = true })
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "J", ":lua MoveWaypointDown()<CR>", { noremap = true, silent = true })
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<CR>", ":lua GoToWaypoint()<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "j",     ":lua NextWaypoint()<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "k",     ":lua PrevWaypoint()<CR>", { noremap = true, silent = true })
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "C", ":lua IncreaseContext(1)<CR>", { noremap = true, silent = true })
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "c", ":lua IncreaseContext(-1)<CR>", { noremap = true, silent = true })
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "B", ":lua IncreaseBeforeContext(1)<CR>", { noremap = true, silent = true })
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "b", ":lua IncreaseBeforeContext(-1)<CR>", { noremap = true, silent = true })
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "A", ":lua IncreaseAfterContext(1)<CR>", { noremap = true, silent = true })
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "a", ":lua IncreaseAfterContext(-1)<CR>", { noremap = true, silent = true })
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "0", ":lua ResetContext()<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "K",     ":lua MoveWaypointUp()<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "J",     ":lua MoveWaypointDown()<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "<CR>",  ":lua GoToWaypoint()<CR>", { noremap = true, silent = true })
+
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "C",     ":lua IncreaseContext(1)<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "c",     ":lua IncreaseContext(-1)<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "B",     ":lua IncreaseBeforeContext(1)<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "b",     ":lua IncreaseBeforeContext(-1)<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "A",     ":lua IncreaseAfterContext(1)<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "a",     ":lua IncreaseAfterContext(-1)<CR>", { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "0",     ":lua ResetContext()<CR>", { noremap = true, silent = true })
 
   -- done keybinds
   -- C     to increase the size of the total context window

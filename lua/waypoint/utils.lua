@@ -3,6 +3,18 @@ local M = {}
 local state = require("waypoint.state")
 local constants = require("waypoint.constants")
 
+local debug = true
+
+function M.p(...)
+  if not debug then return end
+  local args_table = { n = select('#', ...), ... }
+  local inspected = {}
+  for i=1, args_table.n do
+    table.insert(inspected, vim.inspect(args_table[i]))
+  end
+  print(table.concat(inspected, " "))
+end
+
 function M.get_in(t, keys)
   local cur = t
   for _, k in ipairs(keys) do
@@ -124,7 +136,7 @@ function M.align_table(t)
       if t[j] ~= "" then
         local field = t[j][i]
         if field == nil then
-          print(vim.inspect(t[j]))
+          M.p(t[j])
         end
         max_width = math.max(#field, max_width)
       end
