@@ -22,6 +22,7 @@ local function draw(center)
   set_modifiable(true)
   vim.api.nvim_buf_clear_namespace(bufnr, constants.ns, 0, -1)
   local rows = {}
+  local indents = {}
 
   local cursor_line
   local highlight_start
@@ -35,6 +36,8 @@ local function draw(center)
     end
   end
 
+  --TODO: use vim.fn.winsaveview and vim.fn.winrestview to scroll cur waypoint into view
+
   for i, waypoint in ipairs(state.waypoints) do
     local _, extmark_lines, extmark_line_0i, context_start_line_nr_0i = u.extmark_lines_for_waypoint(waypoint)
     assert(extmark_lines)
@@ -45,20 +48,23 @@ local function draw(center)
     end
 
     for j, line_text in ipairs(extmark_lines) do
-      local path_parts = {}
-      for _=1,waypoint.indent do
-        table.insert(path_parts, "  ")
-      end
-      table.insert(path_parts, waypoint.filepath)
+      -- local path_parts = {}
+      -- for _=1,waypoint.indent do
+      --   table.insert(path_parts, "  ")
+      -- end
+      -- table.insert(path_parts, waypoint.filepath)
 
+      table.insert(indents, waypoint.indent)
       local row = {}
-      table.insert(row, table.concat(path_parts))
-      table.insert(row, tostring(context_start_line_nr_0i + j))
+      -- table.insert(row, table.concat(path_parts))
       if j == extmark_line_0i + 1 and waypoint.annotation then
         table.insert(row, waypoint.annotation)
       else
         table.insert(row, "")
       end
+
+      table.insert(row, waypoint.filepath)
+      table.insert(row, tostring(context_start_line_nr_0i + j))
       table.insert(row, line_text)
 
       for _,v in pairs(row) do
@@ -73,12 +79,16 @@ local function draw(center)
       highlight_end = #rows
     end
     if #extmark_lines > 1 and i < #state.waypoints then
-      local empty_row = {"", "", "", ""}
-      table.insert(rows, empty_row)
+      table.insert(rows, "")
+      table.insert(indents, 0)
     end
   end
 
   local aligned = u.align_table(rows)
+
+  for i, line in pairs(aligned) do
+    aligned[i] = string.rep("  ", indents[i]) .. line
+  end
 
   -- Set some text in the buffer
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, aligned)
@@ -87,6 +97,23 @@ local function draw(center)
   --local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1  -- Convert to 0-indexed
   if state.wpi and highlight_start and highlight_end and cursor_line then
     vim.api.nvim_win_set_cursor(0, { cursor_line + 1, 0 })
+    local view = vim.fn.winsaveview()
+    local topline = view.topline
+
+    local height = vim.api.nvim_get_option("lines") - 2
+    local win_height = math.ceil(height * constants.float_height)
+
+    local waypoint_topline = cursor_line - state.context - state.before_context
+    local waypoint_bottomline = cursor_line + state.context + state.after_context
+
+    print(topline, topline + win_height, waypoint_topline, waypoint_bottomline)
+    if waypoint_topline < topline then
+      view.topline = waypoint_topline
+      vim.fn.winrestview(view)
+    elseif topline + win_height < waypoint_bottomline then
+      view.topline = waypoint_bottomline - win_height
+      vim.fn.winrestview(view)
+    end
     vim.cmd("highlight " .. constants.hl_selected .. " guibg=DarkGray guifg=White")
     for i=highlight_start,highlight_end-1 do
       vim.api.nvim_buf_add_highlight(bufnr, constants.ns, constants.hl_selected, i, 0, -1)
@@ -94,9 +121,9 @@ local function draw(center)
 
   end
   set_modifiable(false)
-  if center then
-    vim.api.nvim_command("normal! zz")
-  end
+  -- if center then
+  --   vim.api.nvim_command("normal! zz")
+  -- end
 end
 
 
@@ -252,8 +279,8 @@ function M.open()
   local bg_win_opts = u.shallow_copy(opts)
 
   local hpadding = 3
-  local vpadding = 2
-  bg_win_opts.row = opts.row - vpadding
+  local vpadding = 1
+  bg_win_opts.row = opts.row - vpadding - 1
   bg_win_opts.col = opts.col - hpadding
   bg_win_opts.width = opts.width + hpadding * 2
   bg_win_opts.height = opts.height + vpadding * 2

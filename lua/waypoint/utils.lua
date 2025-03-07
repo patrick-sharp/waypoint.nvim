@@ -121,24 +121,30 @@ function M.align_table(t)
   for i=1,ncols do
     local max_width = 0
     for j=1,nrows do
-      local field = t[j][i]
-      if field == nil then
-        print(vim.inspect(t[j]))
+      if t[j] ~= "" then
+        local field = t[j][i]
+        if field == nil then
+          print(vim.inspect(t[j]))
+        end
+        max_width = math.max(#field, max_width)
       end
-      max_width = math.max(#field, max_width)
     end
     table.insert(widths, max_width)
   end
 
   local result = {}
   for i=1,nrows do
-    local fields = {}
-    for j=1,ncols do
-      local field = t[i][j]
-      local padded = field .. string.rep(" ", widths[j] - #field)
-      table.insert(fields, padded)
+    if t[i] == "" then
+      table.insert(result, "")
+    else
+      local fields = {}
+      for j=1,ncols do
+        local field = t[i][j]
+        local padded = field .. string.rep(" ", widths[j] - #field)
+        table.insert(fields, padded)
+      end
+      table.insert(result, table.concat(fields, " | "))
     end
-    table.insert(result, table.concat(fields, " | "))
   end
   return result
 end
