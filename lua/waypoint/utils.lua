@@ -11,8 +11,7 @@ function M.p(...)
   local inspected = {}
   for i=1, args_table.n do
     table.insert(inspected, vim.inspect(args_table[i]))
-  end
-  print(table.concat(inspected, " "))
+  end print(table.concat(inspected, " "))
 end
 
 function M.get_in(t, keys)
