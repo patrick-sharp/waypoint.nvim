@@ -31,15 +31,13 @@ local function draw(center)
   local highlight_start
   local highlight_end
 
-  -- note this fucks up with unicode
+  -- note that this fucks up with unicode
   local annotation_width = 0
-  for i, waypoint in ipairs(state.waypoints) do
+  for _, waypoint in ipairs(state.waypoints) do
     if waypoint.annotation then
       annotation_width = math.max(annotation_width, #waypoint.annotation)
     end
   end
-
-  --TODO: fix jk with winrestview to scroll in a more reasonable manner
 
   for i, waypoint in ipairs(state.waypoints) do
     local _, extmark_lines, extmark_line_0i, context_start_line_nr_0i = u.extmark_lines_for_waypoint(waypoint)
@@ -53,24 +51,44 @@ local function draw(center)
     end
 
     for j, line_text in ipairs(extmark_lines) do
-      -- local path_parts = {}
-      -- for _=1,waypoint.indent do
-      --   table.insert(path_parts, "  ")
-      -- end
-      -- table.insert(path_parts, waypoint.filepath)
-
       table.insert(indents, waypoint.indent)
       local row = {}
-      -- table.insert(row, table.concat(path_parts))
-      if j == extmark_line_0i + 1 and waypoint.annotation then
-        table.insert(row, waypoint.annotation)
+
+      -- marker for where the waypoint actually is within the context
+      if j == extmark_line_0i + 1 then
+        table.insert(row, "*")
       else
         table.insert(row, "")
       end
 
-      table.insert(row, waypoint.filepath)
-      table.insert(row, tostring(context_start_line_nr_0i + j))
-      table.insert(row, line_text)
+      -- annotation
+      if state.show_annotation then
+        if j == extmark_line_0i + 1 and waypoint.annotation then
+          table.insert(row, waypoint.annotation)
+        else
+          table.insert(row, "")
+        end
+      end
+
+      -- path
+      if state.show_path then
+        if state.show_full_path then
+          table.insert(row, waypoint.filepath)
+        else
+          local filename = vim.fn.fnamemodify(waypoint.filepath, ":t")
+          table.insert(row, filename)
+        end
+      end
+
+      -- line number
+      if state.show_line_num then
+        table.insert(row, tostring(context_start_line_nr_0i + j))
+      end
+
+      -- file text
+      if state.show_file_text then
+        table.insert(row, line_text)
+      end
 
       for _,v in pairs(row) do
         if v == nil then
@@ -244,6 +262,38 @@ function Scroll(increment)
 end
 
 
+function ResetScroll()
+  state.scroll_col = 0
+  draw()
+end
+
+
+function ToggleAnnotation()
+  state.show_annotation = not state.show_annotation
+  draw()
+end
+
+function TogglePath()
+  state.show_path = not state.show_path
+  draw()
+end
+
+function ToggleFullPath()
+  state.show_full_path = not state.show_full_path
+  draw()
+end
+
+function ToggleLineNum()
+  state.show_line_num = not state.show_line_num
+  draw()
+end
+
+function ToggleFileText()
+  state.show_file_text = not state.show_file_text
+  draw()
+end
+
+
 function M.open()
   prev_window_handle = vim.api.nvim_get_current_win()
   if state.wpi == nil and #state.waypoints > 0 then
@@ -324,6 +374,7 @@ function M.open()
 
   vim.api.nvim_buf_set_keymap(bufnr, "n", "l",     ":lua Scroll(4)<CR>",                 keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "h",     ":lua Scroll(-4)<CR>",                keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "0",     ":lua ResetScroll()<CR>",            keymap_opts())
 
   vim.api.nvim_buf_set_keymap(bufnr, "n", "j",     ":lua NextWaypoint()<CR>",            keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "k",     ":lua PrevWaypoint()<CR>",            keymap_opts())
@@ -338,7 +389,13 @@ function M.open()
   vim.api.nvim_buf_set_keymap(bufnr, "n", "b",     ":lua IncreaseBeforeContext(-1)<CR>", keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "A",     ":lua IncreaseAfterContext(1)<CR>",   keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "a",     ":lua IncreaseAfterContext(-1)<CR>",  keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "0",     ":lua ResetContext()<CR>",            keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "r",     ":lua ResetContext()<CR>",            keymap_opts())
+
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "o",     ":lua ToggleAnnotation()<CR>",        keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "p",     ":lua TogglePath()<CR>",              keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "f",     ":lua ToggleFullPath()<CR>",          keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "n",     ":lua ToggleLineNum()<CR>",           keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "t",     ":lua ToggleFileText()<CR>",          keymap_opts())
 
   -- done keybinds
   -- C     to increase the size of the total context window

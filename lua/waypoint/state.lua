@@ -7,11 +7,16 @@
 ---@field indent integer
 
 ---@class State
----@field wpi integer | nil
----@field waypoints table<Waypoint>
----@field context integer
----@field before_context integer
----@field after_context integer
+---@field wpi             integer | nil
+---@field waypoints       table<Waypoint>
+---@field context         integer
+---@field before_context  integer
+---@field after_context   integer
+---@field show_annotation boolean
+---@field show_path       boolean
+---@field show_full_path  boolean
+---@field show_line_num   boolean
+---@field show_file_text  boolean
 
 -- TODO:
 -- state should be a table of extmark ids, and just use the extmarks to maintain state
@@ -24,6 +29,11 @@ local M = {
   before_context = 0,
   after_context = 0,
   scroll_col = 0,
+  show_annotation = true,
+  show_path       = true,
+  show_full_path  = false,
+  show_line_num    = true,
+  show_file_text   = true,
 }
 
 return M
