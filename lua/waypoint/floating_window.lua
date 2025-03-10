@@ -45,10 +45,15 @@ local function draw(center)
 
     if i == state.wpi then
       highlight_start = #rows
-      waypoint_topline = #rows
+      waypoint_topline = #rows + 1
       waypoint_bottomline = #rows + #extmark_lines
       cursor_line = #rows + extmark_line_0i
     end
+
+
+    -- TODO: highlight filenames properly
+    local hl_name = "Directory"  -- Change this if needed
+    local hl = vim.api.nvim_get_hl(0, { name = hl_name, link = false }) 
 
     for j, line_text in ipairs(extmark_lines) do
       table.insert(indents, waypoint.indent)
@@ -110,7 +115,7 @@ local function draw(center)
   local aligned = u.align_table(rows)
 
   for i, line in pairs(aligned) do
-    aligned[i] = string.rep("  ", indents[i]) .. line
+    aligned[i] = string.rep(" ", indents[i]) .. line
   end
 
   -- Set some text in the buffer
@@ -119,26 +124,30 @@ local function draw(center)
   -- Define highlight group
   --local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1  -- Convert to 0-indexed
   if state.wpi and highlight_start and highlight_end and cursor_line then
+    local view0 = vim.fn.winsaveview()
+    u.p("VIEW", view0)
     vim.api.nvim_win_set_cursor(0, { cursor_line + 1, 0 })
     local view = vim.fn.winsaveview()
-    view.leftcol = state.scroll_col
-    view.coladd = state.scroll_col
+    -- view.leftcol = state.scroll_col
+    -- view.coladd = state.scroll_col
     view.col = state.scroll_col
     local topline = view.topline
 
     local height = vim.api.nvim_get_option("lines") - 2
-    local win_height = math.ceil(height * constants.float_height)
+    local win_height = math.ceil(height * constants.window_height)
 
     if waypoint_topline < topline then
-      -- u.p("TOPP", topline, topline + win_height, waypoint_topline, waypoint_bottomline)
+      u.p("TOPP", topline, topline + win_height, waypoint_topline, waypoint_bottomline)
       view.topline = waypoint_topline
     elseif topline + win_height < waypoint_bottomline then
-      -- u.p("BOTT", topline, topline + win_height, waypoint_topline, waypoint_bottomline)
+      u.p("BOTT", topline, topline + win_height, waypoint_topline, waypoint_bottomline)
       view.topline = waypoint_bottomline - win_height
     else
-      -- u.p("NONE", topline, topline + win_height, waypoint_topline, waypoint_bottomline)
+      u.p("NONE", "CL", cursor_line, topline, topline + win_height, "WP", waypoint_topline, waypoint_bottomline)
+      -- u.p("NONE", view)
     end
     vim.fn.winrestview(view)
+
     vim.cmd("highlight " .. constants.hl_selected .. " guibg=DarkGray guifg=White")
     for i=highlight_start,highlight_end-1 do
       vim.api.nvim_buf_add_highlight(bufnr, constants.ns, constants.hl_selected, i, 0, -1)
@@ -155,14 +164,9 @@ end
 
 -- Function to indent or unindent the current line by 2 spaces
 -- if doIndent is true, indent. otherwise unindent
-function IndentLine(do_indent)
+function IndentLine(increment)
   if state.wpi == nil then return end
-  local indent = state.waypoints[state.wpi].indent
-  if do_indent then
-    indent = indent + 1
-  else
-    indent = indent - 1
-  end
+  local indent = state.waypoints[state.wpi].indent + increment
   state.waypoints[state.wpi].indent = u.clamp(indent, 0, 20)
   draw()
 end
@@ -218,7 +222,7 @@ end
 function GoToWaypoint()
   if state.wpi == nil then return end
 
-  Close()
+  Leave()
   --- @type Waypoint | nil 
   local waypoint = state.waypoints[state.wpi]
   if waypoint == nil then vim.api.nvim_err_writeln("waypoint should not be nil") return end
@@ -227,6 +231,7 @@ function GoToWaypoint()
   local waypoint_bufnr = vim.fn.bufnr(waypoint.filepath)
   vim.api.nvim_win_set_buf(0, waypoint_bufnr)
   vim.api.nvim_win_set_cursor(0, { extmark[1] + 1, 0 })
+  vim.api.nvim_command("normal! zz")
 end
 
 
@@ -293,6 +298,12 @@ function ToggleFileText()
   draw()
 end
 
+function ResetIndent()
+  for _,waypoint in pairs(state.waypoints) do
+    waypoint.indent = 0
+  end
+  draw()
+end
 
 function M.open()
   prev_window_handle = vim.api.nvim_get_current_win()
@@ -318,13 +329,19 @@ function M.open()
     end,
   })
 
+  vim.api.nvim_create_autocmd("WinLeave", {
+    group = constants.augroup,
+    buffer = bufnr,
+    callback = Close
+  })
+
   -- Get editor width and height
   local width = vim.api.nvim_get_option("columns")
   local height = vim.api.nvim_get_option("lines") - 2
 
   -- Calculate floating window size
-  local win_width = math.ceil(width * constants.float_width)
-  local win_height = math.ceil(height * constants.float_height)
+  local win_width = math.ceil(width * constants.window_width)
+  local win_height = math.ceil(height * constants.window_height)
 
   -- Calculate starting position
   local row = math.ceil((height - win_height) / 2)
@@ -349,6 +366,8 @@ function M.open()
   bg_win_opts.height = opts.height + vpadding * 2
   bg_win_opts.border = "rounded"
   bg_win_opts.title = "Waypoints"
+  bg_win_opts.footer = "Press ? for help"
+
   bg_win_opts.title_pos = "center"
 
   -- Create the background
@@ -366,14 +385,15 @@ function M.open()
     }
   end
 
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'q',     ":lua Close()<CR>",                   keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<esc>', ":lua Close()<CR>",                   keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'q',     ":lua Leave()<CR>",                   keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<esc>', ":lua Leave()<CR>",                   keymap_opts())
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", ">",     ":lua IndentLine(true)<CR>",          keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<",     ":lua IndentLine(false)<CR>",         keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", ">",     ":lua IndentLine(4)<CR>",          keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "<",     ":lua IndentLine(-4)<CR>",         keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "i",     ":lua ResetIndent()<CR>",            keymap_opts())
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "l",     ":lua Scroll(4)<CR>",                 keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "h",     ":lua Scroll(-4)<CR>",                keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "l",     ":lua Scroll(6)<CR>",                 keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "h",     ":lua Scroll(-6)<CR>",                keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "0",     ":lua ResetScroll()<CR>",            keymap_opts())
 
   vim.api.nvim_buf_set_keymap(bufnr, "n", "j",     ":lua NextWaypoint()<CR>",            keymap_opts())
@@ -391,11 +411,11 @@ function M.open()
   vim.api.nvim_buf_set_keymap(bufnr, "n", "a",     ":lua IncreaseAfterContext(-1)<CR>",  keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "r",     ":lua ResetContext()<CR>",            keymap_opts())
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "o",     ":lua ToggleAnnotation()<CR>",        keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "p",     ":lua TogglePath()<CR>",              keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "f",     ":lua ToggleFullPath()<CR>",          keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "n",     ":lua ToggleLineNum()<CR>",           keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "t",     ":lua ToggleFileText()<CR>",          keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "ta",     ":lua ToggleAnnotation()<CR>",        keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tp",     ":lua TogglePath()<CR>",              keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tf",     ":lua ToggleFullPath()<CR>",          keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tl",     ":lua ToggleLineNum()<CR>",           keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tt",     ":lua ToggleFileText()<CR>",          keymap_opts())
 
   -- done keybinds
   -- C     to increase the size of the total context window
@@ -453,6 +473,9 @@ end
 function Close()
   vim.api.nvim_win_close(bg_winnr, true)
   vim.api.nvim_win_close(winnr, true)
+end
+
+function Leave()
   vim.api.nvim_set_current_win(prev_window_handle)
 end
 
