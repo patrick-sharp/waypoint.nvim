@@ -12,7 +12,7 @@
   [ ] file path
 
 ### POLISH:
-[ ] Bookmarks window automatically resizes when window resizes
+[x] Bookmarks window automatically resizes when window resizes
 [ ] nicer unicode table chars
 [ ] popup with keybind info when you press g?
 [ ] that weird scroll behavior I still can't figure out
