@@ -22,6 +22,66 @@ local function set_modifiable(is_modifiable)
 end
 
 
+local function get_total_width()
+  return vim.api.nvim_get_option("columns")
+end
+
+local function get_total_height()
+  local height = vim.api.nvim_get_option("lines")
+  height = height - vim.o.cmdheight
+  height = height - vim.o.laststatus
+  return height
+end
+
+local function get_floating_window_width()
+  return math.ceil(get_total_width() * constants.window_width)
+end
+
+local function get_floating_window_height()
+  return math.ceil(get_total_height() * constants.window_height)
+end
+
+local function get_win_opts()
+  -- Get editor width and height
+  local width = get_total_width()
+  local height = get_total_height()
+
+  -- Calculate floating window size
+  local win_width = get_floating_window_width()
+  local win_height = get_floating_window_height()
+
+  -- Calculate starting position
+  local row = math.ceil((height - win_height) / 2)
+  local col = math.ceil((width - win_width) / 2)
+  local win_opts = {
+    relative = "editor",
+    width = win_width,
+    height = win_height,
+    row = row,
+    col = col,
+    style = "minimal",
+  }
+  return win_opts
+end
+
+local function get_bg_win_opts(win_opts)
+  assert(win_opts, "win_opts required arg to get_bg_win_opts")
+  local bg_win_opts = u.shallow_copy(win_opts)
+
+  local hpadding = 2
+  local vpadding = 1
+  bg_win_opts.row = win_opts.row - vpadding - 1
+  bg_win_opts.col = win_opts.col - hpadding - 1
+  bg_win_opts.width = win_opts.width + hpadding * 2
+  bg_win_opts.height = win_opts.height + vpadding * 2
+  bg_win_opts.border = "rounded"
+  bg_win_opts.title = "Waypoints"
+  bg_win_opts.footer = "Press g? for help"
+  bg_win_opts.title_pos = "center"
+  return bg_win_opts
+end
+
+
 local function draw(center)
   set_modifiable(true)
   vim.api.nvim_buf_clear_namespace(bufnr, constants.ns, 0, -1)
@@ -146,25 +206,23 @@ local function draw(center)
     local view = vim.fn.winsaveview()
 
     -- clamp scroll col in case max line length changed since last draw (e.g. context shrinks)
-    local width = vim.api.nvim_get_option("columns")
-    local win_width = math.ceil(width * constants.window_width)
-    local scroll_col = u.clamp(state.scroll_col, 0, longest_line_len - win_width)
+    local win_width = get_floating_window_width()
+    state.scroll_col = u.clamp(state.scroll_col, 0, longest_line_len - win_width)
 
-    view.leftcol = scroll_col
-    view.col = scroll_col
+    view.leftcol = state.scroll_col
+    view.col = state.scroll_col
     local topline = view.topline
 
-    local height = vim.api.nvim_get_option("lines") - 2
-    local win_height = math.ceil(height * constants.window_height)
+    local win_height = get_floating_window_height()
 
     if waypoint_topline < topline then
-      u.p("TOPP", topline, topline + win_height, waypoint_topline, waypoint_bottomline)
+      -- u.p("TOPP", topline, topline + win_height, waypoint_topline, waypoint_bottomline)
       view.topline = waypoint_topline
     elseif topline + win_height < waypoint_bottomline then
-      u.p("BOTT", topline, topline + win_height, waypoint_topline, waypoint_bottomline)
+      -- u.p("BOTT", topline, topline + win_height, waypoint_topline, waypoint_bottomline)
       view.topline = waypoint_bottomline - win_height
     else
-      u.p("NONE", "CL", cursor_line, topline, topline + win_height, "WP", waypoint_topline, waypoint_bottomline)
+      -- u.p("NONE", "CL", cursor_line, topline, topline + win_height, "WP", waypoint_topline, waypoint_bottomline)
       -- u.p("NONE", view)
     end
     vim.fn.winrestview(view)
@@ -328,13 +386,19 @@ function ResetIndent()
   draw()
 end
 
-
 function SetWaypointForCursor()
   if not line_to_waypoint then return end
   local cursor_line_1i = vim.api.nvim_win_get_cursor(0)[1]
   if not cursor_line_1i then return end
   state.wpi = line_to_waypoint[cursor_line_1i]
   draw()
+end
+
+function Resize()
+  local win_opts = get_win_opts()
+  local bg_win_opts = get_bg_win_opts(win_opts)
+  vim.api.nvim_win_set_config(winnr, win_opts)
+  vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
 end
 
 function M.open()
@@ -345,7 +409,6 @@ function M.open()
   local is_listed = false
   local is_scratch = false
 
-  --- @type integer
   bufnr = vim.api.nvim_create_buf(is_listed, is_scratch)
   local bg_bufnr = vim.api.nvim_create_buf(is_listed, is_scratch)
 
@@ -364,54 +427,29 @@ function M.open()
   vim.api.nvim_create_autocmd("WinLeave", {
     group = constants.augroup,
     buffer = bufnr,
-    callback = Close
+    callback = Close,
   })
 
   vim.api.nvim_create_autocmd("CursorMoved", {
     group = constants.augroup,
     buffer = bufnr,
-    callback = SetWaypointForCursor
+    callback = SetWaypointForCursor,
   })
 
-  -- Get editor width and height
-  local width = vim.api.nvim_get_option("columns")
-  local height = vim.api.nvim_get_option("lines") - 2
+  vim.api.nvim_create_autocmd("VimResized", {
+    group = constants.augroup,
+    callback = Resize,
+  })
 
-  -- Calculate floating window size
-  local win_width = math.ceil(width * constants.window_width)
-  local win_height = math.ceil(height * constants.window_height)
-
-  -- Calculate starting position
-  local row = math.ceil((height - win_height) / 2)
-  local col = math.ceil((width - win_width) / 2)
-
-  -- Set window options
-  local opts = {
-    relative = "editor",
-    width = win_width,
-    height = win_height,
-    row = row,
-    col = col,
-    style = "minimal",
-  }
-  local bg_win_opts = u.shallow_copy(opts)
-
-  local hpadding = 2
-  local vpadding = 1
-  bg_win_opts.row = opts.row - vpadding - 1
-  bg_win_opts.col = opts.col - hpadding - 1
-  bg_win_opts.width = opts.width + hpadding * 2
-  bg_win_opts.height = opts.height + vpadding * 2
-  bg_win_opts.border = "rounded"
-  bg_win_opts.title = "Waypoints"
-  bg_win_opts.footer = "Press g? for help"
-
-  bg_win_opts.title_pos = "center"
+  local win_opts = get_win_opts()
+  local bg_win_opts = get_bg_win_opts(win_opts)
 
   -- Create the background
-  bg_winnr = vim.api.nvim_open_win(bg_bufnr, true, bg_win_opts)
+  bg_winnr = vim.api.nvim_open_win(bg_bufnr, false, bg_win_opts)
+
   -- Create the window
-  winnr = vim.api.nvim_open_win(bufnr, true, opts)
+  winnr = vim.api.nvim_open_win(bufnr, true, win_opts)
+
 
   draw()
 

@@ -63,6 +63,7 @@ function M.delete_in(t, keys)
 end
 
 function M.shallow_copy(t)
+  M.p(t)
   local t2 = {}
   for k,v in pairs(t) do
     t2[k] = v

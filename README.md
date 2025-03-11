@@ -27,7 +27,8 @@
 [ ] show A/B/C in footer of window
   [ ] limit A + B + C somehow?
 [x] limit horizontal scroll
-[ ] look into whether the status line height messes up my window calculations
+[x] look into whether the status line height messes up my window calculations
+[ ] add a way to indicate whether a context is capped because it's at the beginning or end of files
 
 ### ADVANCED FEATURES:
 [ ] delete waypoint
