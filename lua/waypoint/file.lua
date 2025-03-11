@@ -18,7 +18,7 @@ end
 local function read_file(path)
   local uv = vim.uv or vim.loop  -- Compatibility for different Neovim versions
   local fd = uv.fs_open(path, "r", 438)  -- 438 is octal 0666
-  assert(fd)
+  if fd == nil then return nil end
   local stat = uv.fs_fstat(fd)
   assert(stat)
   local data = uv.fs_read(fd, stat.size, 0)
@@ -28,15 +28,12 @@ local function read_file(path)
 end
 
 local function encode()
-  local waypoints_copy = utils.shallow_copy(state.waypoints)
-  for _, waypoint in pairs(waypoints_copy) do
+  local state_copy = utils.deep_copy(state)
+  for _, waypoint in pairs(state_copy.waypoints) do
     local extmark = utils.extmark_for_waypoint(waypoint)
     waypoint.extmark_id = nil
     waypoint.line_number = extmark[1]
   end
-
-  local state_copy = utils.shallow_copy(state)
-  state_copy.waypoints = waypoints_copy
 
   local data = vim.json.encode(state_copy)
   return data
@@ -49,6 +46,7 @@ end
 
 function M.load()
   local data = read_file(constants.file)
+  if data == nil then return end
   local decoded = vim.json.decode(data)
   for _,waypoint in pairs(state.waypoints) do
     local bufnr = vim.fn.bufnr(waypoint.filepath)
@@ -67,7 +65,7 @@ function M.load()
       virt_text = { {"  " .. waypoint.annotation, constants.hl_group} }
     end
     local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, line_nr, -1, {
-      id = line_nr,
+      id = line_nr + 1,
       sign_text = ">",
       priority = 1,
       sign_hl_group = constants.hl_group,

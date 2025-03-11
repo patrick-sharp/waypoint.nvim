@@ -9,6 +9,10 @@ local prev_window_handle
 local bufnr
 local winnr
 local bg_winnr
+-- if the user does something to move the cursor to another line, we want to set
+-- the new selected waypoint to whatever waypoint the cursor is currently on
+local line_to_waypoint
+local longest_line_len
 
 
 local function set_modifiable(is_modifiable)
@@ -23,6 +27,7 @@ local function draw(center)
   vim.api.nvim_buf_clear_namespace(bufnr, constants.ns, 0, -1)
   local rows = {}
   local indents = {}
+  line_to_waypoint = {}
 
   local cursor_line
   local waypoint_topline
@@ -57,6 +62,7 @@ local function draw(center)
 
     for j, line_text in ipairs(extmark_lines) do
       table.insert(indents, waypoint.indent)
+      table.insert(line_to_waypoint, i)
       local row = {}
 
       -- marker for where the waypoint actually is within the context
@@ -106,16 +112,28 @@ local function draw(center)
     if i == state.wpi then
       highlight_end = #rows
     end
-    if #extmark_lines > 1 and i < #state.waypoints then
+    local has_context = state.before_context ~= 0
+    has_context = has_context or state.context ~= 0
+    has_context = has_context or state.after_context ~= 0
+    if has_context  and i < #state.waypoints then
       table.insert(rows, "")
       table.insert(indents, 0)
+      -- if the user somehow moves to a blank space, just treat that as 
+      -- selecting the waypoint above the space
+      table.insert(line_to_waypoint, i)
     end
   end
 
+  assert(#rows == #indents, "#rows == " .. #rows ..", #indents == " .. #indents .. ", but they should be the same" )
+  assert(#rows == #line_to_waypoint, "#rows == " .. #rows ..", #line_to_waypoint == " .. #line_to_waypoint .. ", but they should be the same" )
+
   local aligned = u.align_table(rows)
 
+
+  longest_line_len = 0
   for i, line in pairs(aligned) do
     aligned[i] = string.rep(" ", indents[i]) .. line
+    longest_line_len = math.max(longest_line_len, #aligned[i])
   end
 
   -- Set some text in the buffer
@@ -124,13 +142,16 @@ local function draw(center)
   -- Define highlight group
   --local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1  -- Convert to 0-indexed
   if state.wpi and highlight_start and highlight_end and cursor_line then
-    local view0 = vim.fn.winsaveview()
-    u.p("VIEW", view0)
     vim.api.nvim_win_set_cursor(0, { cursor_line + 1, 0 })
     local view = vim.fn.winsaveview()
-    -- view.leftcol = state.scroll_col
-    -- view.coladd = state.scroll_col
-    view.col = state.scroll_col
+
+    -- clamp scroll col in case max line length changed since last draw (e.g. context shrinks)
+    local width = vim.api.nvim_get_option("columns")
+    local win_width = math.ceil(width * constants.window_width)
+    local scroll_col = u.clamp(state.scroll_col, 0, longest_line_len - win_width)
+
+    view.leftcol = scroll_col
+    view.col = scroll_col
     local topline = view.topline
 
     local height = vim.api.nvim_get_option("lines") - 2
@@ -196,7 +217,7 @@ end
 
 
 function NextWaypoint()
-  if state.wpi == nil then return end
+  if state.wpi == nil or state.wpi == #state.waypoints then return end
   state.wpi = u.clamp(
     state.wpi + 1,
     1,
@@ -208,7 +229,7 @@ end
 
 
 function PrevWaypoint()
-  if state.wpi == nil then return end
+  if state.wpi == nil or state.wpi == 1 then return end
   state.wpi = u.clamp(
     state.wpi - 1,
     1,
@@ -262,7 +283,9 @@ end
 
 
 function Scroll(increment)
-  state.scroll_col = u.clamp(state.scroll_col + increment, 0, 999)
+  local width = vim.api.nvim_get_option("columns")
+  local win_width = math.ceil(width * constants.window_width)
+  state.scroll_col = u.clamp(state.scroll_col + increment, 0, longest_line_len - win_width)
   draw()
 end
 
@@ -305,6 +328,15 @@ function ResetIndent()
   draw()
 end
 
+
+function SetWaypointForCursor()
+  if not line_to_waypoint then return end
+  local cursor_line_1i = vim.api.nvim_win_get_cursor(0)[1]
+  if not cursor_line_1i then return end
+  state.wpi = line_to_waypoint[cursor_line_1i]
+  draw()
+end
+
 function M.open()
   prev_window_handle = vim.api.nvim_get_current_win()
   if state.wpi == nil and #state.waypoints > 0 then
@@ -335,6 +367,12 @@ function M.open()
     callback = Close
   })
 
+  vim.api.nvim_create_autocmd("CursorMoved", {
+    group = constants.augroup,
+    buffer = bufnr,
+    callback = SetWaypointForCursor
+  })
+
   -- Get editor width and height
   local width = vim.api.nvim_get_option("columns")
   local height = vim.api.nvim_get_option("lines") - 2
@@ -358,15 +396,15 @@ function M.open()
   }
   local bg_win_opts = u.shallow_copy(opts)
 
-  local hpadding = 3
+  local hpadding = 2
   local vpadding = 1
   bg_win_opts.row = opts.row - vpadding - 1
-  bg_win_opts.col = opts.col - hpadding
+  bg_win_opts.col = opts.col - hpadding - 1
   bg_win_opts.width = opts.width + hpadding * 2
   bg_win_opts.height = opts.height + vpadding * 2
   bg_win_opts.border = "rounded"
   bg_win_opts.title = "Waypoints"
-  bg_win_opts.footer = "Press ? for help"
+  bg_win_opts.footer = "Press g? for help"
 
   bg_win_opts.title_pos = "center"
 

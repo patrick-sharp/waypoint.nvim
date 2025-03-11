@@ -11,7 +11,8 @@ function M.p(...)
   local inspected = {}
   for i=1, args_table.n do
     table.insert(inspected, vim.inspect(args_table[i]))
-  end print(table.concat(inspected, " "))
+  end
+  print(table.concat(inspected, " "))
 end
 
 function M.get_in(t, keys)
@@ -67,6 +68,21 @@ function M.shallow_copy(t)
     t2[k] = v
   end
   return t2
+end
+
+function M.deep_copy(orig)
+  local orig_type = type(orig)
+  local copy
+  if orig_type == 'table' then
+    copy = {}
+    for orig_key, orig_value in next, orig, nil do
+      copy[M.deep_copy(orig_key)] = M.deep_copy(orig_value)
+    end
+    setmetatable(copy, M.deep_copy(getmetatable(orig)))
+  else -- number, string, boolean, etc
+    copy = orig
+  end
+  return copy
 end
 
 
