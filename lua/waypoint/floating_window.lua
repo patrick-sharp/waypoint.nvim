@@ -1,5 +1,6 @@
 local M = {}
 
+local config = require("waypoint.config")
 local constants = require("waypoint.constants")
 local state = require("waypoint.state")
 local u = require("waypoint.utils")
@@ -34,11 +35,11 @@ local function get_total_height()
 end
 
 local function get_floating_window_width()
-  return math.ceil(get_total_width() * constants.window_width)
+  return math.ceil(get_total_width() * config.window_width)
 end
 
 local function get_floating_window_height()
-  return math.ceil(get_total_height() * constants.window_height)
+  return math.ceil(get_total_height() * config.window_height)
 end
 
 local function get_win_opts()
@@ -76,7 +77,8 @@ local function get_bg_win_opts(win_opts)
   bg_win_opts.height = win_opts.height + vpadding * 2
   bg_win_opts.border = "rounded"
   bg_win_opts.title = "Waypoints"
-  bg_win_opts.footer = "Press g? for help"
+  -- todo: make the background of this equal to window background
+  bg_win_opts.footer = {{"Press g? for help", constants.hl_selected}, {"   OKAY   "}, {"WACKA", constants.hl_group}}
   bg_win_opts.title_pos = "center"
   return bg_win_opts
 end
@@ -342,7 +344,7 @@ end
 
 function Scroll(increment)
   local width = vim.api.nvim_get_option("columns")
-  local win_width = math.ceil(width * constants.window_width)
+  local win_width = math.ceil(width * config.window_width)
   state.scroll_col = u.clamp(state.scroll_col + increment, 0, longest_line_len - win_width)
   draw()
 end
@@ -461,31 +463,31 @@ function M.open()
     }
   end
 
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'q',     ":lua Leave()<CR>",                   keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<esc>', ":lua Leave()<CR>",                   keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'q',     ":lua Leave()<CR>",                    keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<esc>', ":lua Leave()<CR>",                    keymap_opts())
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", ">",     ":lua IndentLine(4)<CR>",          keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<",     ":lua IndentLine(-4)<CR>",         keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "i",     ":lua ResetIndent()<CR>",            keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", ">",     ":lua IndentLine(4)<CR>",              keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "<",     ":lua IndentLine(-4)<CR>",             keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "i",     ":lua ResetIndent()<CR>",              keymap_opts())
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "l",     ":lua Scroll(6)<CR>",                 keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "h",     ":lua Scroll(-6)<CR>",                keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "0",     ":lua ResetScroll()<CR>",            keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "l",     ":lua Scroll(6)<CR>",                  keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "h",     ":lua Scroll(-6)<CR>",                 keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "0",     ":lua ResetScroll()<CR>",              keymap_opts())
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "j",     ":lua NextWaypoint()<CR>",            keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "k",     ":lua PrevWaypoint()<CR>",            keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "j",     ":lua NextWaypoint()<CR>",             keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "k",     ":lua PrevWaypoint()<CR>",             keymap_opts())
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "K",     ":lua MoveWaypointUp()<CR>",          keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "J",     ":lua MoveWaypointDown()<CR>",        keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<CR>",  ":lua GoToWaypoint()<CR>",            keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "K",     ":lua MoveWaypointUp()<CR>",           keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "J",     ":lua MoveWaypointDown()<CR>",         keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "<CR>",  ":lua GoToWaypoint()<CR>",             keymap_opts())
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "C",     ":lua IncreaseContext(1)<CR>",        keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "c",     ":lua IncreaseContext(-1)<CR>",       keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "B",     ":lua IncreaseBeforeContext(1)<CR>",  keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "b",     ":lua IncreaseBeforeContext(-1)<CR>", keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "A",     ":lua IncreaseAfterContext(1)<CR>",   keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "a",     ":lua IncreaseAfterContext(-1)<CR>",  keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "r",     ":lua ResetContext()<CR>",            keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "C",     ":lua IncreaseContext(1)<CR>",         keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "c",     ":lua IncreaseContext(-1)<CR>",        keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "B",     ":lua IncreaseBeforeContext(1)<CR>",   keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "b",     ":lua IncreaseBeforeContext(-1)<CR>",  keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "A",     ":lua IncreaseAfterContext(1)<CR>",    keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "a",     ":lua IncreaseAfterContext(-1)<CR>",   keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "r",     ":lua ResetContext()<CR>",             keymap_opts())
 
   vim.api.nvim_buf_set_keymap(bufnr, "n", "ta",     ":lua ToggleAnnotation()<CR>",        keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "tp",     ":lua TogglePath()<CR>",              keymap_opts())

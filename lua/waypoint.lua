@@ -7,8 +7,16 @@ local floating_window = require("waypoint.floating_window")
 local crud = require("waypoint.crud")
 local file = require("waypoint.file")
 local constants = require("waypoint.constants")
+local config = require("waypoint.config")
 
 function M.setup(opts)
+  -- set up config
+  for k, v in pairs(opts) do
+    local default_val = config[k]
+    assert(default_val, "property \"" .. k .. "\" does not exist in waypoint config")
+    assert(type(v) == type(default_val), "expected the value for property \"" ..  k .. "\" to be of type " .. type(default_val) .. ", but was of type " .. type(v))
+    config[k] = v
+  end
   vim.api.nvim_create_augroup(constants.augroup, { clear = true })
   vim.api.nvim_create_autocmd("VimEnter", {
     group = constants.augroup,

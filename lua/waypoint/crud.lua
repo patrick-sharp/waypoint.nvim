@@ -1,7 +1,9 @@
 local M = {}
+
+local config = require("waypoint.constants")
+local constants = require("waypoint.constants")
 local state = require("waypoint.state")
 local utils = require("waypoint.utils")
-local constants = require("waypoint.constants")
 
 function M.add_waypoint(filepath, line_nr)
   local bufnr = vim.fn.bufnr(filepath)
@@ -58,8 +60,7 @@ function M.toggle_waypoint()
   else
     M.remove_waypoint(existing_waypoint_i, filepath)
   end
-
-  vim.cmd("highlight " .. constants.hl_group .. " guifg=" .. constants.color .. " guibg=NONE") -- Blue text, no background
+  vim.cmd("highlight " .. constants.hl_sign .. " guifg=" .. config.sign_color .. " guibg=NONE") -- Blue text, no background
 end
 
 return M

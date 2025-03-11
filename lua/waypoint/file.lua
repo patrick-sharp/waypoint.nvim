@@ -1,5 +1,6 @@
 local M = {}
 
+local config = require("waypoint.config")
 local constants = require("waypoint.constants")
 local state = require("waypoint.state")
 local utils = require("waypoint.utils")
@@ -41,11 +42,11 @@ end
 
 function M.save()
   local data = encode()
-  write_file(constants.file, data)
+  write_file(config.file, data)
 end
 
 function M.load()
-  local data = read_file(constants.file)
+  local data = read_file(config.file)
   if data == nil then return end
   local decoded = vim.json.decode(data)
   for _,waypoint in pairs(state.waypoints) do
@@ -62,20 +63,21 @@ function M.load()
     local line_nr = waypoint.line_number
     local virt_text = nil
     if waypoint.annotation then
-      virt_text = { {"  " .. waypoint.annotation, constants.hl_group} }
+      virt_text = { {"  " .. waypoint.annotation, constants.hl_annotation} }
     end
     local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, line_nr, -1, {
       id = line_nr + 1,
       sign_text = ">",
       priority = 1,
-      sign_hl_group = constants.hl_group,
+      sign_hl_group = constants.hl_sign,
       virt_text = virt_text,
       virt_text_pos = "eol",  -- Position at end of line
     })
     waypoint.line_number = nil
     waypoint.extmark_id = extmark_id
   end
-  vim.cmd("highlight " .. constants.hl_group .. " guifg=" .. constants.color .. " guibg=NONE") -- Blue text, no background
+  vim.cmd("highlight " .. constants.hl_sign .. " guifg=" .. config.sign_color .. " guibg=NONE")
+  vim.cmd("highlight " .. constants.hl_annotation .. " guifg=" .. config.annotation_color .. " guibg=NONE")
 
   for k,v in pairs(decoded) do
     state[k] = v
