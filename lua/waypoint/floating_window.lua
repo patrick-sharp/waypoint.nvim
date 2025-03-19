@@ -96,9 +96,9 @@ end
 local function draw(action)
   draws = draws + 1
   if action == nil then
-    print("DRAW" .. draws .. " nil")
+    -- print("DRAW" .. draws .. " nil")
   else
-    print("DRAW" .. draws .. " " .. action)
+    -- print("DRAW" .. draws .. " " .. action)
   end
   set_modifiable(true)
   vim.api.nvim_buf_clear_namespace(bufnr, constants.ns, 0, -1)
@@ -222,11 +222,12 @@ local function draw(action)
       -- print("SETCURS", cursor_line+1)
       vim.api.nvim_win_set_cursor(0, { cursor_line + 1, 0 })
     end
+
+    local view = vim.fn.winsaveview()
+
     local topline = view.topline
 
     local win_height = get_floating_window_height()
-
-    local view = vim.fn.winsaveview()
 
     if waypoint_topline < topline then
       -- u.p("TOPP", topline, topline + win_height, waypoint_topline, waypoint_bottomline)
@@ -238,11 +239,11 @@ local function draw(action)
       -- u.p("NONE", "CL", cursor_line, topline, topline + win_height, "WP", waypoint_topline, waypoint_bottomline)
       -- u.p("NONE", view)
     end
-    vim.fn.winrestview(view)
     if action == "scroll" then
-      view = vim.fn.winsaveview()
-      view.col = view.leftcol
+      view.leftcol = state.scroll_col
+      view.col = view.leftcol + 20
       vim.fn.winrestview(view)
+      vim.cmd("normal! " .. state.scroll_col .. "|")
     end
 
     vim.cmd("highlight " .. constants.hl_selected .. " guibg=DarkGray guifg=White")
@@ -417,8 +418,6 @@ end
 
 function SetWaypointForCursor()
   if ignore_next_cursormoved then
-    print("IGNORING")
-    -- u.p(vim.fn.winsaveview())
     ignore_next_cursormoved = false
     return
   end
@@ -495,11 +494,7 @@ function M.open()
   -- u.p(vim.api.nvim_win_get_option(winnr, "winhl"))
   u.p("HL", vim.api.nvim_get_hl(winnr, { name = "Normal" }))
 
-
-  if state.view == nil then
-    state.view = vim.fn.winsaveview()
-  end
-
+  state.scroll_col = 0
   draw("move_to_waypoint")
 
   local function keymap_opts()

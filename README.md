@@ -48,7 +48,7 @@
 [ ] left pad the file numbers instead of right padding
 [ ] indicate whether context for a mark is limited by file length (eof/bof)
 [x] move cursor without triggering autocmd (excess draws)
-[ ] handle weird interaction of / and scroll now that I have ignore_next_autocmd
+[x] handle weird interaction of / and scroll now that I have ignore_next_autocmd
     have highlight in line, n, hhhhhh, n, l
 
 ### ADVANCED FEATURES:
