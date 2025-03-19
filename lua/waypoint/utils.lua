@@ -86,13 +86,15 @@ function M.deep_copy(orig)
 end
 
 
-function M.buf_find_waypoint(line_nr)
-  -- note that this is just for the current buffer
-  local marks = vim.api.nvim_buf_get_extmarks(0, constants.ns, 0, -1, {})
-  for i, mark in ipairs(marks) do
-    local extmark_row = mark[2] + 1 -- have to do this because extmark line numbers are 0 indexed
-    if extmark_row == line_nr then
-      return i
+function M.buf_find_waypoint(filepath, line_nr)
+  local bufnr = vim.fn.bufnr(filepath)
+  for i, waypoint in ipairs(state.waypoints) do
+    if waypoint.filepath == filepath then
+      local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {})
+      local extmark_row = extmark[1] + 1 -- have to do this because extmark line numbers are 0 indexed
+      if extmark_row == line_nr then
+        return i
+      end
     end
   end
   return -1
@@ -176,5 +178,9 @@ function M.align_table(t)
   return result
 end
 
+-- if this isn't true, then you shouldn't be able to put a waypoint in it
+function M.is_file_buffer()
+  return vim.bo.buftype == ""
+end
 
 return M

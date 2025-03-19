@@ -1,25 +1,27 @@
 local M = {}
 
-local config = require("waypoint.constants")
+local config = require("waypoint.config")
 local constants = require("waypoint.constants")
 local state = require("waypoint.state")
-local utils = require("waypoint.utils")
+local u = require("waypoint.utils")
 
 function M.add_waypoint(filepath, line_nr)
+  if not u.is_file_buffer() then return end
   local bufnr = vim.fn.bufnr(filepath)
   local annotation = "<======> Highlighted Text"
   local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, line_nr - 1, -1, {
     id = line_nr,
     sign_text = ">",
     priority = 1,
-    sign_hl_group = constants.hl_group,
-    virt_text = { {annotation, constants.hl_group} },  -- "Error" is a predefined highlight group
+    sign_hl_group = constants.hl_sign,
+    virt_text = { {annotation, constants.hl_annotation} },  -- "Error" is a predefined highlight group
     virt_text_pos = "eol",  -- Position at end of line
   })
 
   ---@type Waypoint
   local waypoint = {
     annotation = annotation,
+    extmark_bufnr = bufnr,
     extmark_id = extmark_id,
     filepath = filepath,
     indent = 0,
@@ -29,6 +31,7 @@ function M.add_waypoint(filepath, line_nr)
 end
 
 function M.remove_waypoint(existing_waypoint_i, filepath)
+  if not u.is_file_buffer() then return end
   local bufnr = vim.fn.bufnr(filepath)
 
   ---@type Waypoint
@@ -46,6 +49,8 @@ function M.remove_waypoint(existing_waypoint_i, filepath)
 end
 
 function M.toggle_waypoint()
+  if not u.is_file_buffer() then return end
+
   --- @type string
   local filepath = vim.fn.expand("%")
 
@@ -53,14 +58,15 @@ function M.toggle_waypoint()
   local cur_line_nr = vim.api.nvim_win_get_cursor(0)[1] -- Get current line number
 
   --- @type integer
-  local existing_waypoint_i = utils.buf_find_waypoint(cur_line_nr)
+  local existing_waypoint_i = u.buf_find_waypoint(filepath, cur_line_nr)
 
   if existing_waypoint_i == -1 then
     M.add_waypoint(filepath, cur_line_nr)
   else
     M.remove_waypoint(existing_waypoint_i, filepath)
   end
-  vim.cmd("highlight " .. constants.hl_sign .. " guifg=" .. config.sign_color .. " guibg=NONE") -- Blue text, no background
+  vim.cmd("highlight " .. constants.hl_sign .. " guifg=" .. config.color_sign .. " guibg=NONE")
+  vim.cmd("highlight " .. constants.hl_annotation .. " guifg=" .. config.color_annotation .. " guibg=NONE")
 end
 
 return M

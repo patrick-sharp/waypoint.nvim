@@ -6,10 +6,12 @@
 [x] autosave
 [x] autoload
 [ ] syntax highlighting for file text
-[ ] user configuration
+[x] user configuration
   [ ] keybinds
-  [ ] height / width
-  [ ] file path
+  [x] height / width
+  [x] file path
+  [x] color for mark
+  [x] color for annotation
 
 ### POLISH:
 [x] Bookmarks window automatically resizes when window resizes
@@ -30,12 +32,24 @@
   [ ] / and ?
   [ ] <C-d> and <C-u>
   [ ] (possible fix for all of these: keep track of which line is which waypoint, and set waypoint + draw when cursor moves)
-[ ] show A/B/C in footer of window
-  [ ] limit A + B + C somehow?
+      hmm, this is tough. maybe: on cursor move, just select the waypoint the cursor is over.
+      on some actions (e.g. j/k), center the cursor on the waypoint marker itself.
+      could there also be a better ux for expanding context? maybe A should put the waypoint at the top, B at the bottom?
+[x] show A/B/C in footer of window
   [ ] make footer background equal to window background
 [x] limit horizontal scroll
 [x] look into whether the status line height messes up my window calculations
-[ ] add a way to indicate whether a context is capped because it's at the beginning or end of files
+[x] bug when navigated to from telescope
+[x] fix toggle bug
+[x] fix highlight when creating but not loading bug
+[x] only allow bookmarks in files (e.g. not in nvim-tree)
+[ ] decide whether I want to keep annotations
+  [ ] update annotations
+[ ] left pad the file numbers instead of right padding
+[ ] indicate whether context for a mark is limited by file length (eof/bof)
+[x] move cursor without triggering autocmd (excess draws)
+[ ] handle weird interaction of / and scroll now that I have ignore_next_autocmd
+    have highlight in line, n, hhhhhh, n, l
 
 ### ADVANCED FEATURES:
 [ ] delete waypoint

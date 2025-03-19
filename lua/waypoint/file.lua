@@ -76,8 +76,11 @@ function M.load()
     waypoint.line_number = nil
     waypoint.extmark_id = extmark_id
   end
-  vim.cmd("highlight " .. constants.hl_sign .. " guifg=" .. config.sign_color .. " guibg=NONE")
-  vim.cmd("highlight " .. constants.hl_annotation .. " guifg=" .. config.annotation_color .. " guibg=NONE")
+  vim.cmd("highlight " .. constants.hl_sign .. " guifg=" .. config.color_sign .. " guibg=NONE")
+  vim.cmd("highlight " .. constants.hl_annotation .. " guifg=" .. config.color_annotation .. " guibg=NONE")
+  vim.cmd("highlight " .. constants.hl_footer_after_context .. " guifg=" .. config.color_footer_after_context .. " guibg=NONE")
+  vim.cmd("highlight " .. constants.hl_footer_before_context .. " guifg=" .. config.color_footer_before_context .. " guibg=NONE")
+  vim.cmd("highlight " .. constants.hl_footer_context .. " guifg=" .. config.color_footer_context .. " guibg=NONE")
 
   for k,v in pairs(decoded) do
     state[k] = v

@@ -6,7 +6,6 @@ local state = require("waypoint.state")
 local u = require("waypoint.utils")
 
 
-local prev_window_handle
 local bufnr
 local winnr
 local bg_winnr
@@ -14,6 +13,13 @@ local bg_winnr
 -- the new selected waypoint to whatever waypoint the cursor is currently on
 local line_to_waypoint
 local longest_line_len
+
+-- I use this to avoid drawing twice when the cursor moves.
+-- I have no idea how nvim orders events and event handlers so hopefully this 
+-- isn't a catastrophe waiting to happen
+local ignore_next_cursormoved
+
+local draws = 0
 
 
 local function set_modifiable(is_modifiable)
@@ -78,13 +84,22 @@ local function get_bg_win_opts(win_opts)
   bg_win_opts.border = "rounded"
   bg_win_opts.title = "Waypoints"
   -- todo: make the background of this equal to window background
-  bg_win_opts.footer = {{"Press g? for help", constants.hl_selected}, {"   OKAY   "}, {"WACKA", constants.hl_group}}
+  local a = {"   A: " .. state.after_context, constants.hl_footer_after_context }
+  local b = {"   B: " .. state.before_context, constants.hl_footer_before_context }
+  local c = {"   C: " .. state.context, constants.hl_footer_context }
+  bg_win_opts.footer = {{"Press g? for help", constants.hl_selected}, a, b, c }
   bg_win_opts.title_pos = "center"
   return bg_win_opts
 end
 
 
-local function draw(center)
+local function draw(action)
+  draws = draws + 1
+  if action == nil then
+    print("DRAW" .. draws .. " nil")
+  else
+    print("DRAW" .. draws .. " " .. action)
+  end
   set_modifiable(true)
   vim.api.nvim_buf_clear_namespace(bufnr, constants.ns, 0, -1)
   local rows = {}
@@ -198,21 +213,15 @@ local function draw(center)
     longest_line_len = math.max(longest_line_len, #aligned[i])
   end
 
-  -- Set some text in the buffer
+  -- Set text in the buffer
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, aligned)
 
   -- Define highlight group
-  --local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1  -- Convert to 0-indexed
   if state.wpi and highlight_start and highlight_end and cursor_line then
-    vim.api.nvim_win_set_cursor(0, { cursor_line + 1, 0 })
-    local view = vim.fn.winsaveview()
-
-    -- clamp scroll col in case max line length changed since last draw (e.g. context shrinks)
-    local win_width = get_floating_window_width()
-    state.scroll_col = u.clamp(state.scroll_col, 0, longest_line_len - win_width)
-
-    view.leftcol = state.scroll_col
-    view.col = state.scroll_col
+    if action == "move_to_waypoint" or action == "context" then
+      -- print("SETCURS", cursor_line+1)
+      vim.api.nvim_win_set_cursor(0, { cursor_line + 1, 0 })
+    end
     local topline = view.topline
 
     local win_height = get_floating_window_height()
@@ -228,6 +237,11 @@ local function draw(center)
       -- u.p("NONE", view)
     end
     vim.fn.winrestview(view)
+    if action == "scroll" then
+      view = vim.fn.winsaveview()
+      view.col = view.leftcol +1
+      vim.fn.winrestview(view)
+    end
 
     vim.cmd("highlight " .. constants.hl_selected .. " guibg=DarkGray guifg=White")
     for i=highlight_start,highlight_end-1 do
@@ -235,9 +249,18 @@ local function draw(center)
     end
 
   end
+
+  local win_opts = get_win_opts()
+  local bg_win_opts = get_bg_win_opts(win_opts)
+  vim.api.nvim_win_set_config(winnr, win_opts)
+  vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
+
   set_modifiable(false)
-  if center then
+  if action == "center" or action == "context" then
     vim.api.nvim_command("normal! zz")
+  end
+  if action ~= "set_waypoint_for_cursor" then
+    ignore_next_cursormoved = true
   end
 end
 
@@ -283,7 +306,7 @@ function NextWaypoint()
     1,
     #state.waypoints
   )
-  draw()
+  draw("move_to_waypoint")
 end
 
 
@@ -295,7 +318,7 @@ function PrevWaypoint()
     1,
     #state.waypoints
   )
-  draw()
+  draw("move_to_waypoint")
 end
 
 
@@ -318,19 +341,19 @@ end
 
 function IncreaseContext(increment)
   state.context = u.clamp(state.context + increment, 0)
-  draw(true)
+  draw("context")
 end
 
 
 function IncreaseBeforeContext(increment)
   state.before_context = u.clamp(state.before_context + increment, 0)
-  draw(true)
+  draw("context")
 end
 
 
 function IncreaseAfterContext(increment)
   state.after_context = u.clamp(state.after_context + increment, 0)
-  draw(true)
+  draw("context")
 end
 
 
@@ -345,14 +368,16 @@ end
 function Scroll(increment)
   local width = vim.api.nvim_get_option("columns")
   local win_width = math.ceil(width * config.window_width)
+  local col = state.scroll_col
   state.scroll_col = u.clamp(state.scroll_col + increment, 0, longest_line_len - win_width)
-  draw()
+  u.p("SCROLL", col, state.scroll_col)
+  draw("scroll")
 end
 
 
 function ResetScroll()
   state.scroll_col = 0
-  draw()
+  draw("scroll")
 end
 
 
@@ -389,11 +414,21 @@ function ResetIndent()
 end
 
 function SetWaypointForCursor()
+  if ignore_next_cursormoved then
+    print("IGNORING")
+    -- u.p(vim.fn.winsaveview())
+    ignore_next_cursormoved = false
+    return
+  end
+
   if not line_to_waypoint then return end
   local cursor_line_1i = vim.api.nvim_win_get_cursor(0)[1]
   if not cursor_line_1i then return end
   state.wpi = line_to_waypoint[cursor_line_1i]
-  draw()
+  local view = vim.fn.winsaveview()
+  u.p("SWFC left", view.leftcol, "scroll", state.scroll_col)
+  state.scroll_col = view.leftcol
+  draw("set_waypoint_for_cursor")
 end
 
 function Resize()
@@ -404,7 +439,6 @@ function Resize()
 end
 
 function M.open()
-  prev_window_handle = vim.api.nvim_get_current_win()
   if state.wpi == nil and #state.waypoints > 0 then
     state.wpi = 1
   end
@@ -452,8 +486,19 @@ function M.open()
   -- Create the window
   winnr = vim.api.nvim_open_win(bufnr, true, win_opts)
 
+  -- I added this because if you open waypoint from telescope, it has wrap disabled
+  -- I'm sure there are a bunch of other edge cases like this lurking around
+  vim.api.nvim_win_set_option(winnr, "wrap", false)
 
-  draw()
+  -- u.p(vim.api.nvim_win_get_option(winnr, "winhl"))
+  u.p("HL", vim.api.nvim_get_hl(winnr, { name = "Normal" }))
+
+
+  if state.view == nil then
+    state.view = vim.fn.winsaveview()
+  end
+
+  draw("move_to_waypoint")
 
   local function keymap_opts()
     return {
@@ -463,89 +508,37 @@ function M.open()
     }
   end
 
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'q',     ":lua Leave()<CR>",                    keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<esc>', ":lua Leave()<CR>",                    keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'q',     ":lua Leave()<CR>",                   keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<esc>', ":lua Leave()<CR>",                   keymap_opts())
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", ">",     ":lua IndentLine(4)<CR>",              keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<",     ":lua IndentLine(-4)<CR>",             keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "i",     ":lua ResetIndent()<CR>",              keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", ">",     ":lua IndentLine(4)<CR>",             keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "<",     ":lua IndentLine(-4)<CR>",            keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "i",     ":lua ResetIndent()<CR>",             keymap_opts())
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "l",     ":lua Scroll(6)<CR>",                  keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "h",     ":lua Scroll(-6)<CR>",                 keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "0",     ":lua ResetScroll()<CR>",              keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "l",     ":lua Scroll(6)<CR>",                 keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "h",     ":lua Scroll(-6)<CR>",                keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "0",     ":lua ResetScroll()<CR>",             keymap_opts())
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "j",     ":lua NextWaypoint()<CR>",             keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "k",     ":lua PrevWaypoint()<CR>",             keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "j",     ":lua NextWaypoint()<CR>",            keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "k",     ":lua PrevWaypoint()<CR>",            keymap_opts())
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "K",     ":lua MoveWaypointUp()<CR>",           keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "J",     ":lua MoveWaypointDown()<CR>",         keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<CR>",  ":lua GoToWaypoint()<CR>",             keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "K",     ":lua MoveWaypointUp()<CR>",          keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "J",     ":lua MoveWaypointDown()<CR>",        keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "<CR>",  ":lua GoToWaypoint()<CR>",            keymap_opts())
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "C",     ":lua IncreaseContext(1)<CR>",         keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "c",     ":lua IncreaseContext(-1)<CR>",        keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "B",     ":lua IncreaseBeforeContext(1)<CR>",   keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "b",     ":lua IncreaseBeforeContext(-1)<CR>",  keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "A",     ":lua IncreaseAfterContext(1)<CR>",    keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "a",     ":lua IncreaseAfterContext(-1)<CR>",   keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "r",     ":lua ResetContext()<CR>",             keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "C",     ":lua IncreaseContext(1)<CR>",        keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "c",     ":lua IncreaseContext(-1)<CR>",       keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "B",     ":lua IncreaseBeforeContext(1)<CR>",  keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "b",     ":lua IncreaseBeforeContext(-1)<CR>", keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "A",     ":lua IncreaseAfterContext(1)<CR>",   keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "a",     ":lua IncreaseAfterContext(-1)<CR>",  keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "r",     ":lua ResetContext()<CR>",            keymap_opts())
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "ta",     ":lua ToggleAnnotation()<CR>",        keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tp",     ":lua TogglePath()<CR>",              keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tf",     ":lua ToggleFullPath()<CR>",          keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tl",     ":lua ToggleLineNum()<CR>",           keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tt",     ":lua ToggleFileText()<CR>",          keymap_opts())
-
-  -- done keybinds
-  -- C     to increase the size of the total context window
-  -- c     to decrease context
-  -- A     to increase after context
-  -- a     to decrease after context
-  -- B     to increase before context
-  -- b     to decrease before context
-  --
-  -- todo keybinds
-  -- dd to delete line
-  -- u     to undo
-  -- <c-r> to redo
-  -- t     to add a title
-  -- T     to remove a title
-  -- f     to toggle full file paths
-  --
-  --
-  -- visual mode delete to delete groups of lines
-  -- visual mode + J/K to move groups of waypoints
-  -- making new groups (tabs)
-  -- navigating between groups
-  -- combining groups
-  -- change the title of a group
-  --  inspo: zellij
-  -- move line to group
-  -- make a command :Waypoint to bring up the waypoint window
-  -- show undo stack
-  --   move waypoint x to group y
-  --   combined group x with group y
-  -- store bookmarks in the folder you have open in vim
-  -- 
-  -- telescope extension to search by either title or line contents
-  -- list waypoints in the quickfix list
-  -- should be able to open a floating window, a window on the left (like nvim tree), or a window on the right
-  -- have the ability to list by custom order or by mru
-  --
-  -- cols in table
-  -- line/col
-  -- text at line/col
-  -- bookmark
-  --
-  -- other ideas:
-  -- if a waypoint has a waypoint under it that has more indentation, then put a
-  --   blank line between last waypoint under it with less indentation and the 
-  --   next waypoint with equal indentation
-  -- show everything in a column aligned table. leftmost column can be filename + indentation
-  -- syntax highlight the partss that come from actual files
-  -- figure out how to more gracefully make sure the window open state never gets weird.
-  -- make saving and loading waypoints to file automatic
-  -- if the cursor movement wouldn't make all of a waypoint visible, try to move the screen so it's all visible
-
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "ta",    ":lua ToggleAnnotation()<CR>",        keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tp",    ":lua TogglePath()<CR>",              keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tf",    ":lua ToggleFullPath()<CR>",          keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tl",    ":lua ToggleLineNum()<CR>",           keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tt",    ":lua ToggleFileText()<CR>",          keymap_opts())
 end
 
 function Close()
@@ -554,7 +547,8 @@ function Close()
 end
 
 function Leave()
-  vim.api.nvim_set_current_win(prev_window_handle)
+  vim.cmd("wincmd w")
+  -- vim.api.nvim_set_current_win(prev_window_handle)
 end
 
 return M

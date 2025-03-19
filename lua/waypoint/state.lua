@@ -2,7 +2,8 @@
 
 ---@class Waypoint
 ---@field annotation string | nil
----@field extmark_id integer
+---@field extmark_bufnr integer
+---@field extmark_id integer the id of the extmark within the buffer. Note that these are not unique globally
 ---@field filepath string
 ---@field indent integer
 
