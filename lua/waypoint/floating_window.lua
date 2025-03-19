@@ -226,6 +226,8 @@ local function draw(action)
 
     local win_height = get_floating_window_height()
 
+    local view = vim.fn.winsaveview()
+
     if waypoint_topline < topline then
       -- u.p("TOPP", topline, topline + win_height, waypoint_topline, waypoint_bottomline)
       view.topline = waypoint_topline
@@ -239,7 +241,7 @@ local function draw(action)
     vim.fn.winrestview(view)
     if action == "scroll" then
       view = vim.fn.winsaveview()
-      view.col = view.leftcol +1
+      view.col = view.leftcol
       vim.fn.winrestview(view)
     end
 
