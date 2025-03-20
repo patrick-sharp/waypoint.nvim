@@ -167,7 +167,6 @@ function M.align_table(t, table_cell_types)
       table.insert(result, "")
     else
       local fields = {}
-      -- assert(#table_cell_types == #t[i], tostring(i) .. "th row is " .. #t[i] " long, expected " .. #table_cell_types)
       assert(#table_cell_types == #t[i])
       for j=1,ncols do
         local field = t[i][j]

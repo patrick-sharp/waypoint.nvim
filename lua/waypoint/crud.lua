@@ -31,7 +31,6 @@ function M.add_waypoint(filepath, line_nr)
 end
 
 function M.remove_waypoint(existing_waypoint_i, filepath)
-  if not u.is_file_buffer() then return end
   local bufnr = vim.fn.bufnr(filepath)
 
   ---@type Waypoint

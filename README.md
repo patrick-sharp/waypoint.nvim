@@ -45,7 +45,7 @@
 [x] only allow bookmarks in files (e.g. not in nvim-tree)
 [ ] decide whether I want to keep annotations
   [ ] update annotations
-[ ] left pad the file numbers instead of right padding
+[x] left pad the file numbers instead of right padding
 [ ] indicate whether context for a mark is limited by file length (eof/bof)
 [x] move cursor without triggering autocmd (excess draws)
 [x] handle weird interaction of / and scroll now that I have ignore_next_autocmd
@@ -54,12 +54,8 @@
 [ ] fix bug where moving to bottom doesn't move view to bring bottom waypoint fully into view
 
 ### ADVANCED FEATURES:
-[ ] delete waypoint
-[ ] copy waypoint
-[ ] paste waypoint
-[ ] undo
-[ ] redo
-[ ] allow cursor to move within a waypoint if you're searching, and for subsequent searches to move between waypoints
+[ ] delete waypoint from floating window with dd
+[x] allow cursor to move within a waypoint if you're searching, and for subsequent searches to move between waypoints
 [ ] telescope for waypoints
 [ ] quickfixlist for waypoints
 
@@ -70,3 +66,4 @@ how I want it to work
 
 should moving up and down put scroll back to beginning?
 should scrolling move cursor all the way to the left of screen?
+

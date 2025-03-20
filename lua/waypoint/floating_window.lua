@@ -1,6 +1,7 @@
 local M = {}
 
 local config = require("waypoint.config")
+local crud = require("waypoint.crud")
 local constants = require("waypoint.constants")
 local state = require("waypoint.state")
 local u = require("waypoint.utils")
@@ -443,6 +444,15 @@ function Resize()
   vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
 end
 
+function RemoveCurrentWaypoint()
+  crud.remove_waypoint(state.wpi, state.waypoints[state.wpi].filepath)
+  if #state.waypoints == 0 then
+    state.wpi = nil
+  end
+  state.wpi = u.clamp(state.wpi, 1, #state.waypoints)
+  draw()
+end
+
 function M.open()
   if state.wpi == nil and #state.waypoints > 0 then
     state.wpi = 1
@@ -540,6 +550,8 @@ function M.open()
   vim.api.nvim_buf_set_keymap(bufnr, "n", "tf",    ":lua ToggleFullPath()<CR>",          keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "tl",    ":lua ToggleLineNum()<CR>",           keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "tt",    ":lua ToggleFileText()<CR>",          keymap_opts())
+
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "dd",    ":lua RemoveCurrentWaypoint()<CR>",   keymap_opts())
 end
 
 function Close()
