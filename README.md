@@ -49,6 +49,10 @@
     have highlight in line, n, hhhhhh, n, l
 [ ] keep track of the cursor position and restore to it when you open the floating window
 [ ] fix bug where moving to bottom doesn't move view to bring bottom waypoint fully into view
+[x] goddamnit, I just realized the source of the bug. it's because the table chars are unicode, and therefore multiple chars long
+    nvim_win_get_cursor doesn't account for unicode.
+    solution: get rid of all uses of nvim_win_get_cursor and replace with vim.fn.getcurpos()
+[ ] handle col vs curswant better so unicode doesn't confuse cursor state
 
 ### ADVANCED FEATURES:
 [x] delete waypoint from floating window with dd

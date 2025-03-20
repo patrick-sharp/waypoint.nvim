@@ -183,7 +183,7 @@ local function draw(action)
 
       for _,v in pairs(row) do
         if v == nil then
-          u.p(row)
+          u.log(row)
         end
       end
 
@@ -235,7 +235,7 @@ local function draw(action)
   -- Define highlight group
   if state.wpi and highlight_start and highlight_end and cursor_line then
     if action == "move_to_waypoint" or action == "context" then
-      vim.api.nvim_win_set_cursor(0, { cursor_line + 1, 0 })
+      vim.api.nvim_win_set_cursor(0, { cursor_line + 1, state.cursor_x })
     end
 
     local view = vim.fn.winsaveview()
@@ -245,22 +245,28 @@ local function draw(action)
     local win_height = get_floating_window_height()
 
     if waypoint_topline < topline then
-      -- u.p("TOPP", topline, topline + win_height, waypoint_topline, waypoint_bottomline)
+      -- u.log("TOPP", topline, topline + win_height, waypoint_topline, waypoint_bottomline)
       view.topline = waypoint_topline
     elseif topline + win_height < waypoint_bottomline then
-      -- u.p("BOTT", topline, topline + win_height, waypoint_topline, waypoint_bottomline)
+      -- u.log("BOTT", topline, topline + win_height, waypoint_topline, waypoint_bottomline)
       view.topline = waypoint_bottomline - win_height
     else
-      -- u.p("NONE", "CL", cursor_line, topline, topline + win_height, "WP", waypoint_topline, waypoint_bottomline)
-      -- u.p("NONE", view)
+      -- u.log("NONE", "CL", cursor_line, topline, topline + win_height, "WP", waypoint_topline, waypoint_bottomline)
+      -- u.log("NONE", view)
     end
     if action == "scroll" then
       view.leftcol = state.scroll_col
       -- for some reason vim.fn.restview doesn't do what it's supposed if the leftcol and col are the same
       -- so I have to do this, and then adjust the col to the left side of the screen afterward
-      view.col = view.leftcol + 20
+      local win_width = get_floating_window_width()
+      -- have to set curswant to deal with unicode
+      view.col = state.cursor_x
+      view.curswant = view.col
+
       vim.fn.winrestview(view)
-      vim.cmd("normal! " .. state.scroll_col .. "|")
+      vim.cmd("normal! " .. state.cursor_x .. "|")
+    else
+      vim.fn.winrestview(view)
     end
 
     vim.cmd("highlight " .. constants.hl_selected .. " guibg=DarkGray guifg=White")
@@ -326,6 +332,8 @@ function NextWaypoint()
     1,
     #state.waypoints
   )
+  -- center on selected waypoint
+  state.cursor_y = nil
   draw("move_to_waypoint")
 end
 
@@ -388,15 +396,15 @@ end
 function Scroll(increment)
   local width = vim.api.nvim_get_option("columns")
   local win_width = math.ceil(width * config.window_width)
-  local col = state.scroll_col
   state.scroll_col = u.clamp(state.scroll_col + increment, 0, longest_line_len - win_width)
-  u.p("SCROLL", col, state.scroll_col)
+  state.cursor_x = u.clamp(state.cursor_x, state.scroll_col, state.scroll_col + win_width)
   draw("scroll")
 end
 
 
 function ResetScroll()
   state.scroll_col = 0
+  state.cursor_x = 0
   draw("scroll")
 end
 
@@ -440,11 +448,16 @@ function SetWaypointForCursor()
   end
 
   if not line_to_waypoint then return end
-  local cursor_line_1i = vim.api.nvim_win_get_cursor(0)[1]
+  -- use getcurpos to avoid issues with unicode
+  local cursor_pos = vim.fn.getcurpos()
+  local cursor_line_1i = cursor_pos[2]
+  local cursor_col_0i = cursor_pos[5]
   if not cursor_line_1i then return end
   state.wpi = line_to_waypoint[cursor_line_1i]
+  state.cursor_y = cursor_line_1i
+  state.cursor_x = cursor_col_0i
   local view = vim.fn.winsaveview()
-  u.p("SWFC left", view.leftcol, "scroll", state.scroll_col)
+  state.topline = view.topline
   state.scroll_col = view.leftcol
   draw("set_waypoint_for_cursor")
 end
@@ -517,8 +530,8 @@ function M.open()
   -- I'm sure there are a bunch of other edge cases like this lurking around
   vim.api.nvim_win_set_option(winnr, "wrap", false)
 
-  -- u.p(vim.api.nvim_win_get_option(winnr, "winhl"))
-  u.p("HL", vim.api.nvim_get_hl(winnr, { name = "Normal" }))
+  -- u.log(vim.api.nvim_win_get_option(winnr, "winhl"))
+  -- u.log("HL", vim.api.nvim_get_hl(winnr, { name = "Normal" }))
 
   state.scroll_col = 0
   draw("move_to_waypoint")

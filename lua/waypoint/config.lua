@@ -14,7 +14,7 @@ local M = {
   color_footer_before_context = "#66ff66",
   color_footer_context = "#6666ff",
   window_width = 0.8,
-  window_height = 0.7,
+  window_height = 0.8,
   file = "./nvim-waypoints.json",
 }
 

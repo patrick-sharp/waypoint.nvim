@@ -14,6 +14,9 @@
 ---@field before_context     integer
 ---@field after_context      integer
 ---@field scroll_col         integer
+---@field cursor_x           integer | nil
+---@field cursor_y           integer | nil
+---@field topline            integer | nil
 ---@field show_annotation    boolean
 ---@field show_path          boolean
 ---@field show_full_path     boolean
@@ -30,10 +33,10 @@ local M = {
   context            = 0,
   before_context     = 0,
   after_context      = 0,
+  topline            = nil, -- when nil, window will just center on current waypoint
   scroll_col         = 0,
-  -- col                = 0,
-  -- line               = 0,
-  -- topline            = 0,
+  cursor_x           = 0,
+  cursor_y           = nil, -- when nil, will be equal to line of current waypoint
   show_annotation    = true,
   show_path          = true,
   show_full_path     = false,

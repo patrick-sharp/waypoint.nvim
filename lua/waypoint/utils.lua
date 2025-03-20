@@ -6,13 +6,17 @@ local constants = require("waypoint.constants")
 local debug = true
 
 function M.p(...)
-  if not debug then return end
   local args_table = { n = select('#', ...), ... }
   local inspected = {}
   for i=1, args_table.n do
     table.insert(inspected, vim.inspect(args_table[i]))
   end
   print(table.concat(inspected, " "))
+end
+
+function M.log(...)
+  if not debug then return end
+  M.p(...)
 end
 
 function M.get_in(t, keys)
@@ -178,7 +182,7 @@ function M.align_table(t, table_cell_types)
         end
         table.insert(fields, padded)
       end
-      table.insert(result, table.concat(fields, " │ "))
+      table.insert(result, table.concat(fields, " " .. constants.table_separator .. " "))
     end
   end
   return result
