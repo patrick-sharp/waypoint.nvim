@@ -207,7 +207,19 @@ local function draw(action)
   assert(#rows == #indents, "#rows == " .. #rows ..", #indents == " .. #indents .. ", but they should be the same" )
   assert(#rows == #line_to_waypoint, "#rows == " .. #rows ..", #line_to_waypoint == " .. #line_to_waypoint .. ", but they should be the same" )
 
-  local table_cell_types = {"number", "string", "string", "number", "string"}
+  local table_cell_types = {"number", "string"}
+  if state.show_annotation then
+    table.insert(table_cell_types, "string")
+  end
+  if state.show_path then
+    table.insert(table_cell_types, "string")
+  end
+  if state.show_line_num then
+    table.insert(table_cell_types, "number")
+  end
+  if state.show_file_text then
+    table.insert(table_cell_types, "string")
+  end
   local aligned = u.align_table(rows, table_cell_types)
 
 
