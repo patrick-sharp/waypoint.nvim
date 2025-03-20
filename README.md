@@ -22,19 +22,16 @@
   [ ] color the table chars differently than text
   [ ] color the files
   [ ] color the line numbers
+  [ ] color the mark numbers (or get rid of them)
 [ ] popup with keybind info when you press g?
-[ ] that weird scroll behavior I still can't figure out
+[x] that weird scroll behavior I still can't figure out
 [x] the bug when saving and loading
 [x] the bug where marks at beginning/end of file don't have gaps
-[ ] support for other movement-like keys
+[x] support for other movement-like keys
   [x] H/M/L
   [x] gg/G
   [x] / and ?
-  [ ] <C-d> and <C-u>
-  [ ] (possible fix for all of these: keep track of which line is which waypoint, and set waypoint + draw when cursor moves)
-      hmm, this is tough. maybe: on cursor move, just select the waypoint the cursor is over.
-      on some actions (e.g. j/k), center the cursor on the waypoint marker itself.
-      could there also be a better ux for expanding context? maybe A should put the waypoint at the top, B at the bottom?
+  [x] <C-d> and <C-u>
 [x] show A/B/C in footer of window
   [ ] make footer background equal to window background
 [x] limit horizontal scroll
@@ -54,7 +51,7 @@
 [ ] fix bug where moving to bottom doesn't move view to bring bottom waypoint fully into view
 
 ### ADVANCED FEATURES:
-[ ] delete waypoint from floating window with dd
+[x] delete waypoint from floating window with dd
 [x] allow cursor to move within a waypoint if you're searching, and for subsequent searches to move between waypoints
 [ ] telescope for waypoints
 [ ] quickfixlist for waypoints
