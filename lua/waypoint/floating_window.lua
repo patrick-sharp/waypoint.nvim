@@ -144,8 +144,10 @@ local function draw(action)
 
       -- marker for where the waypoint actually is within the context
       if j == extmark_line_0i + 1 then
+        table.insert(row, tostring(i))
         table.insert(row, "*")
       else
+        table.insert(row, "")
         table.insert(row, "")
       end
 
@@ -204,7 +206,8 @@ local function draw(action)
   assert(#rows == #indents, "#rows == " .. #rows ..", #indents == " .. #indents .. ", but they should be the same" )
   assert(#rows == #line_to_waypoint, "#rows == " .. #rows ..", #line_to_waypoint == " .. #line_to_waypoint .. ", but they should be the same" )
 
-  local aligned = u.align_table(rows)
+  local table_cell_types = {"number", "string", "string", "number", "string"}
+  local aligned = u.align_table(rows, table_cell_types)
 
 
   longest_line_len = 0
@@ -219,7 +222,6 @@ local function draw(action)
   -- Define highlight group
   if state.wpi and highlight_start and highlight_end and cursor_line then
     if action == "move_to_waypoint" or action == "context" then
-      -- print("SETCURS", cursor_line+1)
       vim.api.nvim_win_set_cursor(0, { cursor_line + 1, 0 })
     end
 
@@ -241,6 +243,8 @@ local function draw(action)
     end
     if action == "scroll" then
       view.leftcol = state.scroll_col
+      -- for some reason vim.fn.restview doesn't do what it's supposed if the leftcol and col are the same
+      -- so I have to do this, and then adjust the col to the left side of the screen afterward
       view.col = view.leftcol + 20
       vim.fn.winrestview(view)
       vim.cmd("normal! " .. state.scroll_col .. "|")

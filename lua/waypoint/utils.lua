@@ -139,7 +139,7 @@ end
 
 --- @param t table<table<string>>
 --- @return table<string>
-function M.align_table(t)
+function M.align_table(t, table_cell_types)
   if #t == 0 then
     return {}
   end
@@ -167,9 +167,16 @@ function M.align_table(t)
       table.insert(result, "")
     else
       local fields = {}
+      -- assert(#table_cell_types == #t[i], tostring(i) .. "th row is " .. #t[i] " long, expected " .. #table_cell_types)
+      assert(#table_cell_types == #t[i])
       for j=1,ncols do
         local field = t[i][j]
-        local padded = field .. string.rep(" ", widths[j] - #field)
+        local padded
+        if table_cell_types[j] == "number" then
+          padded = string.rep(" ", widths[j] - #field) .. field
+        else
+          padded = field .. string.rep(" ", widths[j] - #field)
+        end
         table.insert(fields, padded)
       end
       table.insert(result, table.concat(fields, " │ "))

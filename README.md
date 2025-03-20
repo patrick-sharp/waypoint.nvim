@@ -27,9 +27,9 @@
 [x] the bug when saving and loading
 [x] the bug where marks at beginning/end of file don't have gaps
 [ ] support for other movement-like keys
-  [ ] H/M/L
-  [ ] gg/G
-  [ ] / and ?
+  [x] H/M/L
+  [x] gg/G
+  [x] / and ?
   [ ] <C-d> and <C-u>
   [ ] (possible fix for all of these: keep track of which line is which waypoint, and set waypoint + draw when cursor moves)
       hmm, this is tough. maybe: on cursor move, just select the waypoint the cursor is over.
@@ -50,6 +50,8 @@
 [x] move cursor without triggering autocmd (excess draws)
 [x] handle weird interaction of / and scroll now that I have ignore_next_autocmd
     have highlight in line, n, hhhhhh, n, l
+[ ] keep track of the cursor position and restore to it when you open the floating window
+[ ] fix bug where moving to bottom doesn't move view to bring bottom waypoint fully into view
 
 ### ADVANCED FEATURES:
 [ ] delete waypoint
@@ -60,3 +62,11 @@
 [ ] allow cursor to move within a waypoint if you're searching, and for subsequent searches to move between waypoints
 [ ] telescope for waypoints
 [ ] quickfixlist for waypoints
+
+how I want it to work
+1. scroll_col, topline, col and leftcol should be saved
+2. if you close and reopen, those are restored.
+3. however, they aren't persisted if you close vim
+
+should moving up and down put scroll back to beginning?
+should scrolling move cursor all the way to the left of screen?
