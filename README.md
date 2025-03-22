@@ -41,24 +41,24 @@
 [x] fix highlight when creating but not loading bug
 [x] only allow bookmarks in files (e.g. not in nvim-tree)
 [ ] decide whether I want to keep annotations
-  [ ] update annotations
+  [ ] if so, add ability to update annotations
 [x] left pad the file numbers instead of right padding
 [ ] indicate whether context for a mark is limited by file length (eof/bof)
 [x] move cursor without triggering autocmd (excess draws)
 [x] handle weird interaction of / and scroll now that I have ignore_next_autocmd
     have highlight in line, n, hhhhhh, n, l
-[ ] keep track of the cursor position and restore to it when you open the floating window
-[ ] fix bug where moving to bottom doesn't move view to bring bottom waypoint fully into view
+[x] keep track of the cursor position and restore to it when you open the floating window
+[x] fix bug where moving to bottom doesn't move view to bring bottom waypoint fully into view
 [x] goddamnit, I just realized the source of the bug. it's because the table chars are unicode, and therefore multiple chars long
     nvim_win_get_cursor doesn't account for unicode.
     solution: get rid of all uses of nvim_win_get_cursor and replace with vim.fn.getcurpos()
-[ ] handle col vs curswant better so unicode doesn't confuse cursor state
+[x] handle col vs curswant better so unicode doesn't confuse cursor state
 
 ### ADVANCED FEATURES:
 [x] delete waypoint from floating window with dd
 [x] allow cursor to move within a waypoint if you're searching, and for subsequent searches to move between waypoints
+[x] quickfixlist for waypoints
 [ ] telescope for waypoints
-[ ] quickfixlist for waypoints
 
 how I want it to work
 1. scroll_col, topline, col and leftcol should be saved

@@ -6,7 +6,7 @@ local constants = require("waypoint.constants")
 local state = require("waypoint.state")
 local u = require("waypoint.utils")
 
-
+local is_open = false
 local bufnr
 local winnr
 local bg_winnr
@@ -88,7 +88,8 @@ local function get_bg_win_opts(win_opts)
   local a = {"   A: " .. state.after_context, constants.hl_footer_after_context }
   local b = {"   B: " .. state.before_context, constants.hl_footer_before_context }
   local c = {"   C: " .. state.context, constants.hl_footer_context }
-  bg_win_opts.footer = {{"Press g? for help", constants.hl_selected}, a, b, c }
+  local wpi = {"   " .. state.wpi .. '/' .. #state.waypoints, nil }
+  bg_win_opts.footer = {{"Press g? for help", constants.hl_selected}, a, b, c, wpi }
   bg_win_opts.title_pos = "center"
   return bg_win_opts
 end
@@ -146,7 +147,22 @@ local function draw(action)
       -- marker for where the waypoint actually is within the context
       if j == extmark_line_0i + 1 then
         table.insert(row, tostring(i))
-        table.insert(row, "*")
+        local waypoint_bufnr = vim.fn.bufnr(waypoint.filepath)
+        local x = vim.treesitter.highlighter.active[waypoint_bufnr] ~= nil
+        local line = 1
+        local col = 0
+        local synstack = vim.api.nvim_buf_call(waypoint_bufnr, function()
+          return vim.fn.synstack(line, col)
+        end)
+        local y = #vim.fn.synstack(vim.fn.line('.'), vim.fn.col('.')) ~= 0
+        if x then
+          table.insert(row, tostring("trees"))
+        elseif y then
+          table.insert(row, tostring("synst"))
+        else
+          table.insert(row, waypoint_bufnr .. "*")
+        end
+        --table.insert(row, "*")
       else
         table.insert(row, "")
         table.insert(row, "")
@@ -226,7 +242,7 @@ local function draw(action)
   longest_line_len = 0
   for i, line in pairs(aligned) do
     aligned[i] = string.rep(" ", indents[i]) .. line
-    longest_line_len = math.max(longest_line_len, #aligned[i])
+    longest_line_len = math.max(longest_line_len, vim.fn.strchars(aligned[i]))
   end
 
   -- Set text in the buffer
@@ -235,7 +251,7 @@ local function draw(action)
   -- Define highlight group
   if state.wpi and highlight_start and highlight_end and cursor_line then
     if action == "move_to_waypoint" or action == "context" then
-      vim.api.nvim_win_set_cursor(0, { cursor_line + 1, state.view.col })
+      vim.fn.setcursorcharpos(cursor_line + 1, state.view.col + 1)
     end
 
 
@@ -249,7 +265,7 @@ local function draw(action)
       vim.fn.setcursorcharpos(lnum, state.view.col + 1)
       local view = vim.fn.winsaveview()
       view.leftcol = state.view.leftcol
-      vim.fn.winrestview(view)
+      vim.fn.winrestview({leftcol = state.view.leftcol})
     else
       local view = vim.fn.winsaveview()
       local topline = view.topline
@@ -396,14 +412,10 @@ end
 function Scroll(increment)
   local width = vim.api.nvim_get_option("columns")
   local win_width = math.ceil(width * config.window_width)
-  -- local view = vim.fn.winsaveview()
-  -- local view_char_col = vim.fn.getcursorcharpos()[3] - 1
-  --local unicode_gap = view.col - view_char_col
   state.view.leftcol = u.clamp(state.view.leftcol + increment, 0, longest_line_len - win_width)
-  -- state.view.col = u.clamp(state.view.col, state.view.leftcol + unicode_gap, state.view.leftcol + win_width + unicode_gap)
-  state.view.col = u.clamp(state.view.col, state.view.leftcol, state.view.leftcol + win_width)
-  -- state.view.curswant = u.clamp(state.view.curswant, state.view.leftcol, state.view.leftcol + win_width)
-  --u.p(unicode_gap, view.col, view_char_col, state.view)
+  local x = state.view.col
+  state.view.col = u.clamp(state.view.col, state.view.leftcol, state.view.leftcol + win_width - 1)
+  u.p(x, state.view.col)
   draw("scroll")
 end
 
@@ -482,7 +494,34 @@ function RemoveCurrentWaypoint()
   draw()
 end
 
+function SetQFList()
+  local qflist = {}
+  for _,waypoint in pairs(state.waypoints) do
+    local wp_bufnr = vim.fn.bufnr(waypoint.filepath)
+    local extmark = vim.api.nvim_buf_get_extmark_by_id(wp_bufnr, constants.ns, waypoint.extmark_id, {})
+    if #extmark == 0 then
+      u.p(waypoint, extmark, vim.api.nvim_buf_get_extmarks(wp_bufnr, constants.ns, {0,-1}, {-1,-1}, {}))
+    end
+    local lnum = extmark[1]
+    local line = vim.api.nvim_buf_get_lines(wp_bufnr, lnum, lnum + 1, false)[1]
+    table.insert(qflist, {
+      filename = waypoint.filepath,
+      lnum = lnum,
+      col = 0,
+      text = line,
+    })
+  end
+  vim.fn.setqflist(qflist, 'r')
+  vim.cmd('copen')
+end
+
+
 function M.open()
+  if is_open then
+    return
+  else
+    is_open = true
+  end
   if state.wpi == nil and #state.waypoints > 0 then
     state.wpi = 1
   end
@@ -582,11 +621,16 @@ function M.open()
   vim.api.nvim_buf_set_keymap(bufnr, "n", "tt",    ":lua ToggleFileText()<CR>",          keymap_opts())
 
   vim.api.nvim_buf_set_keymap(bufnr, "n", "dd",    ":lua RemoveCurrentWaypoint()<CR>",   keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "L",     ":lua SetQFList()<CR>",               keymap_opts())
 end
 
 function Close()
   vim.api.nvim_win_close(bg_winnr, true)
   vim.api.nvim_win_close(winnr, true)
+  is_open = false
+  bufnr = nil
+  winnr = nil
+  bg_winnr = nil
 end
 
 function Leave()

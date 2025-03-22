@@ -9,6 +9,7 @@
 ---@field file string
 local M = {
   color_annotation = "#9999ff",
+  color_annotation_2 = "#99ffff",
   color_sign = "#ff9999",
   color_footer_after_context = "#ff6666",
   color_footer_before_context = "#66ff66",
