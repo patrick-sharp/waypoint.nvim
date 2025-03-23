@@ -34,17 +34,21 @@ function M.ha()
   local synstack = vim.fn.synstack(vim.fn.line('.'), vim.fn.col('.'))
   local groups = {}
 
+  u.p(synstack)
   for i = 1, #synstack do
     local synid = synstack[i]
     local name = vim.fn.synIDattr(synid, "name")
-    local hlgroup = vim.api.nvim_get_hl(0, {id = synid})
-    while hlgroup.link ~= nil do
-      name = hlgroup.link
-      hlgroup = vim.api.nvim_get_hl(0, {name = name})
+    if false then
+      local hlgroup = vim.api.nvim_get_hl(0, {id = synid})
+      while hlgroup.link ~= nil do
+        name = hlgroup.link
+        hlgroup = vim.api.nvim_get_hl(0, {name = name})
+      end
+      local hex_str = string.format("#%x", hlgroup.fg)
+      table.insert(groups, {name, hlgroup, hex_str})
+    else
+      table.insert(groups, {name})
     end
-    local hex_str = string.format("#%x", hlgroup.fg)
-    table.insert(groups, {name, hlgroup, hex_str})
-    -- table.insert(groups, {name})
   end
   u.p(groups)
 end

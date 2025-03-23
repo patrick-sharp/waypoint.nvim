@@ -59,6 +59,11 @@
 [x] allow cursor to move within a waypoint if you're searching, and for subsequent searches to move between waypoints
 [x] quickfixlist for waypoints
 [ ] telescope for waypoints
+[ ] add some features from harpoon
+  [ ] jump to first waypoint while outside the float window
+  [ ] jump to currently selected waypoint while outside the float window
+  [ ] jump to and select next waypoint while outside the float window
+  [ ] jump to and select prev waypoint while outside the float window
 
 how I want it to work
 1. scroll_col, topline, col and leftcol should be saved

@@ -97,11 +97,11 @@ end
 
 local function draw(action)
   draws = draws + 1
-  if action == nil then
-    print("DRAW" .. draws .. " nil")
-  else
-    print("DRAW" .. draws .. " " .. action)
-  end
+  -- if action == nil then
+  --   print("DRAW" .. draws .. " nil")
+  -- else
+  --   print("DRAW" .. draws .. " " .. action)
+  -- end
   set_modifiable(true)
   vim.api.nvim_buf_clear_namespace(bufnr, constants.ns, 0, -1)
   local rows = {}
@@ -258,7 +258,7 @@ local function draw(action)
       if type(col_highlights) == "string" then
         assert(false, "This should not happen, align_tables should change all column-wide highlights to a HighlightRange")
       else
-        for _,hlrange in pairs(col_highlights) do
+        for k,hlrange in pairs(col_highlights) do
           -- print("ADDHL", bufnr, constants.ns, hlrange.name, lnum, hlrange.col_start, hlrange.col_end)
           -- print(hlrange.col_start, hlrange.col_end)
           -- print(hlrange.col_end + indents[lnum], #aligned, #aligned[lnum])
@@ -275,6 +275,16 @@ local function draw(action)
             hlrange.col_start,
             hlrange.col_end
           )
+          if k == 1 then
+            vim.api.nvim_buf_add_highlight(
+              bufnr,
+              hlrange.nsid,
+              hlrange.name,
+              lnum - 1,
+              hlrange.col_start,
+              hlrange.col_end
+            )
+          end
         end
       end
     end
@@ -313,7 +323,6 @@ local function draw(action)
 
     for i=highlight_start,highlight_end-1 do
       vim.api.nvim_buf_add_highlight(bufnr, 0, constants.hl_selected, i, 0, -1)
-      hlgroup = vim.api.nvim_get_hl(0, {name = name})
     end
   end
   vim.cmd("highlight " .. constants.hl_selected .. " guibg=DarkGray guifg=White")
@@ -417,18 +426,21 @@ end
 
 function IncreaseContext(increment)
   state.context = u.clamp(state.context + increment, 0)
+  state.view.lnum = nil
   draw("context")
 end
 
 
 function IncreaseBeforeContext(increment)
   state.before_context = u.clamp(state.before_context + increment, 0)
+  state.view.lnum = nil
   draw("context")
 end
 
 
 function IncreaseAfterContext(increment)
   state.after_context = u.clamp(state.after_context + increment, 0)
+  state.view.lnum = nil
   draw("context")
 end
 
@@ -510,6 +522,7 @@ function SetWaypointForCursor()
   if not line_to_waypoint then return end
   -- use getcursorcharpos to avoid issues with unicode
   local cursor_pos = vim.fn.getcursorcharpos()
+  print(cursor_pos[2])
   state.view.lnum = cursor_pos[2]
   state.view.col = cursor_pos[3] - 1
 

@@ -172,23 +172,16 @@ function M.extmark_lines_for_waypoint(waypoint)
       end
       for col=2,#line do
         vim.api.nvim_buf_call(bufnr, function() 
-          synstack = vim.fn.synstack(i + start_line_nr_i0, 1)
+          synstack = vim.fn.synstack(i + start_line_nr_i0, col)
         end)
         if #synstack > 0 then
           synid = synstack[#synstack]
           name = vim.fn.synIDattr(synid, "name")
-          if not curr then
-            curr = {
-              nsid = 0,
-              name = name,
-              col_start = col,
-              col_end = -1,
-            }
-          end
           if curr then
             if name == curr.name then
               curr.col_end = col
             else
+              table.insert(line_hlranges, curr)
               curr = {
                 nsid = 0,
                 name = name,
@@ -196,6 +189,13 @@ function M.extmark_lines_for_waypoint(waypoint)
                 col_end = -1,
               }
             end
+          else
+            curr = {
+              nsid = 0,
+              name = name,
+              col_start = col,
+              col_end = -1,
+            }
           end
         else
           if curr then
