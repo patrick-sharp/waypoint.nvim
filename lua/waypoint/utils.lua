@@ -153,7 +153,10 @@ function M.extmark_lines_for_waypoint(waypoint)
   elseif pcall(vim.api.nvim_buf_get_var, bufnr, "current_syntax") then
     for i,line in pairs(lines) do
       local line_hlranges = {}
-      local synstack = vim.fn.synstack(i + start_line_nr_i0, 1)
+      local synstack
+      vim.api.nvim_buf_call(bufnr, function() 
+        synstack = vim.fn.synstack(i + start_line_nr_i0, 1)
+      end)
       local synid = nil
       local name = nil
       local curr = nil
@@ -168,7 +171,9 @@ function M.extmark_lines_for_waypoint(waypoint)
         }
       end
       for col=2,#line do
-        synstack = vim.fn.synstack(i + start_line_nr_i0, col)
+        vim.api.nvim_buf_call(bufnr, function() 
+          synstack = vim.fn.synstack(i + start_line_nr_i0, 1)
+        end)
         if #synstack > 0 then
           synid = synstack[#synstack]
           name = vim.fn.synIDattr(synid, "name")
@@ -180,12 +185,22 @@ function M.extmark_lines_for_waypoint(waypoint)
               col_end = -1,
             }
           end
-          if curr and name == curr.name  then
-            curr.col_end = col
+          if curr then
+            if name == curr.name then
+              curr.col_end = col
+            else
+              curr = {
+                nsid = 0,
+                name = name,
+                col_start = col,
+                col_end = -1,
+              }
+            end
           end
         else
           if curr then
             table.insert(line_hlranges, curr)
+            curr = nil
           end
         end
       end
@@ -257,8 +272,8 @@ function M.align_table(t, table_cell_types, highlights)
         }}
       else
         for _,hlrange in pairs(col_highlights) do
-          hlrange.col_start = hlrange.col_start + offset
-          hlrange.col_end = hlrange.col_start + offset + byte_widths[j]
+          hlrange.col_start = hlrange.col_start + offset - 1
+          hlrange.col_end = hlrange.col_end + offset
         end
       end
       offset = offset + #constants.table_separator + byte_widths[j] + 2

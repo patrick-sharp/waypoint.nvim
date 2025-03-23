@@ -98,9 +98,9 @@ end
 local function draw(action)
   draws = draws + 1
   if action == nil then
-    -- print("DRAW" .. draws .. " nil")
+    print("DRAW" .. draws .. " nil")
   else
-    -- print("DRAW" .. draws .. " " .. action)
+    print("DRAW" .. draws .. " " .. action)
   end
   set_modifiable(true)
   vim.api.nvim_buf_clear_namespace(bufnr, constants.ns, 0, -1)
@@ -240,26 +240,6 @@ local function draw(action)
     table.insert(table_cell_types, "string")
   end
   local aligned = u.align_table(rows, table_cell_types, hlranges)
-  -- u.p(hlranges)
-  for lnum,line_hlranges in pairs(hlranges) do
-    for _,col_highlights in pairs(line_hlranges) do
-      if type(col_highlights) == "string" then
-        assert(false, "This should not happen, align_tables should change all column-wide highlights to a HighlightRange")
-      else
-        for _,hlrange in pairs(col_highlights) do
-          print("ADDHL", bufnr, constants.ns, hlrange.name, lnum, hlrange.col_start, hlrange.col_end)
-          vim.api.nvim_buf_add_highlight(
-            bufnr,
-            hlrange.nsid,
-            hlrange.name,
-            lnum - 1,
-            hlrange.col_start,
-            hlrange.col_end
-          )
-        end
-      end
-    end
-  end
 
 
 
@@ -272,6 +252,33 @@ local function draw(action)
   -- Set text in the buffer
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, aligned)
 
+  -- highlight the text in the buffer
+  for lnum,line_hlranges in pairs(hlranges) do
+    for _,col_highlights in pairs(line_hlranges) do
+      if type(col_highlights) == "string" then
+        assert(false, "This should not happen, align_tables should change all column-wide highlights to a HighlightRange")
+      else
+        for _,hlrange in pairs(col_highlights) do
+          -- print("ADDHL", bufnr, constants.ns, hlrange.name, lnum, hlrange.col_start, hlrange.col_end)
+          -- print(hlrange.col_start, hlrange.col_end)
+          -- print(hlrange.col_end + indents[lnum], #aligned, #aligned[lnum])
+          -- vim.api.nvim_buf_set_extmark(bufnr, constants.ns, lnum - 1, hlrange.col_start + indents[lnum], {
+          --   end_col = hlrange.col_end + indents[lnum], -- 0-based column number
+          --   hl_group = hlrange.name,                   -- Highlight group to apply
+          -- })
+
+          vim.api.nvim_buf_add_highlight(
+            bufnr,
+            hlrange.nsid,
+            hlrange.name,
+            lnum - 1,
+            hlrange.col_start,
+            hlrange.col_end
+          )
+        end
+      end
+    end
+  end
   -- Define highlight group
   if state.wpi and highlight_start and highlight_end and cursor_line then
     if action == "move_to_waypoint" or action == "context" then
@@ -311,6 +318,11 @@ local function draw(action)
   end
   vim.cmd("highlight " .. constants.hl_selected .. " guibg=DarkGray guifg=White")
   vim.cmd("highlight " .. constants.hl_sign .. " guifg=" .. config.color_sign .. " guibg=NONE")
+  vim.cmd("highlight " .. constants.hl_annotation .. " guifg=" .. config.color_annotation .. " guibg=NONE")
+  vim.cmd("highlight " .. constants.hl_annotation_2 .. " guifg=" .. config.color_annotation_2 .. " guibg=NONE")
+  vim.cmd("highlight " .. constants.hl_footer_after_context .. " guifg=" .. config.color_footer_after_context .. " guibg=NONE")
+  vim.cmd("highlight " .. constants.hl_footer_before_context .. " guifg=" .. config.color_footer_before_context .. " guibg=NONE")
+  vim.cmd("highlight " .. constants.hl_footer_context .. " guifg=" .. config.color_footer_context .. " guibg=NONE")
 
   local win_opts = get_win_opts()
   local bg_win_opts = get_bg_win_opts(win_opts)
@@ -432,15 +444,26 @@ end
 function Scroll(increment)
   local width = vim.api.nvim_get_option("columns")
   local win_width = math.ceil(width * config.window_width)
+  if state.view.leftcol == 0 and increment < 0 then
+    state.view.col = 0
+  end
+  local leftcol = state.view.leftcol
   state.view.leftcol = u.clamp(state.view.leftcol + increment, 0, longest_line_len - win_width)
   state.view.col = u.clamp(state.view.col, state.view.leftcol, state.view.leftcol + win_width - 1)
+
+  if leftcol == state.view.leftcol then
+    if increment < 0 then
+      state.view.col = 0
+    else
+      state.view.col = longest_line_len - 1
+    end
+  end
   draw("scroll")
 end
 
 
 function ResetScroll()
   state.view.col = 0
-  state.view.curswant = 0
   state.view.leftcol = 0
   draw("scroll")
 end

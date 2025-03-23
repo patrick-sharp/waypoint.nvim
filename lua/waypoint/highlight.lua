@@ -44,6 +44,7 @@ function M.ha()
     end
     local hex_str = string.format("#%x", hlgroup.fg)
     table.insert(groups, {name, hlgroup, hex_str})
+    -- table.insert(groups, {name})
   end
   u.p(groups)
 end
