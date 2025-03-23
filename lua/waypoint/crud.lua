@@ -14,7 +14,7 @@ function M.add_waypoint(filepath, line_nr)
     sign_text = ">",
     priority = 1,
     sign_hl_group = constants.hl_sign,
-    virt_text = { {annotation, constants.hl_annotation} },  -- "Error" is a predefined highlight group
+    virt_text = { {"  " .. annotation, constants.hl_annotation}, {"  " .. annotation, constants.hl_annotation_2} },  -- "Error" is a predefined highlight group
     virt_text_pos = "eol",  -- Position at end of line
   })
 
@@ -64,8 +64,6 @@ function M.toggle_waypoint()
   else
     M.remove_waypoint(existing_waypoint_i, filepath)
   end
-  vim.cmd("highlight " .. constants.hl_sign .. " guifg=" .. config.color_sign .. " guibg=NONE")
-  vim.cmd("highlight " .. constants.hl_annotation .. " guifg=" .. config.color_annotation .. " guibg=NONE")
 end
 
 return M

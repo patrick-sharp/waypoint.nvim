@@ -123,8 +123,11 @@ local function draw(action)
     end
   end
 
+  --- @type table<table<string | table<HighlightRange>>>
+  local hlranges = {}
+
   for i, waypoint in ipairs(state.waypoints) do
-    local _, extmark_lines, extmark_line_0i, context_start_line_nr_0i = u.extmark_lines_for_waypoint(waypoint)
+    local _, extmark_lines, extmark_line_0i, context_start_line_nr_0i, extmark_hlranges = u.extmark_lines_for_waypoint(waypoint)
     assert(extmark_lines)
 
     if i == state.wpi then
@@ -134,12 +137,15 @@ local function draw(action)
       cursor_line = #rows + extmark_line_0i
     end
 
-
     -- TODO: highlight filenames properly
-    local hl_name = "Directory"  -- Change this if needed
-    local hl = vim.api.nvim_get_hl(0, { name = hl_name, link = false })
+    -- local hl_name = "Directory"  -- Change this if needed
+    -- local hl = vim.api.nvim_get_hl(0, { name = hl_name, link = false })
+
 
     for j, line_text in ipairs(extmark_lines) do
+      local line_hlranges = {}
+      --- @type table<HighlightRange>
+      local line_extmark_hlranges = extmark_hlranges[j]
       table.insert(indents, waypoint.indent)
       table.insert(line_to_waypoint, i)
       local row = {}
@@ -147,33 +153,23 @@ local function draw(action)
       -- marker for where the waypoint actually is within the context
       if j == extmark_line_0i + 1 then
         table.insert(row, tostring(i))
-        local waypoint_bufnr = vim.fn.bufnr(waypoint.filepath)
-        local x = vim.treesitter.highlighter.active[waypoint_bufnr] ~= nil
-        local line = 1
-        local col = 0
-        local synstack = vim.api.nvim_buf_call(waypoint_bufnr, function()
-          return vim.fn.synstack(line, col)
-        end)
-        local y = #vim.fn.synstack(vim.fn.line('.'), vim.fn.col('.')) ~= 0
-        if x then
-          table.insert(row, tostring("trees"))
-        elseif y then
-          table.insert(row, tostring("synst"))
-        else
-          table.insert(row, waypoint_bufnr .. "*")
-        end
-        --table.insert(row, "*")
+        table.insert(row, "*")
+        table.insert(line_hlranges, {})
+        table.insert(line_hlranges, constants.hl_sign)
       else
         table.insert(row, "")
         table.insert(row, "")
+        table.insert(line_hlranges, {})
+        table.insert(line_hlranges, {})
       end
-
       -- annotation
       if state.show_annotation then
         if j == extmark_line_0i + 1 and waypoint.annotation then
           table.insert(row, waypoint.annotation)
+          table.insert(line_hlranges, constants.hl_annotation)
         else
           table.insert(row, "")
+          table.insert(line_hlranges, {})
         end
       end
 
@@ -181,20 +177,24 @@ local function draw(action)
       if state.show_path then
         if state.show_full_path then
           table.insert(row, waypoint.filepath)
+          table.insert(line_hlranges, "Directory")
         else
           local filename = vim.fn.fnamemodify(waypoint.filepath, ":t")
           table.insert(row, filename)
+          table.insert(line_hlranges, "Directory")
         end
       end
 
       -- line number
       if state.show_line_num then
         table.insert(row, tostring(context_start_line_nr_0i + j))
+        table.insert(line_hlranges, "LineNr")
       end
 
       -- file text
       if state.show_file_text then
         table.insert(row, line_text)
+        table.insert(line_hlranges, line_extmark_hlranges)
       end
 
       for _,v in pairs(row) do
@@ -204,6 +204,7 @@ local function draw(action)
       end
 
       table.insert(rows, row)
+      table.insert(hlranges, line_hlranges)
     end
     if i == state.wpi then
       highlight_end = #rows
@@ -217,11 +218,13 @@ local function draw(action)
       -- if the user somehow moves to a blank space, just treat that as 
       -- selecting the waypoint above the space
       table.insert(line_to_waypoint, i)
+      table.insert(hlranges, {})
     end
   end
 
   assert(#rows == #indents, "#rows == " .. #rows ..", #indents == " .. #indents .. ", but they should be the same" )
   assert(#rows == #line_to_waypoint, "#rows == " .. #rows ..", #line_to_waypoint == " .. #line_to_waypoint .. ", but they should be the same" )
+  assert(#rows == #hlranges, "#rows == " .. #rows ..", #hlranges == " .. #hlranges .. ", but they should be the same" )
 
   local table_cell_types = {"number", "string"}
   if state.show_annotation then
@@ -236,7 +239,28 @@ local function draw(action)
   if state.show_file_text then
     table.insert(table_cell_types, "string")
   end
-  local aligned = u.align_table(rows, table_cell_types)
+  local aligned = u.align_table(rows, table_cell_types, hlranges)
+  -- u.p(hlranges)
+  for lnum,line_hlranges in pairs(hlranges) do
+    for _,col_highlights in pairs(line_hlranges) do
+      if type(col_highlights) == "string" then
+        assert(false, "This should not happen, align_tables should change all column-wide highlights to a HighlightRange")
+      else
+        for _,hlrange in pairs(col_highlights) do
+          print("ADDHL", bufnr, constants.ns, hlrange.name, lnum, hlrange.col_start, hlrange.col_end)
+          vim.api.nvim_buf_add_highlight(
+            bufnr,
+            hlrange.nsid,
+            hlrange.name,
+            lnum - 1,
+            hlrange.col_start,
+            hlrange.col_end
+          )
+        end
+      end
+    end
+  end
+
 
 
   longest_line_len = 0
@@ -272,25 +296,21 @@ local function draw(action)
 
       local win_height = get_floating_window_height()
       if waypoint_topline < topline then
-        -- u.log("TOPP", topline, topline + win_height, waypoint_topline, waypoint_bottomline)
         view.topline = waypoint_topline
       elseif topline + win_height < waypoint_bottomline then
-        -- u.log("BOTT", topline, topline + win_height, waypoint_topline, waypoint_bottomline)
         view.topline = waypoint_bottomline - win_height
-      else
-        -- u.log("NONE", "CL", cursor_line, topline, topline + win_height, "WP", waypoint_topline, waypoint_bottomline)
-        -- u.log("NONE", view)
       end
       vim.fn.winrestview(view)
     end
 
 
-    vim.cmd("highlight " .. constants.hl_selected .. " guibg=DarkGray guifg=White")
     for i=highlight_start,highlight_end-1 do
-      vim.api.nvim_buf_add_highlight(bufnr, constants.ns, constants.hl_selected, i, 0, -1)
+      vim.api.nvim_buf_add_highlight(bufnr, 0, constants.hl_selected, i, 0, -1)
+      hlgroup = vim.api.nvim_get_hl(0, {name = name})
     end
-
   end
+  vim.cmd("highlight " .. constants.hl_selected .. " guibg=DarkGray guifg=White")
+  vim.cmd("highlight " .. constants.hl_sign .. " guifg=" .. config.color_sign .. " guibg=NONE")
 
   local win_opts = get_win_opts()
   local bg_win_opts = get_bg_win_opts(win_opts)
@@ -413,9 +433,7 @@ function Scroll(increment)
   local width = vim.api.nvim_get_option("columns")
   local win_width = math.ceil(width * config.window_width)
   state.view.leftcol = u.clamp(state.view.leftcol + increment, 0, longest_line_len - win_width)
-  local x = state.view.col
   state.view.col = u.clamp(state.view.col, state.view.leftcol, state.view.leftcol + win_width - 1)
-  u.p(x, state.view.col)
   draw("scroll")
 end
 
@@ -499,9 +517,6 @@ function SetQFList()
   for _,waypoint in pairs(state.waypoints) do
     local wp_bufnr = vim.fn.bufnr(waypoint.filepath)
     local extmark = vim.api.nvim_buf_get_extmark_by_id(wp_bufnr, constants.ns, waypoint.extmark_id, {})
-    if #extmark == 0 then
-      u.p(waypoint, extmark, vim.api.nvim_buf_get_extmarks(wp_bufnr, constants.ns, {0,-1}, {-1,-1}, {}))
-    end
     local lnum = extmark[1]
     local line = vim.api.nvim_buf_get_lines(wp_bufnr, lnum, lnum + 1, false)[1]
     table.insert(qflist, {

@@ -8,6 +8,7 @@ local crud = require("waypoint.crud")
 local file = require("waypoint.file")
 local constants = require("waypoint.constants")
 local config = require("waypoint.config")
+local highlight = require("waypoint.highlight")
 
 function M.setup(opts)
   -- set up config
@@ -32,6 +33,9 @@ function M.setup(opts)
   vim.keymap.set({ 'n', 'v' }, '<leader><leader>m', crud.toggle_waypoint, { noremap = true })
   vim.keymap.set({ 'n', 'v' }, '<leader><leader>s', file.save, { noremap = true })
   vim.keymap.set({ 'n', 'v' }, '<leader><leader>l', file.load, { noremap = true })
+
+  vim.keymap.set({ 'n', 'v' }, '<leader><leader>w', highlight.wa, { noremap = true })
+  vim.keymap.set({ 'n', 'v' }, '<leader><leader>h', highlight.ha, { noremap = true })
 end
 
 return M

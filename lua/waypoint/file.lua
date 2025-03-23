@@ -41,6 +41,9 @@ local function encode()
 end
 
 function M.save()
+  if #state.waypoints == 0 then
+    return
+  end
   local data = encode()
   write_file(config.file, data)
 end
