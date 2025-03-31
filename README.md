@@ -40,8 +40,7 @@
 [x] fix toggle bug
 [x] fix highlight when creating but not loading bug
 [x] only allow bookmarks in files (e.g. not in nvim-tree)
-[ ] decide whether I want to keep annotations
-  [ ] if so, add ability to update annotations
+[ ] remove annotations
 [x] left pad the file numbers instead of right padding
 [ ] indicate whether context for a mark is limited by file length (eof/bof)
 [x] move cursor without triggering autocmd (excess draws)
@@ -53,6 +52,9 @@
     nvim_win_get_cursor doesn't account for unicode.
     solution: get rid of all uses of nvim_win_get_cursor and replace with vim.fn.getcurpos()
 [x] handle col vs curswant better so unicode doesn't confuse cursor state
+[ ] fix syntax highlighting for makefile
+[ ] increase performance of highlighting
+
 
 ### ADVANCED FEATURES:
 [x] delete waypoint from floating window with dd
@@ -70,6 +72,11 @@ how I want it to work
 2. if you close and reopen, those are restored.
 3. however, they aren't persisted if you close vim
 
-should moving up and down put scroll back to beginning?
-should scrolling move cursor all the way to the left of screen?
+syntax file location
+/opt/homebrew/Cellar/neovim/0.10.3/share/nvim/runtime/syntax
+
+
+man section on syntax
+:h syn
+6. Defining a syntax					*:syn-define* *E410*
 

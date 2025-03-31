@@ -125,6 +125,28 @@ function M.extmark_for_waypoint(waypoint)
   return extmark
 end
 
+local function make_curr(name, col)
+  return {
+    nsid = 0,
+    name = name,
+    col_start = col,
+    col_end = -1,
+  }
+end
+
+
+local function make_curr_2(name, col)
+  return {
+    nsid = 0,
+    name = name,
+    col_start = col,
+    col_end = -1,
+  }
+end
+
+-- local function synstack_equal(stack_0, stack_1)
+--   for i,
+-- end
 
 --- @param waypoint Waypoint
 --- @return { [1]: integer, [2]: integer }, table<string>, integer, integer, table<table<HighlightRange>>
@@ -141,6 +163,9 @@ function M.extmark_lines_for_waypoint(waypoint)
 
   local marked_line_idx_0i = extmark_line_nr_i0 - start_line_nr_i0
   local lines = vim.api.nvim_buf_get_lines(bufnr, start_line_nr_i0, end_line_nr_i0, false)
+    -- local finish_01 = vim.loop.hrtime()
+    -- local finish_02 = vim.loop.hrtime()
+    -- print("PERFfff:", (finish_02 - finish_01) / 1e6)
 
   -- figure out how each line is highlighted
   --- @type table<table<<HighlightRange>>
@@ -163,12 +188,7 @@ function M.extmark_lines_for_waypoint(waypoint)
       if #synstack > 0 then
         synid = synstack[#synstack]
         name = vim.fn.synIDattr(synid, "name")
-        curr = {
-          nsid = 0,
-          name = name,
-          col_start = 1,
-          col_end = -1,
-        }
+        curr = make_curr(name, 1)
       end
       for col=2,#line do
         vim.api.nvim_buf_call(bufnr, function() 
@@ -182,20 +202,10 @@ function M.extmark_lines_for_waypoint(waypoint)
               curr.col_end = col
             else
               table.insert(line_hlranges, curr)
-              curr = {
-                nsid = 0,
-                name = name,
-                col_start = col,
-                col_end = -1,
-              }
+              curr = make_curr(name, col)
             end
           else
-            curr = {
-              nsid = 0,
-              name = name,
-              col_start = col,
-              col_end = -1,
-            }
+            curr = make_curr(name, col)
           end
         else
           if curr then

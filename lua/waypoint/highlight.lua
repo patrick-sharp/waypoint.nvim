@@ -37,17 +37,15 @@ function M.ha()
   u.p(synstack)
   for i = 1, #synstack do
     local synid = synstack[i]
-    local name = vim.fn.synIDattr(synid, "name")
-    if false then
+    if true then
+      synid = vim.fn.synIDtrans(synid)
+      local name = vim.fn.synIDattr(synid, "name")
       local hlgroup = vim.api.nvim_get_hl(0, {id = synid})
-      while hlgroup.link ~= nil do
-        name = hlgroup.link
-        hlgroup = vim.api.nvim_get_hl(0, {name = name})
-      end
       local hex_str = string.format("#%x", hlgroup.fg)
       table.insert(groups, {name, hlgroup, hex_str})
     else
-      table.insert(groups, {name})
+      local name = vim.fn.synIDattr(synid, "name")
+      table.insert(groups, name)
     end
   end
   u.p(groups)
