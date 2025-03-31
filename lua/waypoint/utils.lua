@@ -2,6 +2,8 @@ local M = {}
 
 local state = require("waypoint.state")
 local constants = require("waypoint.constants")
+local treesitter_highlights = require("waypoint.highlight_treesitter")
+local vanilla_highlights = require("waypoint.highlight_vanilla")
 
 --- @class HighlightRange
 --- col_start and col_end values are byte indexed because that's what 
@@ -125,28 +127,6 @@ function M.extmark_for_waypoint(waypoint)
   return extmark
 end
 
-local function make_curr(name, col)
-  return {
-    nsid = 0,
-    name = name,
-    col_start = col,
-    col_end = -1,
-  }
-end
-
-
-local function make_curr_2(name, col)
-  return {
-    nsid = 0,
-    name = name,
-    col_start = col,
-    col_end = -1,
-  }
-end
-
--- local function synstack_equal(stack_0, stack_1)
---   for i,
--- end
 
 --- @param waypoint Waypoint
 --- @return { [1]: integer, [2]: integer }, table<string>, integer, integer, table<table<HighlightRange>>
@@ -168,7 +148,7 @@ function M.extmark_lines_for_waypoint(waypoint)
     -- print("PERFfff:", (finish_02 - finish_01) / 1e6)
 
   -- figure out how each line is highlighted
-  --- @type table<table<<HighlightRange>>
+  --- @type table<table<HighlightRange>>
   local hlranges = {}
   local treesitter = false
   local nohighlight = false
@@ -176,47 +156,7 @@ function M.extmark_lines_for_waypoint(waypoint)
     print("UNFINISHED")
     treesitter = true
   elseif pcall(vim.api.nvim_buf_get_var, bufnr, "current_syntax") then
-    for i,line in pairs(lines) do
-      local line_hlranges = {}
-      local synstack
-      vim.api.nvim_buf_call(bufnr, function() 
-        synstack = vim.fn.synstack(i + start_line_nr_i0, 1)
-      end)
-      local synid = nil
-      local name = nil
-      local curr = nil
-      if #synstack > 0 then
-        synid = synstack[#synstack]
-        name = vim.fn.synIDattr(synid, "name")
-        curr = make_curr(name, 1)
-      end
-      for col=2,#line do
-        vim.api.nvim_buf_call(bufnr, function() 
-          synstack = vim.fn.synstack(i + start_line_nr_i0, col)
-        end)
-        if #synstack > 0 then
-          synid = synstack[#synstack]
-          name = vim.fn.synIDattr(synid, "name")
-          if curr then
-            if name == curr.name then
-              curr.col_end = col
-            else
-              table.insert(line_hlranges, curr)
-              curr = make_curr(name, col)
-            end
-          else
-            curr = make_curr(name, col)
-          end
-        else
-          if curr then
-            table.insert(line_hlranges, curr)
-            curr = nil
-          end
-        end
-      end
-      table.insert(line_hlranges, curr)
-      table.insert(hlranges, line_hlranges)
-    end
+    hlranges = vanilla_highlights.get_vanilla_syntax_highlights(bufnr, lines, start_line_nr_i0)
   else
     nohighlight = true
   end

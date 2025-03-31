@@ -54,6 +54,7 @@
 [x] handle col vs curswant better so unicode doesn't confuse cursor state
 [ ] fix syntax highlighting for makefile
 [ ] increase performance of highlighting
+[ ] don't allow growing then shrinking context to let the view go past the end of lines
 
 
 ### ADVANCED FEATURES:
