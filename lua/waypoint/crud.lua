@@ -8,19 +8,15 @@ local u = require("waypoint.utils")
 function M.add_waypoint(filepath, line_nr)
   if not u.is_file_buffer() then return end
   local bufnr = vim.fn.bufnr(filepath)
-  local annotation = "<======> Highlighted Text"
   local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, line_nr - 1, -1, {
     id = line_nr,
     sign_text = ">",
     priority = 1,
     sign_hl_group = constants.hl_sign,
-    virt_text = { {"  " .. annotation, constants.hl_annotation}, {"  " .. annotation, constants.hl_annotation_2} },  -- "Error" is a predefined highlight group
-    virt_text_pos = "eol",  -- Position at end of line
   })
 
   ---@type Waypoint
   local waypoint = {
-    annotation = annotation,
     extmark_bufnr = bufnr,
     extmark_id = extmark_id,
     filepath = filepath,

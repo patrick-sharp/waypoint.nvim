@@ -65,9 +65,6 @@ function M.load()
     end
     local line_nr = waypoint.line_number
     local virt_text = nil
-    if waypoint.annotation then
-      virt_text = { {"  " .. waypoint.annotation, constants.hl_annotation}, {"  " .. waypoint.annotation, constants.hl_annotation_2} }
-    end
     local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, line_nr, -1, {
       id = line_nr + 1,
       sign_text = ">",
@@ -80,8 +77,6 @@ function M.load()
     waypoint.extmark_id = extmark_id
   end
   vim.cmd("highlight " .. constants.hl_sign .. " guifg=" .. config.color_sign .. " guibg=NONE")
-  vim.cmd("highlight " .. constants.hl_annotation .. " guifg=" .. config.color_annotation .. " guibg=NONE")
-  vim.cmd("highlight " .. constants.hl_annotation_2 .. " guifg=" .. config.color_annotation_2 .. " guibg=NONE")
   vim.cmd("highlight " .. constants.hl_footer_after_context .. " guifg=" .. config.color_footer_after_context .. " guibg=NONE")
   vim.cmd("highlight " .. constants.hl_footer_before_context .. " guifg=" .. config.color_footer_before_context .. " guibg=NONE")
   vim.cmd("highlight " .. constants.hl_footer_context .. " guifg=" .. config.color_footer_context .. " guibg=NONE")

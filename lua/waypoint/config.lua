@@ -1,5 +1,4 @@
 ---@class Config
----@field color_annotation string
 ---@field color_sign string
 ---@field color_footer_after_context string
 ---@field color_footer_before_context string
@@ -8,8 +7,6 @@
 ---@field window_height number
 ---@field file string
 local M = {
-  color_annotation = "#9999ff",
-  color_annotation_2 = "#99ffff",
   color_sign = "#ff9999",
   color_footer_after_context = "#ff6666",
   color_footer_before_context = "#66ff66",

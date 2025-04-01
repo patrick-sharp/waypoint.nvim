@@ -121,14 +121,6 @@ local function draw(action)
   local highlight_start
   local highlight_end
 
-  -- note that this fucks up with unicode
-  local annotation_width = 0
-  for _, waypoint in ipairs(state.waypoints) do
-    if waypoint.annotation then
-      annotation_width = math.max(annotation_width, #waypoint.annotation)
-    end
-  end
-
   --- @type table<table<string | table<HighlightRange>>>
   --- first index is the line number, second is the column index. each column 
   --- highlight is either a string or a table of highlight ranges. if string, 
@@ -167,16 +159,6 @@ local function draw(action)
         table.insert(row, "")
         table.insert(line_hlranges, {})
         table.insert(line_hlranges, {})
-      end
-      -- annotation
-      if state.show_annotation then
-        if j == extmark_line_0i + 1 and waypoint.annotation then
-          table.insert(row, waypoint.annotation)
-          table.insert(line_hlranges, constants.hl_annotation)
-        else
-          table.insert(row, "")
-          table.insert(line_hlranges, {})
-        end
       end
 
       -- path
@@ -235,9 +217,6 @@ local function draw(action)
   assert(#rows == #hlranges, "#rows == " .. #rows ..", #hlranges == " .. #hlranges .. ", but they should be the same" )
 
   local table_cell_types = {"number", "string"}
-  if state.show_annotation then
-    table.insert(table_cell_types, "string")
-  end
   if state.show_path then
     table.insert(table_cell_types, "string")
   end
@@ -486,11 +465,6 @@ function ResetScroll()
 end
 
 
-function ToggleAnnotation()
-  state.show_annotation = not state.show_annotation
-  draw()
-end
-
 function TogglePath()
   state.show_path = not state.show_path
   draw()
@@ -658,8 +632,6 @@ function M.open()
   vim.cmd("highlight " .. constants.hl_sign .. " guifg=" .. config.color_sign .. " guibg=NONE")
   vim.cmd("highlight " .. constants.hl_directory .. " guifg=" .. color_dir_hex)
   vim.cmd("highlight " .. constants.hl_linenr .. " guifg=" .. color_nr_hex)
-  vim.cmd("highlight " .. constants.hl_annotation .. " guifg=" .. config.color_annotation .. " guibg=NONE")
-  vim.cmd("highlight " .. constants.hl_annotation_2 .. " guifg=" .. config.color_annotation_2 .. " guibg=NONE")
   vim.cmd("highlight " .. constants.hl_footer_after_context .. " guifg=" .. config.color_footer_after_context .. " guibg=NONE")
   vim.cmd("highlight " .. constants.hl_footer_before_context .. " guifg=" .. config.color_footer_before_context .. " guibg=NONE")
   vim.cmd("highlight " .. constants.hl_footer_context .. " guifg=" .. config.color_footer_context .. " guibg=NONE")
@@ -693,7 +665,6 @@ function M.open()
   vim.api.nvim_buf_set_keymap(bufnr, "n", "A",     ":lua IncreaseAfterContext(-1)<CR>",  keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "R",     ":lua ResetContext()<CR>",            keymap_opts())
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "ta",    ":lua ToggleAnnotation()<CR>",        keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "tp",    ":lua TogglePath()<CR>",              keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "tf",    ":lua ToggleFullPath()<CR>",          keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "tl",    ":lua ToggleLineNum()<CR>",           keymap_opts())

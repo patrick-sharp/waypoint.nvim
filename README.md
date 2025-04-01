@@ -40,7 +40,7 @@
 [x] fix toggle bug
 [x] fix highlight when creating but not loading bug
 [x] only allow bookmarks in files (e.g. not in nvim-tree)
-[ ] remove annotations
+[x] remove annotations
 [x] left pad the file numbers instead of right padding
 [ ] indicate whether context for a mark is limited by file length (eof/bof)
 [x] move cursor without triggering autocmd (excess draws)
@@ -55,6 +55,12 @@
 [ ] fix syntax highlighting for makefile
 [ ] increase performance of highlighting
 [ ] don't allow growing then shrinking context to let the view go past the end of lines
+[ ] fix bugs around closing buffers with waypoints in them
+[ ] fix issues with highlighting filetypes you haven't opened yet
+[ ] don't open all buffers with marks, instead convert waypoints to extmarks when the buffer is loaded
+[ ] add treesitter highlights
+[ ] fix cursor jump bug when scrolling on window with short lines
+[ ] pad each waypoint to width of window
 
 
 ### ADVANCED FEATURES:

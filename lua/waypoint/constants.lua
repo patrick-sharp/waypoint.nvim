@@ -5,7 +5,6 @@ local augroup = "waypoint"
 ---@field hl_group string
 ---@field hl_selected string
 ---@field hl_sign string
----@field hl_annotation string
 ---@field hl_footer_after_context string
 ---@field hl_footer_before_context string
 ---@field hl_footer_context string
@@ -17,8 +16,6 @@ local M = {
   hl_sign = "waypoint_hl_sign",
   hl_directory = "waypoint_hl_directory",
   hl_linenr = "waypoint_hl_linenr",
-  hl_annotation = "waypoint_hl_annotation",
-  hl_annotation_2 = "waypoint_hl_annotation_2",
   hl_footer_after_context = "waypoint_hl_footer_a",
   hl_footer_before_context = "waypoint_hl_footer_b",
   hl_footer_context = "waypoint_hl_footer_c",
