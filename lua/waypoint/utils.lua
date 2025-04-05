@@ -25,6 +25,8 @@ function M.p(...)
   print(table.concat(inspected, " "))
 end
 
+local p = M.p
+
 function M.log(...)
   if not debug then return end
   M.p(...)
@@ -193,8 +195,9 @@ end
 --- @param t table<table<string>>
 --- @param table_cell_types table<string>
 --- @param highlights table<table<string | table<HighlightRange>>>   rows x columns x (optionally) multiple highlights for a given column. This parameter is mutated to adjust the highlights of each line so they will work after the alignment.
+--- @param win_width integer
 --- @return table<string>
-function M.align_table(t, table_cell_types, highlights)
+function M.align_table(t, table_cell_types, highlights, win_width)
   if #t == 0 then
     return {}
   end
@@ -263,6 +266,11 @@ function M.align_table(t, table_cell_types, highlights)
         table.insert(fields, padded)
       end
       table.insert(result, table.concat(fields, " " .. constants.table_separator .. " "))
+      local row_len = M.vislen(result[#result])
+      if row_len < win_width then
+        local num_padding_spaces = win_width - row_len
+        result[#result] = result[#result] .. string.rep(" ", num_padding_spaces)
+      end
     end
   end
   return result

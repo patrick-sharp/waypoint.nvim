@@ -5,6 +5,7 @@ local crud = require("waypoint.crud")
 local constants = require("waypoint.constants")
 local state = require("waypoint.state")
 local u = require("waypoint.utils")
+local p = u.p
 
 local is_open = false
 local bufnr
@@ -227,7 +228,8 @@ local function draw(action)
     table.insert(table_cell_types, "string")
   end
 
-  local aligned = u.align_table(rows, table_cell_types, hlranges)
+  local win_width = get_floating_window_width()
+  local aligned = u.align_table(rows, table_cell_types, hlranges, win_width)
 
   longest_line_len = 0
   for i, line in pairs(aligned) do
@@ -440,20 +442,9 @@ end
 function Scroll(increment)
   local width = vim.api.nvim_get_option("columns")
   local win_width = math.ceil(width * config.window_width)
-  if state.view.leftcol == 0 and increment < 0 then
-    state.view.col = 0
-  end
-  local leftcol = state.view.leftcol
-  state.view.leftcol = u.clamp(state.view.leftcol + increment, 0, longest_line_len - win_width)
+  local leftcol_max = u.clamp(longest_line_len - win_width, 0)
+  state.view.leftcol = u.clamp(state.view.leftcol + increment, 0, leftcol_max)
   state.view.col = u.clamp(state.view.col, state.view.leftcol, state.view.leftcol + win_width - 1)
-
-  if leftcol == state.view.leftcol then
-    if increment < 0 then
-      state.view.col = 0
-    else
-      state.view.col = longest_line_len - 1
-    end
-  end
   draw("scroll")
 end
 
