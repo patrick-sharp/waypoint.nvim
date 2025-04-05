@@ -175,6 +175,20 @@ function M.clamp(x, min, max)
   return x
 end
 
+-- length of the string as actually appears on screen.
+-- takes tabs and unicode into account
+function M.vislen(str)
+  local num_tabs = 0
+  for k = 1, #str do
+    local char = str:sub(k, k)
+    if char == "\t" then
+      num_tabs = num_tabs + 1
+    end
+  end
+  local strchars = vim.fn.strchars(str)
+  return strchars + (vim.o.tabstop - 1) * num_tabs
+end
+
 
 --- @param t table<table<string>>
 --- @param table_cell_types table<string>
@@ -200,7 +214,7 @@ function M.align_table(t, table_cell_types, highlights)
         if field == nil then
           M.p(t[j])
         end
-        max_width = math.max(vim.fn.strchars(field), max_width)
+        max_width = math.max(M.vislen(field), max_width)
         max_byte_width = math.max(#field, max_width)
       end
     end
@@ -243,15 +257,7 @@ function M.align_table(t, table_cell_types, highlights)
         if table_cell_types[j] == "number" then
           padded = string.rep(" ", widths[j] - vim.fn.strchars(field)) .. field
         else
-          local num_tabs = 0
-          for k = 1, #field do
-            local char = field:sub(k, k)
-            if char == "\t" then
-              num_tabs = num_tabs + 1
-            end
-          end
-          local tab_pad_adjustment = (vim.o.tabstop - 1) * num_tabs
-          local num_padding_spaces = widths[j] - vim.fn.strchars(field) - tab_pad_adjustment
+          local num_padding_spaces = widths[j] - M.vislen(field)
           padded = field .. string.rep(" ", num_padding_spaces)
         end
         table.insert(fields, padded)
