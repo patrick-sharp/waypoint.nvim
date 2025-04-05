@@ -154,7 +154,9 @@ function M.extmark_lines_for_waypoint(waypoint)
   local hlranges = {}
   local treesitter = false
   local nohighlight = false
-  if #vim.treesitter.highlighter.active > 0 then
+  local ts_highlight = require("vim.treesitter.highlighter")
+  local file_uses_treesitter = ts_highlight.active[bufnr]
+  if file_uses_treesitter then
     print("UNFINISHED")
     treesitter = true
   elseif pcall(vim.api.nvim_buf_get_var, bufnr, "current_syntax") then

@@ -8,6 +8,7 @@ local augroup = "waypoint"
 ---@field hl_footer_after_context string
 ---@field hl_footer_before_context string
 ---@field hl_footer_context string
+---@field hl_footer_waypoint_nr string
 ---@field ns integer
 local M = {
   augroup = augroup,
@@ -19,6 +20,7 @@ local M = {
   hl_footer_after_context = "waypoint_hl_footer_a",
   hl_footer_before_context = "waypoint_hl_footer_b",
   hl_footer_context = "waypoint_hl_footer_c",
+  hl_footer_waypoint_nr = "waypoint_hl_footer_nr",
   ns = vim.api.nvim_create_namespace(augroup),
   table_separator = '│'
   -- table_separator = '|'

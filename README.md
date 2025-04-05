@@ -5,7 +5,8 @@
 ### MVP:
 [x] autosave
 [x] autoload
-[ ] syntax highlighting for file text
+[ ] syntax highlighting for file text with vanilla vim syntax
+[ ] syntax highlighting for file text with treesitter
 [x] user configuration
   [ ] keybinds
   [x] height / width
@@ -51,15 +52,16 @@
     nvim_win_get_cursor doesn't account for unicode.
     solution: get rid of all uses of nvim_win_get_cursor and replace with vim.fn.getcurpos()
 [x] handle col vs curswant better so unicode doesn't confuse cursor state
-[ ] fix syntax highlighting for makefile
+[x] fix syntax highlighting for makefile
 [ ] increase performance of highlighting
-[ ] don't allow growing then shrinking context to let the view go past the end of lines
+[x] don't allow growing then shrinking context to let the view go past the end of lines
 [ ] fix bugs around closing buffers with waypoints in them
-[ ] fix issues with highlighting filetypes you haven't opened yet
+[x] fix issues with highlighting files you haven't opened yet
 [ ] don't open all buffers with marks, instead convert waypoints to extmarks when the buffer is loaded
 [ ] add treesitter highlights
-[ ] fix cursor jump bug when scrolling on window with short lines
-[ ] pad each waypoint to width of window
+[x] fix cursor jump bug when scrolling on window with short lines
+[x] pad each waypoint to width of window
+[ ] indent after the waypoint number (this will be a pain)
 
 
 ### ADVANCED FEATURES:
@@ -72,17 +74,4 @@
   [ ] jump to currently selected waypoint while outside the float window
   [ ] jump to and select next waypoint while outside the float window
   [ ] jump to and select prev waypoint while outside the float window
-
-how I want it to work
-1. scroll_col, topline, col and leftcol should be saved
-2. if you close and reopen, those are restored.
-3. however, they aren't persisted if you close vim
-
-syntax file location
-/opt/homebrew/Cellar/neovim/0.10.3/share/nvim/runtime/syntax
-
-
-man section on syntax
-:h syn
-6. Defining a syntax					*:syn-define* *E410*
 

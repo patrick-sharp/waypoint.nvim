@@ -6,6 +6,7 @@ local constants = require("waypoint.constants")
 local state = require("waypoint.state")
 local u = require("waypoint.utils")
 local p = u.p
+local highlight = require("waypoint.highlight")
 
 local is_open = false
 local bufnr
@@ -86,16 +87,23 @@ local function get_bg_win_opts(win_opts)
   bg_win_opts.border = "rounded"
   bg_win_opts.title = "Waypoints"
   -- todo: make the background of this equal to window background
-  local a = {"   A: " .. state.after_context, constants.hl_footer_after_context }
-  local b = {"   B: " .. state.before_context, constants.hl_footer_before_context }
-  local c = {"   C: " .. state.context, constants.hl_footer_context }
+  -- between the A, B, and C indicators
+  local sep = {" ─── ", 'NormalFloat' } -- give it the background of the rest of the floating window
+  local a = {"A: " .. state.after_context, constants.hl_footer_after_context }
+  local b = {"B: " .. state.before_context, constants.hl_footer_before_context }
+  local c = {"C: " .. state.context, constants.hl_footer_context }
   local wpi
   if state.wpi == nil then
-    wpi = {"   No waypoints", nil}
+    wpi = {"No waypoints", constants.hl_footer_waypoint_nr}
   else
-    wpi = {"   " .. state.wpi .. '/' .. #state.waypoints, nil }
+    wpi = {state.wpi .. '/' .. #state.waypoints, constants.hl_footer_waypoint_nr }
   end
-  bg_win_opts.footer = {{"Press g? for help", constants.hl_selected}, a, b, c, wpi }
+  bg_win_opts.footer = {
+    { "─ ", 'NormalFloat'},
+    { "Press g? for help", constants.hl_selected },
+    sep, a, sep, b, sep, c, sep, wpi,
+    { " ", 'NormalFloat'},
+  }
   bg_win_opts.title_pos = "center"
   return bg_win_opts
 end
@@ -247,10 +255,6 @@ local function draw(action)
         assert(false, "This should not happen, align_tables should change all column-wide highlights to a HighlightRange")
       else
         for _,hlrange in pairs(col_highlights) do
-          -- print("ADDHL", bufnr, constants.ns, hlrange.name, lnum, hlrange.col_start, hlrange.col_end)
-          -- print(hlrange.col_start, hlrange.col_end)
-          -- print(hlrange.col_end + indents[lnum], #aligned, #aligned[lnum])
-
           vim.api.nvim_buf_set_extmark(bufnr, constants.ns, lnum - 1, hlrange.col_start + indents[lnum], {
             end_col = hlrange.col_end + indents[lnum], -- 0-based column number
             hl_group = hlrange.name,                   -- Highlight group to apply
@@ -268,14 +272,12 @@ local function draw(action)
       end
     end
   end
-  -- Define highlight group
   if state.wpi and highlight_start and highlight_end and cursor_line then
     if action == "move_to_waypoint" or action == "context" then
       vim.fn.setcursorcharpos(cursor_line + 1, state.view.col + 1)
     end
 
-
-    if action == "scroll" then
+    if action == "scroll" or action == "context" then
       local lnum
       if state.view.lnum == nil then
         lnum = vim.fn.getcursorcharpos()[2]
@@ -396,11 +398,11 @@ function GoToWaypoint()
   vim.api.nvim_command("normal! zz")
 end
 
--- TODO: make this actually work
 local function clamp_view()
   local width = vim.api.nvim_get_option("columns")
   local win_width = math.ceil(width * config.window_width)
-  state.view.leftcol = u.clamp(state.view.leftcol, 0, longest_line_len - win_width)
+  local leftcol_max = u.clamp(longest_line_len - win_width, 0)
+  state.view.leftcol = u.clamp(state.view.leftcol, 0, leftcol_max)
   state.view.col = u.clamp(state.view.col, state.view.leftcol, state.view.leftcol + win_width - 1)
 end
 
@@ -610,24 +612,7 @@ function M.open()
   end
 
   -- highlight
-  local color_dir_dec = vim.api.nvim_get_hl(0, {name = "Directory"}).fg
-  local color_dir_hex = '#' .. string.format("%x", color_dir_dec)
-
-  local color_nr_dec = vim.api.nvim_get_hl(0, {name = "LineNr"}).fg
-  local color_nr_hex = '#' .. string.format("%x", color_nr_dec)
-
-  local color_cursor_line_dec = vim.api.nvim_get_hl(0, {name = "StatusLine"}).bg
-  local color_cursor_line_hex = '#' .. string.format("%x", color_cursor_line_dec)
-
-  vim.cmd("highlight " .. constants.hl_selected .. " guibg=" .. color_cursor_line_hex)
-  vim.cmd("highlight " .. constants.hl_sign .. " guifg=" .. config.color_sign .. " guibg=NONE")
-  vim.cmd("highlight " .. constants.hl_directory .. " guifg=" .. color_dir_hex)
-  vim.cmd("highlight " .. constants.hl_linenr .. " guifg=" .. color_nr_hex)
-  vim.cmd("highlight " .. constants.hl_footer_after_context .. " guifg=" .. config.color_footer_after_context .. " guibg=NONE")
-  vim.cmd("highlight " .. constants.hl_footer_before_context .. " guifg=" .. config.color_footer_before_context .. " guibg=NONE")
-  vim.cmd("highlight " .. constants.hl_footer_context .. " guifg=" .. config.color_footer_context .. " guibg=NONE")
-
-
+  highlight.highlight_custom_groups()
 
   -- keymaps
   vim.api.nvim_buf_set_keymap(bufnr, 'n', 'q',     ":lua Leave()<CR>",                   keymap_opts())
