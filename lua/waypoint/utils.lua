@@ -243,7 +243,16 @@ function M.align_table(t, table_cell_types, highlights)
         if table_cell_types[j] == "number" then
           padded = string.rep(" ", widths[j] - vim.fn.strchars(field)) .. field
         else
-          padded = field .. string.rep(" ", widths[j] - #field)
+          local num_tabs = 0
+          for k = 1, #field do
+            local char = field:sub(k, k)
+            if char == "\t" then
+              num_tabs = num_tabs + 1
+            end
+          end
+          local tab_pad_adjustment = (vim.o.tabstop - 1) * num_tabs
+          local num_padding_spaces = widths[j] - vim.fn.strchars(field) - tab_pad_adjustment
+          padded = field .. string.rep(" ", num_padding_spaces)
         end
         table.insert(fields, padded)
       end

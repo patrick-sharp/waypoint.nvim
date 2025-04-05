@@ -18,10 +18,9 @@
 [ ] nicer colors / chars
   [x] nicer unicode table chars
   [ ] nicer mark indicator chars
-  [ ] color the mark indicator chars
-  [ ] color the table chars differently than text
-  [ ] color the files
-  [ ] color the line numbers
+  [x] color the mark indicator chars
+  [x] color the files
+  [x] color the line numbers
   [ ] color the mark numbers (or get rid of them)
 [ ] popup with keybind info when you press g?
 [x] that weird scroll behavior I still can't figure out
