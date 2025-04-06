@@ -16,8 +16,11 @@ function M.highlight_custom_groups()
   local color_cursor_line_dec = vim.api.nvim_get_hl(0, {name = "StatusLine"}).bg
   local color_cursor_line_hex = '#' .. string.format("%x", color_cursor_line_dec)
 
-  local hl_def = vim.api.nvim_get_hl_by_name('NormalFloat', true)
-  local bg_color = string.format('#%06x', hl_def.background)
+  local hl_def = vim.api.nvim_get_hl_by_name('FloatBorder', true)
+  local bg_color = "NONE"
+  if hl_def.background then
+    bg_color = string.format('#%06x', hl_def.background)
+  end
 
   vim.cmd("highlight " .. constants.hl_selected .. " guibg=" .. color_cursor_line_hex)
   vim.cmd("highlight " .. constants.hl_sign .. " guifg=" .. config.color_sign .. " guibg=NONE")

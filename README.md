@@ -22,7 +22,6 @@
   [x] color the mark indicator chars
   [x] color the files
   [x] color the line numbers
-  [ ] color the mark numbers (or get rid of them)
 [ ] popup with keybind info when you press g?
 [x] that weird scroll behavior I still can't figure out
 [x] the bug when saving and loading
@@ -33,7 +32,7 @@
   [x] / and ?
   [x] <C-d> and <C-u>
 [x] show A/B/C in footer of window
-  [ ] make footer background equal to window background
+  [x] make footer background equal to window background
 [x] limit horizontal scroll
 [x] look into whether the status line height messes up my window calculations
 [x] bug when navigated to from telescope
@@ -42,7 +41,6 @@
 [x] only allow bookmarks in files (e.g. not in nvim-tree)
 [x] remove annotations
 [x] left pad the file numbers instead of right padding
-[ ] indicate whether context for a mark is limited by file length (eof/bof)
 [x] move cursor without triggering autocmd (excess draws)
 [x] handle weird interaction of / and scroll now that I have ignore_next_autocmd
     have highlight in line, n, hhhhhh, n, l
@@ -53,15 +51,16 @@
     solution: get rid of all uses of nvim_win_get_cursor and replace with vim.fn.getcurpos()
 [x] handle col vs curswant better so unicode doesn't confuse cursor state
 [x] fix syntax highlighting for makefile
-[ ] increase performance of highlighting
 [x] don't allow growing then shrinking context to let the view go past the end of lines
-[ ] fix bugs around closing buffers with waypoints in them
 [x] fix issues with highlighting files you haven't opened yet
-[ ] don't open all buffers with marks, instead convert waypoints to extmarks when the buffer is loaded
-[ ] add treesitter highlights
 [x] fix cursor jump bug when scrolling on window with short lines
 [x] pad each waypoint to width of window
+[ ] fix bugs around closing buffers with waypoints in them
+[ ] add treesitter highlights
+[ ] increase performance of highlighting
 [ ] indent after the waypoint number (this will be a pain)
+[ ] think about persisting waypoints on every waypoint state change
+[ ] indicate whether context for a mark is limited by file length (eof/bof)
 
 
 ### ADVANCED FEATURES:
@@ -75,3 +74,6 @@
   [ ] jump to and select next waypoint while outside the float window
   [ ] jump to and select prev waypoint while outside the float window
 
+
+last capture group has priority
+if it doesn't make sense to apply it, then don't

@@ -88,7 +88,7 @@ local function get_bg_win_opts(win_opts)
   bg_win_opts.title = "Waypoints"
   -- todo: make the background of this equal to window background
   -- between the A, B, and C indicators
-  local sep = {" ─── ", 'NormalFloat' } -- give it the background of the rest of the floating window
+  local sep = {" ─── ", 'FloatBorder' } -- give it the background of the rest of the floating window
   local a = {"A: " .. state.after_context, constants.hl_footer_after_context }
   local b = {"B: " .. state.before_context, constants.hl_footer_before_context }
   local c = {"C: " .. state.context, constants.hl_footer_context }
@@ -99,10 +99,10 @@ local function get_bg_win_opts(win_opts)
     wpi = {state.wpi .. '/' .. #state.waypoints, constants.hl_footer_waypoint_nr }
   end
   bg_win_opts.footer = {
-    { "─ ", 'NormalFloat'},
+    { "─ ", 'FloatBorder'},
     { "Press g? for help", constants.hl_selected },
     sep, a, sep, b, sep, c, sep, wpi,
-    { " ", 'NormalFloat'},
+    { " ", 'FloatBorder'},
   }
   bg_win_opts.title_pos = "center"
   return bg_win_opts
@@ -160,7 +160,7 @@ local function draw(action)
       -- marker for where the waypoint actually is within the context
       if j == extmark_line_0i + 1 then
         table.insert(row, tostring(i))
-        table.insert(row, "*")
+        table.insert(row, config.mark_char)
         table.insert(line_hlranges, {})
         table.insert(line_hlranges, constants.hl_sign)
       else

@@ -14,6 +14,7 @@ local M = {
   window_width = 0.8,
   window_height = 0.8,
   file = "./nvim-waypoints.json",
+  mark_char = "•"
 }
 
 return M

@@ -153,19 +153,20 @@ function M.extmark_lines_for_waypoint(waypoint)
   --- @type table<table<HighlightRange>>
   local hlranges = {}
   local treesitter = false
-  local nohighlight = false
-  local ts_highlight = require("vim.treesitter.highlighter")
-  local file_uses_treesitter = ts_highlight.active[bufnr]
+  local no_active_highlights = false
+
+  local has_treesitter, ts_highlight = pcall(require("vim.treesitter.highlighter"))
+  local file_uses_treesitter = has_treesitter and ts_highlight.active[bufnr]
   if file_uses_treesitter then
     print("UNFINISHED")
     treesitter = true
   elseif pcall(vim.api.nvim_buf_get_var, bufnr, "current_syntax") then
     hlranges = vanilla_highlights.get_vanilla_syntax_highlights(bufnr, lines, start_line_nr_i0)
   else
-    nohighlight = true
+    no_active_highlights = true
   end
 
-  assert(#lines == #hlranges or treesitter or nohighlight, "#lines == " .. #lines ..", #hlranges == " .. #hlranges .. ", but they should be the same" )
+  assert(#lines == #hlranges or treesitter or no_active_highlights, "#lines == " .. #lines ..", #hlranges == " .. #hlranges .. ", but they should be the same" )
   return extmark, lines, marked_line_idx_0i, start_line_nr_i0, hlranges
 end
 
@@ -209,10 +210,8 @@ function M.align_table(t, table_cell_types, highlights, win_width)
 
   -- figure out how wide each table column is
   local widths = {}
-  local byte_widths = {}
   for i=1,ncols do
     local max_width = 0
-    local max_byte_width = 0
     for j=1,nrows do
       if t[j] ~= "" then
         local field = t[j][i]
@@ -220,24 +219,27 @@ function M.align_table(t, table_cell_types, highlights, win_width)
           M.p(t[j])
         end
         max_width = math.max(M.vislen(field), max_width)
-        max_byte_width = math.max(#field, max_width)
       end
     end
     table.insert(widths, max_width)
-    table.insert(byte_widths, max_byte_width)
   end
 
   -- now that we know how wide each table is, we can figure out how the 
   -- highlight groups of each line will be adjusted
   for i,row_highlights in pairs(highlights) do
-    local offset = 0 -- how much to add to col_start and col_end
+    -- how much to add to col_start and col_end
+    -- note that this is a byte offset, not a character offset
+    local offset = 0
     for j,col_highlights in pairs(row_highlights) do
+      local field = t[i][j]
+      local padded_byte_length = widths[j] - M.vislen(field) + #field
       if type(col_highlights) == "string" then
+        -- accounting for tabs and unicode characters
         row_highlights[j] = {{
           nsid = constants.ns,
           name = col_highlights,
           col_start = offset,
-          col_end = offset + byte_widths[j],
+          col_end = offset + padded_byte_length
         }}
       else
         for _,hlrange in pairs(col_highlights) do
@@ -245,7 +247,8 @@ function M.align_table(t, table_cell_types, highlights, win_width)
           hlrange.col_end = hlrange.col_end + offset
         end
       end
-      offset = offset + #constants.table_separator + byte_widths[j] + 2
+      -- the extra 2 for the spaces on either side of the table separator
+      offset = offset + padded_byte_length + #constants.table_separator + 2
     end
   end
 
@@ -260,7 +263,7 @@ function M.align_table(t, table_cell_types, highlights, win_width)
         local field = t[i][j]
         local padded
         if table_cell_types[j] == "number" then
-          padded = string.rep(" ", widths[j] - vim.fn.strchars(field)) .. field
+          padded = string.rep(" ", widths[j] - M.vislen(field)) .. field
         else
           local num_padding_spaces = widths[j] - M.vislen(field)
           padded = field .. string.rep(" ", num_padding_spaces)
