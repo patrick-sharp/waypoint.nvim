@@ -70,7 +70,7 @@ function M.load()
     local virt_text = nil
     local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, line_nr, -1, {
       id = line_nr + 1,
-      sign_text = ">",
+      sign_text = config.mark_char,
       priority = 1,
       sign_hl_group = constants.hl_sign,
       virt_text = virt_text,

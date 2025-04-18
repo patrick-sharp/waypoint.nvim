@@ -10,7 +10,7 @@ function M.add_waypoint(filepath, line_nr)
   local bufnr = vim.fn.bufnr(filepath)
   local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, line_nr - 1, -1, {
     id = line_nr,
-    sign_text = ">",
+    sign_text = config.mark_char,
     priority = 1,
     sign_hl_group = constants.hl_sign,
   })

@@ -2,15 +2,16 @@ local M = {}
 
 local state = require("waypoint.state")
 local constants = require("waypoint.constants")
-local treesitter_highlights = require("waypoint.highlight_treesitter")
-local vanilla_highlights = require("waypoint.highlight_vanilla")
+local highlight_treesitter = require("waypoint.highlight_treesitter")
+local highlight_vanilla = require("waypoint.highlight_vanilla")
+local p = require ("waypoint.print")
 
 --- @class HighlightRange
 --- col_start and col_end values are byte indexed because that's what 
 --- nvim_buf_add_highlight uses. That is unlike state.view.col, which is column
 --- index (i.e. it accounts for unicode chars being multiple bytes long).
 --- @field nsid        integer
---- @field name        string 
+--- @field hl_group    string | integer   if the range comes from treesitter, it will be an id. If it comes from vanilla vim, it will be a name.
 --- @field col_start   integer
 --- @field col_end     integer
 
@@ -24,8 +25,6 @@ function M.p(...)
   end
   print(table.concat(inspected, " "))
 end
-
-local p = M.p
 
 function M.log(...)
   if not debug then return end
@@ -155,13 +154,14 @@ function M.extmark_lines_for_waypoint(waypoint)
   local treesitter = false
   local no_active_highlights = false
 
-  local has_treesitter, ts_highlight = pcall(require("vim.treesitter.highlighter"))
-  local file_uses_treesitter = has_treesitter and ts_highlight.active[bufnr]
+  --local has_treesitter, ts_highlight = pcall(require("vim.treesitter.highlighter"))
+  local file_uses_treesitter = vim.treesitter.highlighter.active[bufnr]
   if file_uses_treesitter then
-    print("UNFINISHED")
-    treesitter = true
+    -- treesitter = true
+    hlranges = highlight_treesitter.get_treesitter_syntax_highlights(bufnr, start_line_nr_i0, end_line_nr_i0)
+    -- p("PATRICK", hlranges)
   elseif pcall(vim.api.nvim_buf_get_var, bufnr, "current_syntax") then
-    hlranges = vanilla_highlights.get_vanilla_syntax_highlights(bufnr, lines, start_line_nr_i0)
+    hlranges = highlight_vanilla.get_vanilla_syntax_highlights(bufnr, lines, start_line_nr_i0)
   else
     no_active_highlights = true
   end
@@ -237,7 +237,7 @@ function M.align_table(t, table_cell_types, highlights, win_width)
         -- accounting for tabs and unicode characters
         row_highlights[j] = {{
           nsid = constants.ns,
-          name = col_highlights,
+          hl_group = col_highlights,
           col_start = offset,
           col_end = offset + padded_byte_length
         }}

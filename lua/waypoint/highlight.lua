@@ -24,6 +24,7 @@ function M.highlight_custom_groups()
 
   vim.cmd("highlight " .. constants.hl_selected .. " guibg=" .. color_cursor_line_hex)
   vim.cmd("highlight " .. constants.hl_sign .. " guifg=" .. config.color_sign .. " guibg=NONE")
+  -- vim.cmd("highlight link " .. constants.hl_sign .. " SpecialKey ")
   vim.cmd("highlight " .. constants.hl_directory .. " guifg=" .. color_dir_hex)
   vim.cmd("highlight " .. constants.hl_linenr .. " guifg=" .. color_nr_hex)
   vim.cmd("highlight " .. constants.hl_footer_after_context .. " guifg=" .. config.color_footer_after_context .. " guibg=" .. bg_color)

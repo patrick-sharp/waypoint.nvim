@@ -157,20 +157,22 @@ local function draw(action)
       table.insert(line_to_waypoint, i)
       local row = {}
 
-      -- marker for where the waypoint actually is within the context
+      -- waypoint number and mark char 
       if j == extmark_line_0i + 1 then
+        -- if this is line the waypoint is on
         table.insert(row, tostring(i))
         table.insert(row, config.mark_char)
         table.insert(line_hlranges, {})
         table.insert(line_hlranges, constants.hl_sign)
       else
+        -- if this is a line in the context around the waypoint
         table.insert(row, "")
         table.insert(row, "")
         table.insert(line_hlranges, {})
         table.insert(line_hlranges, {})
       end
 
-      -- path
+      -- file path
       if state.show_path then
         if state.show_full_path then
           table.insert(row, waypoint.filepath)
@@ -219,7 +221,7 @@ local function draw(action)
     end
   end
   local finish_2 = vim.loop.hrtime()
-  print("PERF:", (finish_1 - start) / 1e6, (finish_2 - finish_1) / 1e6)
+  -- print("PERF:", (finish_1 - start) / 1e6, (finish_2 - finish_1) / 1e6)
 
   assert(#rows == #indents, "#rows == " .. #rows ..", #indents == " .. #indents .. ", but they should be the same" )
   assert(#rows == #line_to_waypoint, "#rows == " .. #rows ..", #line_to_waypoint == " .. #line_to_waypoint .. ", but they should be the same" )
@@ -257,13 +259,13 @@ local function draw(action)
         for _,hlrange in pairs(col_highlights) do
           vim.api.nvim_buf_set_extmark(bufnr, constants.ns, lnum - 1, hlrange.col_start + indents[lnum], {
             end_col = hlrange.col_end + indents[lnum], -- 0-based column number
-            hl_group = hlrange.name,                   -- Highlight group to apply
+            hl_group = hlrange.hl_group,                   -- Highlight group to apply
           })
 
           -- vim.api.nvim_buf_add_highlight(
           --   bufnr,
           --   hlrange.nsid,
-          --   hlrange.name,
+          --   hlrange.hl_group,
           --   lnum - 1,
           --   hlrange.col_start,
           --   hlrange.col_end
@@ -620,11 +622,12 @@ function M.open()
 
   vim.api.nvim_buf_set_keymap(bufnr, "n", ">",     ":lua IndentLine(4)<CR>",             keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "<",     ":lua IndentLine(-4)<CR>",            keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "i",     ":lua ResetIndent()<CR>",             keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "ri",    ":lua ResetIndent()<CR>",             keymap_opts())
 
   vim.api.nvim_buf_set_keymap(bufnr, "n", "L",     ":lua Scroll(6)<CR>",                 keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "H",     ":lua Scroll(-6)<CR>",                keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "0",     ":lua ResetScroll()<CR>",             keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "rs",    ":lua ResetScroll()<CR>",             keymap_opts())
 
   vim.api.nvim_buf_set_keymap(bufnr, "n", "j",     ":lua NextWaypoint()<CR>",            keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "k",     ":lua PrevWaypoint()<CR>",            keymap_opts())

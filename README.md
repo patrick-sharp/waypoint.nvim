@@ -5,7 +5,7 @@
 ### MVP:
 [x] autosave
 [x] autoload
-[ ] syntax highlighting for file text with vanilla vim syntax
+[x] syntax highlighting for file text with vanilla vim syntax
 [ ] syntax highlighting for file text with treesitter
 [x] user configuration
   [ ] keybinds
@@ -16,9 +16,9 @@
 
 ### POLISH:
 [x] Bookmarks window automatically resizes when window resizes
-[ ] nicer colors / chars
+[x] nicer colors / chars
   [x] nicer unicode table chars
-  [ ] nicer mark indicator chars
+  [x] nicer mark indicator chars
   [x] color the mark indicator chars
   [x] color the files
   [x] color the line numbers
@@ -77,3 +77,36 @@
 
 last capture group has priority
 if it doesn't make sense to apply it, then don't
+
+have code for getting leaves, but they don't map to highlight groups in the way I was expecting
+
+:TSHighlightCapturesUnderCursor
+
+~/.local/share/nvim/site/pack/packer/start/nvim-treesitter/queries/
+
+
+MarkdownCode
+String
+@string.regexp xxx guifg=#ce9178
+@character     xxx guifg=#ce9178
+@lsp.type.regexp
+Character
+markdownLinkText
+
+markdownEscape
+markdownFootnote
+markdownFootnoteDefinition
+@markup.raw.markdown
+@markup.raw.markdown_inline
+@textReference
+
+DING DING DING
+@markup.raw.markdown_inline
+
+unfortunately, the slow part about the vanilla syntax highlighting is
+actually getting the synstack.
+I'm not sure what to do about this.
+maybe open small other windows with the file open instead of actually pasting text into the buffer 
+    that sounds insane.
+maybe re-implementing the syntax highlighter?
+    that also sounds insane.

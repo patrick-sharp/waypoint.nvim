@@ -7,14 +7,24 @@
 ---@field window_height number
 ---@field file string
 local M = {
-  color_sign = "#ff9999",
+  color_sign = "NONE",
   color_footer_after_context = "#ff6666",
   color_footer_before_context = "#66ff66",
   color_footer_context = "#6666ff",
   window_width = 0.8,
   window_height = 0.8,
   file = "./nvim-waypoints.json",
-  mark_char = "•"
+  --mark_char = "★",
+  --mark_char = "⌖",
+  -- mark_char = "⚑",
+  -- mark_char = "⛯",
+  -- mark_char = "📌",
+  -- mark_char = "→",
+  -- mark_char = "➡",
+  -- mark_char = "⥤",
+  mark_char = "◆",
+  -- mark_char = "►",
+  -- mark_char = " "
 }
 
 return M

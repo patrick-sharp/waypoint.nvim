@@ -24,6 +24,7 @@ local M = {
   ns = vim.api.nvim_create_namespace(augroup),
   table_separator = '│'
   -- table_separator = '|'
+  -- table_separator = " "
 }
 
 return M
