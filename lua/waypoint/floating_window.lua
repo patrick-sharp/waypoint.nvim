@@ -1,11 +1,12 @@
 local M = {}
 
 local config = require("waypoint.config")
-local crud = require("waypoint.crud")
+local crud = require("waypoint.waypoint_crud")
 local constants = require("waypoint.constants")
 local state = require("waypoint.state")
-local u = require("waypoint.utils")
-local p = u.p
+local u = require("waypoint.utils_general")
+local uw = require("waypoint.utils_waypoint")
+local p = require("waypoint.print")
 local highlight = require("waypoint.highlight")
 
 local is_open = false
@@ -21,9 +22,6 @@ local longest_line_len
 -- I have no idea how nvim orders events and event handlers so hopefully this 
 -- isn't a catastrophe waiting to happen
 local ignore_next_cursormoved
-
-local draws = 0
-
 
 local function set_modifiable(is_modifiable)
   if bufnr == nil then error("Should not be called before initializing window") end
@@ -85,7 +83,7 @@ local function get_bg_win_opts(win_opts)
   bg_win_opts.width = win_opts.width + hpadding * 2
   bg_win_opts.height = win_opts.height + vpadding * 2
   bg_win_opts.border = "rounded"
-  bg_win_opts.title = "Waypoints"
+  bg_win_opts.title = {{" Waypoints ", "FloatBorder"}}
   -- todo: make the background of this equal to window background
   -- between the A, B, and C indicators
   local sep = {" ─── ", 'FloatBorder' } -- give it the background of the rest of the floating window
@@ -110,13 +108,6 @@ end
 
 
 local function draw(action)
-  local start = vim.loop.hrtime()
-  draws = draws + 1
-  -- if action == nil then
-  --   print("DRAW" .. draws .. " nil")
-  -- else
-  --   print("DRAW" .. draws .. " " .. action)
-  -- end
   set_modifiable(true)
   vim.api.nvim_buf_clear_namespace(bufnr, constants.ns, 0, -1)
   local rows = {}
@@ -130,16 +121,24 @@ local function draw(action)
   local highlight_start
   local highlight_end
 
-  --- @type table<table<string | table<HighlightRange>>>
+  --- @type table<table<string | table<waypoint.HighlightRange>>>
   --- first index is the line number, second is the column index. each column 
   --- highlight is either a string or a table of highlight ranges. if string, 
   --- highlight the whole column using the group whose name is the string. 
   --- Otherwise, apply each highlight in the table.
   local hlranges = {}
-  local finish_1 = vim.loop.hrtime()
 
   for i, waypoint in ipairs(state.waypoints) do
-    local _, extmark_lines, extmark_line_0i, context_start_line_nr_0i, extmark_hlranges = u.extmark_lines_for_waypoint(waypoint)
+    --- @type waypoint.WaypointFileText
+    local waypoint_file_text = uw.get_waypoint_file_text(
+      waypoint,
+      state.before_context + state.context,
+      state.after_context + state.context
+    )
+    local extmark_lines = waypoint_file_text.lines
+    local extmark_line_0i = waypoint_file_text.waypoint_linenr
+    local context_start_line_nr_0i = waypoint_file_text.context_start_linenr
+    local extmark_hlranges = waypoint_file_text.highlight_ranges
     assert(extmark_lines)
 
     if i == state.wpi then
@@ -151,7 +150,7 @@ local function draw(action)
 
     for j, line_text in ipairs(extmark_lines) do
       local line_hlranges = {}
-      --- @type table<HighlightRange>
+      --- @type table<waypoint.HighlightRange>
       local line_extmark_hlranges = extmark_hlranges[j]
       table.insert(indents, waypoint.indent)
       table.insert(line_to_waypoint, i)
@@ -220,8 +219,6 @@ local function draw(action)
       table.insert(hlranges, {})
     end
   end
-  local finish_2 = vim.loop.hrtime()
-  -- print("PERF:", (finish_1 - start) / 1e6, (finish_2 - finish_1) / 1e6)
 
   assert(#rows == #indents, "#rows == " .. #rows ..", #indents == " .. #indents .. ", but they should be the same" )
   assert(#rows == #line_to_waypoint, "#rows == " .. #rows ..", #line_to_waypoint == " .. #line_to_waypoint .. ", but they should be the same" )
@@ -239,7 +236,7 @@ local function draw(action)
   end
 
   local win_width = get_floating_window_width()
-  local aligned = u.align_table(rows, table_cell_types, hlranges, win_width)
+  local aligned = uw.align_waypoint_table(rows, table_cell_types, hlranges, win_width)
 
   longest_line_len = 0
   for i, line in pairs(aligned) do
@@ -392,7 +389,7 @@ function GoToWaypoint()
   --- @type Waypoint | nil 
   local waypoint = state.waypoints[state.wpi]
   if waypoint == nil then vim.api.nvim_err_writeln("waypoint should not be nil") return end
-  local extmark = u.extmark_for_waypoint(waypoint)
+  local extmark = uw.extmark_for_waypoint(waypoint)
 
   local waypoint_bufnr = vim.fn.bufnr(waypoint.filepath)
   vim.api.nvim_win_set_buf(0, waypoint_bufnr)
@@ -556,9 +553,13 @@ function M.open()
   bufnr = vim.api.nvim_create_buf(is_listed, is_scratch)
   local bg_bufnr = vim.api.nvim_create_buf(is_listed, is_scratch)
 
-  vim.bo[bufnr].buftype = "nofile"  -- Prevents the buffer from being treated as a normal file
-  vim.bo[bufnr].bufhidden = "wipe"  -- Ensures the buffer is removed when closed
-  vim.bo[bufnr].swapfile = false    -- Prevents swap file creation
+  vim.bo[bufnr].buftype = "nofile" -- Prevents the buffer from being treated as a normal file
+  vim.bo[bufnr].bufhidden = "wipe" -- Ensures the buffer is removed when closed
+  vim.bo[bufnr].swapfile = false   -- Prevents swap file creation
+
+  -- this extension does not support wrap, all long lines will overflow off the
+  -- edge of the screen
+  vim.api.nvim_buf_set_option(bufnr, 'wrap', false)
 
   vim.api.nvim_create_autocmd("BufLeave", {
     group = constants.augroup,
@@ -598,10 +599,6 @@ function M.open()
   -- I'm sure there are a bunch of other edge cases like this lurking around
   vim.api.nvim_win_set_option(winnr, "wrap", false)
 
-  -- TOOD: figure out highlighting
-  -- u.log(vim.api.nvim_win_get_option(winnr, "winhl"))
-  -- u.log("HL", vim.api.nvim_get_hl(winnr, { name = "Normal" }))
-
   state.view.leftcol = 0
   draw("move_to_waypoint")
 
@@ -620,8 +617,8 @@ function M.open()
   vim.api.nvim_buf_set_keymap(bufnr, 'n', 'q',     ":lua Leave()<CR>",                   keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<esc>', ":lua Leave()<CR>",                   keymap_opts())
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", ">",     ":lua IndentLine(4)<CR>",             keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<",     ":lua IndentLine(-4)<CR>",            keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", ">",     ":lua IndentLine(3)<CR>",             keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "<",     ":lua IndentLine(-3)<CR>",            keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "ri",    ":lua ResetIndent()<CR>",             keymap_opts())
 
   vim.api.nvim_buf_set_keymap(bufnr, "n", "L",     ":lua Scroll(6)<CR>",                 keymap_opts())

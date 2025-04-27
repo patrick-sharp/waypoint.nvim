@@ -3,7 +3,8 @@ local M = {}
 local config = require("waypoint.config")
 local constants = require("waypoint.constants")
 local state = require("waypoint.state")
-local utils = require("waypoint.utils")
+local u = require("waypoint.utils_general")
+local uw = require("waypoint.utils_waypoint")
 local highlight = require("waypoint.highlight")
 
 local function write_file(path, content)
@@ -30,9 +31,9 @@ local function read_file(path)
 end
 
 local function encode()
-  local state_copy = utils.deep_copy(state)
+  local state_copy = u.deep_copy(state)
   for _, waypoint in pairs(state_copy.waypoints) do
-    local extmark = utils.extmark_for_waypoint(waypoint)
+    local extmark = uw.extmark_for_waypoint(waypoint)
     waypoint.extmark_id = nil
     waypoint.line_number = extmark[1]
   end
@@ -65,6 +66,44 @@ function M.load()
       vim.fn.bufload(bufnr)
       -- without this, vim won't apply syntax highlighting to the new buffer
       vim.api.nvim_exec_autocmds("BufRead", { buffer = bufnr })
+      vim.api.nvim_buf_set_option(bufnr, 'buflisted', true)
+      -- vim.treesitter.highlighter._on_win(nil, nil, bufnr, -1, -1)
+
+      -- vim.api.nvim_exec_autocmds("FileType", { buffer = bufnr })
+      -- vim.treesitter.start(bufnr, 'markdown')
+      -- vim.treesitter.start(bufnr)
+
+      -- do
+      --   vim.api.nvim_create_autocmd("FileType", {
+      --     pattern = "markdown",
+      --     callback = function()
+      --         pcall(vim.treesitter.start)
+      --     end
+      --   })
+      --
+      --   vim.api.nvim_exec_autocmds("FileType", { buffer = bufnr })
+      -- end
+
+      -- do
+      --   -- Step 2: Set the filetype (important for Treesitter to know which parser to use)
+      --   vim.api.nvim_buf_set_option(bufnr, 'filetype', 'markdown') -- Adjust filetype as needed
+      --   -- Step 3: Read the file content if needed
+      --   vim.api.nvim_buf_call(bufnr, function()
+      --     vim.cmd('silent! edit')  -- This loads file content without switching to it
+      --   end)
+      --   -- Step 4: Start Treesitter parser
+      --   -- vim.treesitter.start(bufnr, 'markdown')  -- Specify language explicitly
+      --   local parser = vim.treesitter.get_parser(bufnr, 'markdown')
+      --   parser:parse() -- Force initial parse
+      --
+      --   -- Step 5: Create and attach highlighter manually
+      --   local highlighter = vim.treesitter.highlighter.new(parser)
+      --     vim.api.nvim_buf_call(bufnr, function()
+      --     -- This executes in the buffer context
+      --     highlighter:highlight(0, -1)
+      --   end)
+      -- end
+
     end
     local line_nr = waypoint.line_number
     local virt_text = nil

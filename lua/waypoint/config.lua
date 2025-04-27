@@ -25,6 +25,8 @@ local M = {
   mark_char = "◆",
   -- mark_char = "►",
   -- mark_char = " "
+  telescope_filename_width = 30,
+  telescope_linenr_width = 5,
 }
 
 return M

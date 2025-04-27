@@ -56,18 +56,22 @@
 [x] fix cursor jump bug when scrolling on window with short lines
 [x] pad each waypoint to width of window
 [ ] fix bugs around closing buffers with waypoints in them
-[ ] add treesitter highlights
-[ ] increase performance of highlighting
+[x] add treesitter highlights
+[x] increase performance of highlighting
 [ ] indent after the waypoint number (this will be a pain)
 [ ] think about persisting waypoints on every waypoint state change
 [ ] indicate whether context for a mark is limited by file length (eof/bof)
+[ ] fix all the extra spacing I put in the lua lsp type annotations
+[ ] scope class declaration type annotations
+[x] find out how TOhtml works with vanilla syntax and fix my vanilla syntax highlighter
+[ ] figure out why my method of loading other files at startup doesn't work for treesitter highlights but does for vanilla
 
 
 ### ADVANCED FEATURES:
 [x] delete waypoint from floating window with dd
 [x] allow cursor to move within a waypoint if you're searching, and for subsequent searches to move between waypoints
 [x] quickfixlist for waypoints
-[ ] telescope for waypoints
+[x] telescope for waypoints
 [ ] add some features from harpoon
   [ ] jump to first waypoint while outside the float window
   [ ] jump to currently selected waypoint while outside the float window
@@ -93,16 +97,6 @@ String
 Character
 markdownLinkText
 
-markdownEscape
-markdownFootnote
-markdownFootnoteDefinition
-@markup.raw.markdown
-@markup.raw.markdown_inline
-@textReference
-
-DING DING DING
-@markup.raw.markdown_inline
-
 unfortunately, the slow part about the vanilla syntax highlighting is
 actually getting the synstack.
 I'm not sure what to do about this.
@@ -110,3 +104,29 @@ maybe open small other windows with the file open instead of actually pasting te
     that sounds insane.
 maybe re-implementing the syntax highlighter?
     that also sounds insane.
+
+
+:syn sync fromstart  " Ensure syntax is fully parsed
+:redir @a           " Redirect output to register 'a'
+:syntax list        " List all syntax groups
+:redir END          " Stop redirection
+:put a              " Paste the list
+
+ function DumpSyntax()
+    local lines = {}
+    for i = 1, vim.fn.line('$') do
+        local line = vim.fn.getline(i)
+        for j = 1, #line do
+            local stack = vim.fn.synstack(i, j)
+            if #stack > 0 then
+                local syn = vim.fn.synIDattr(stack[#stack], 'name')
+                table.insert(lines, string.format("Line %d, Col %d: %s", i, j, syn))
+            end
+        end
+    end
+    vim.fn.writefile(lines, 'syntax_dump.txt')
+    print("Syntax dump saved to syntax_dump.txt")
+end
+
+:TOhtml
+

@@ -22,9 +22,10 @@ local M = {
   hl_footer_context = "waypoint_hl_footer_c",
   hl_footer_waypoint_nr = "waypoint_hl_footer_nr",
   ns = vim.api.nvim_create_namespace(augroup),
-  table_separator = '│'
+  table_separator = '│',
   -- table_separator = '|'
   -- table_separator = " "
+  debug = true,
 }
 
 return M

@@ -1,5 +1,4 @@
-local u = require("waypoint.utils")
-local p = u.p
+local p = require("waypoint.print")
 
 local config = require("waypoint.config")
 local constants = require("waypoint.constants")

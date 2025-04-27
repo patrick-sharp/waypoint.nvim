@@ -4,11 +4,10 @@
 local M = {}
 
 local floating_window = require("waypoint.floating_window")
-local crud = require("waypoint.crud")
+local crud = require("waypoint.waypoint_crud")
 local file = require("waypoint.file")
 local constants = require("waypoint.constants")
 local config = require("waypoint.config")
-local ts = require("waypoint.highlight_treesitter")
 local p = require("waypoint.print")
 
 -- function Wacka()
@@ -19,13 +18,6 @@ local p = require("waypoint.print")
 --   )
 -- end
 --
-function Wacka2()
-  ts.get_nodes_with_highlights(
-    vim.fn.bufnr(),
-    vim.fn.line('.'),
-    vim.fn.line('.')
-  )
-end
 
 function M.setup(opts)
   -- set up config
@@ -50,10 +42,6 @@ function M.setup(opts)
   vim.keymap.set({ 'n', 'v' }, '<leader><leader>m', crud.toggle_waypoint, { noremap = true })
   vim.keymap.set({ 'n', 'v' }, '<leader><leader>s', file.save, { noremap = true })
   vim.keymap.set({ 'n', 'v' }, '<leader><leader>l', file.load, { noremap = true })
-  -- vim.keymap.set({ 'n', 'v' }, '<leader><leader>8', ts.get_node_at_cursor, { noremap = true })
-  -- vim.keymap.set({ 'n', 'v' }, '<leader><leader>x', ts.get_all_nodes_in_range, { noremap = true })
-  -- vim.keymap.set({ 'n', 'v' }, '<leader><leader>a', Wacka, { noremap = true })
-  vim.keymap.set({ 'n', 'v' }, '<leader><leader>b', Wacka2, { noremap = true })
 end
 
 return M

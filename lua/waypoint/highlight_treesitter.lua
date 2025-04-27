@@ -56,16 +56,19 @@ function M.get_nodes_with_highlights(bufnr, start_line, end_line)
         break
       end
 
-      -- for some reason, the id returned by this can't be used to get the
-      -- highlight group with vim.api.nvim_get_hl. Yet, it works when you add
-      -- an extmark with this hl group.
-      local hl_id = state.highlighter_query:get_hl_from_capture(capture)
-
-      local capname = state.highlighter_query._query.captures[capture]
+      local hl_id = 0
+      local capname = nil
       local hl_name = nil
-      if not vim.startswith(capname, '_') then
-        -- this is the same logic neovim uses to create highlight groups for captures
-        hl_name = '@' .. capname .. '.' .. state.highlighter_query.lang
+      if capture then
+        -- for some reason, the id returned by this can't be used to get the
+        -- highlight group with vim.api.nvim_get_hl. Yet, it works when you add
+        -- an extmark with this hl group.
+        hl_id = state.highlighter_query:get_hl_from_capture(capture)
+        capname = state.highlighter_query._query.captures[capture]
+        if not vim.startswith(capname, '_') then
+          -- this is the same logic neovim uses to create highlight groups for captures
+          hl_name = '@' .. capname .. '.' .. state.highlighter_query.lang
+        end
       end
 
       table.insert(results,
