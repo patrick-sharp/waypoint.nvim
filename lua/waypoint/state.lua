@@ -12,16 +12,17 @@
 ---@field leftcol    integer         the left column visible on the screen
 
 ---@class State
----@field wpi                integer | nil     the index of the currently selected waypoint.
----@field waypoints          table<Waypoint>   all the waypoints in this session.
----@field context            integer           the number of lines above and below the waypoint that will also appear in the waypoint window. adds with before_context and after_context.
----@field before_context     integer           the number of lines above the waypoint that will also appear in the waypoint window. adds with context and after_context.
----@field after_context      integer           the number of lines below the waypoint that will also appear in the waypoint window. adds with context and before_context.
----@field show_path          boolean
----@field show_full_path     boolean
----@field show_line_num      boolean
----@field show_file_text     boolean
----@field view               View
+---@field wpi            integer | nil   the index of the currently selected waypoint.
+---@field waypoints      table<Waypoint> all the waypoints in this session.
+---@field context        integer         the number of lines above and below the waypoint that will also appear in the waypoint window. adds with before_context and after_context.
+---@field before_context integer         the number of lines above the waypoint that will also appear in the waypoint window. adds with context and after_context.
+---@field after_context  integer         the number of lines below the waypoint that will also appear in the waypoint window. adds with context and before_context.
+---@field show_path      boolean
+---@field show_full_path boolean
+---@field show_line_num  boolean
+---@field show_file_text boolean
+---@field show_context   boolean         whether or not to show the context around the waypoint instead of just the line of text the waypoint is on
+---@field view           View
 
 ---@type State
 local M = {
@@ -35,6 +36,7 @@ local M = {
   show_full_path     = false,
   show_line_num      = true,
   show_file_text     = true,
+  show_context       = true,
 
   view = {
     lnum     = nil,

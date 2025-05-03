@@ -129,12 +129,22 @@ local function draw(action)
   --- Otherwise, apply each highlight in the table.
   local hlranges = {}
 
+  local num_lines_before
+  local num_lines_after
+  if state.show_context then
+    num_lines_before = state.before_context + state.context
+    num_lines_after = state.after_context + state.context
+  else
+    num_lines_before = 0
+    num_lines_after = 0
+  end
+
   for i, waypoint in ipairs(state.waypoints) do
     --- @type waypoint.WaypointFileText
     local waypoint_file_text = uw.get_waypoint_context(
       waypoint,
-      state.before_context + state.context,
-      state.after_context + state.context
+      num_lines_before,
+      num_lines_after
     )
     local extmark_lines = waypoint_file_text.lines
     local extmark_line_0i = waypoint_file_text.waypoint_linenr
@@ -211,7 +221,7 @@ local function draw(action)
     local has_context = state.before_context ~= 0
     has_context = has_context or state.context ~= 0
     has_context = has_context or state.after_context ~= 0
-    if has_context  and i < #state.waypoints then
+    if state.show_context and has_context and i < #state.waypoints then
       table.insert(rows, "")
       table.insert(indents, 0)
       -- if the user somehow moves to a blank space, just treat that as 
@@ -480,6 +490,11 @@ function ToggleFileText()
   draw()
 end
 
+function ToggleContext()
+  state.show_context = not state.show_context
+  draw()
+end
+
 function ResetCurrentIndent()
   if state.wpi then
     state.waypoints[state.wpi].indent = 0
@@ -550,24 +565,6 @@ function SetQFList()
 end
 
 function ShowHelp()
-  -- -- Define the items to display in the popup
-  -- local items = { "Option 1", "Option 2", "Option 3" }
-  --
-  -- -- Define a function to show the popup
-  -- local function show_g_popup()
-  --   vim.ui.select(items, {
-  --     prompt = "Select an option:",
-  --     format_item = function(item)
-  --       return "> " .. item
-  --     end,
-  --   }, function(choice)
-  --       if choice then
-  --         print("You selected: " .. choice)
-  --       end
-  --     end)
-  -- end
-  -- show_g_popup()
-
   -- Create a scratch buffer
   local buf = vim.api.nvim_create_buf(false, true)
 
@@ -644,14 +641,6 @@ function M.open()
   -- this extension does not support wrap, all long lines will overflow off the
   -- edge of the screen
   vim.api.nvim_buf_set_option(bufnr, 'wrap', false)
-
-  vim.api.nvim_create_autocmd("BufLeave", {
-    group = constants.augroup,
-    buffer = bufnr,
-    callback = function()
-      vim.api.nvim_buf_clear_namespace(bufnr, constants.ns, 0, -1)
-    end,
-  })
 
   vim.api.nvim_create_autocmd("WinLeave", {
     group = constants.augroup,
@@ -732,12 +721,14 @@ function M.open()
   vim.api.nvim_buf_set_keymap(bufnr, "n", "a",     ":lua IncreaseAfterContext(1)<CR>",                        keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "A",     ":lua IncreaseAfterContext(-1)<CR>",                       keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "R",     ":lua ResetContext()<CR>",                                 keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "rc",    ":lua ResetContext()<CR>",                                 keymap_opts())
 
   vim.api.nvim_buf_set_keymap(bufnr, "n", "tp",    ":lua TogglePath()<CR>",                                   keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "tf",    ":lua ToggleFullPath()<CR>",                               keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "tl",    ":lua ToggleLineNum()<CR>",                                keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "tn",    ":lua ToggleLineNum()<CR>",                                keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "tt",    ":lua ToggleFileText()<CR>",                               keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tc",    ":lua ToggleContext()<CR>",                                 keymap_opts())
 
   vim.api.nvim_buf_set_keymap(bufnr, "n", "dd",    ":lua RemoveCurrentWaypoint()<CR>",                        keymap_opts())
   vim.api.nvim_buf_set_keymap(bufnr, "n", "Q",     ":lua SetQFList()<CR>",                                    keymap_opts())
@@ -745,6 +736,7 @@ function M.open()
 end
 
 function Close()
+  vim.api.nvim_buf_clear_namespace(bufnr, constants.ns, 0, -1)
   vim.api.nvim_win_close(bg_winnr, true)
   vim.api.nvim_win_close(winnr, true)
   vim.api.nvim_buf_delete(bg_bufnr, {})

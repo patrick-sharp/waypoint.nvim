@@ -65,7 +65,8 @@
 [ ] scope class declaration type annotations
 [ ] figure out why my method of loading other files at startup doesn't work for treesitter highlights but does for vanilla
 [ ] add bookmarks.nvim-style config validation
-[ ] popup with keybind info when you press g?
+[ ] g? shows keybinds
+    even telescope couldn't figure out how to make the nested window thing work, so I'll do this instead
 [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
 [ ] add keybind to swap waypoint and all its subindented waypoints
 [ ] allow numbers + motions
@@ -84,6 +85,9 @@
     bufnr
     winnr
 [ ] remove index hungarian, use comments instead
+[x] fix the bug where opening nvim-tree fucks up the window
+[ ] fix bugs around leaving the window when the g? popup is up
+[x] add ability to toggle context
 
 
 ### ADVANCED FEATURES:
