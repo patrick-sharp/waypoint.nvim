@@ -22,7 +22,7 @@ local function waypoints(opts)
    opts = opts or {}
    local waypoint_list = {}
    for _, wp in pairs(state.waypoints) do
-    local waypoint_file_text = uw.get_waypoint_file_text(wp, 0, 0)
+    local waypoint_file_text = uw.get_waypoint_context(wp, 0, 0)
     local linenr = waypoint_file_text.context_start_linenr + 1 -- telescope expects 1-indexed lines
     table.insert(waypoint_list, {
        filename = wp.filepath,

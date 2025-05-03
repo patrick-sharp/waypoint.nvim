@@ -42,6 +42,8 @@ function M.setup(opts)
   vim.keymap.set({ 'n', 'v' }, '<leader><leader>m', crud.toggle_waypoint, { noremap = true })
   vim.keymap.set({ 'n', 'v' }, '<leader><leader>s', file.save, { noremap = true })
   vim.keymap.set({ 'n', 'v' }, '<leader><leader>l', file.load, { noremap = true })
+
+  vim.keymap.set({ 'n', 'v' }, 'g?', floating_window.ShowHelp, { noremap = true })
 end
 
 return M

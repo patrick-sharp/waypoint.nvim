@@ -6,9 +6,9 @@
 [x] autosave
 [x] autoload
 [x] syntax highlighting for file text with vanilla vim syntax
-[ ] syntax highlighting for file text with treesitter
+[x] syntax highlighting for file text with treesitter
 [x] user configuration
-  [ ] keybinds
+  [ ] keybinds with an on_attach(bufnr) function
   [x] height / width
   [x] file path
   [x] color for mark
@@ -22,7 +22,6 @@
   [x] color the mark indicator chars
   [x] color the files
   [x] color the line numbers
-[ ] popup with keybind info when you press g?
 [x] that weird scroll behavior I still can't figure out
 [x] the bug when saving and loading
 [x] the bug where marks at beginning/end of file don't have gaps
@@ -55,16 +54,36 @@
 [x] fix issues with highlighting files you haven't opened yet
 [x] fix cursor jump bug when scrolling on window with short lines
 [x] pad each waypoint to width of window
-[ ] fix bugs around closing buffers with waypoints in them
 [x] add treesitter highlights
 [x] increase performance of highlighting
+[x] find out how TOhtml works with vanilla syntax and fix my vanilla syntax highlighter
+[ ] fix bugs around closing buffers with waypoints in them
 [ ] indent after the waypoint number (this will be a pain)
 [ ] think about persisting waypoints on every waypoint state change
 [ ] indicate whether context for a mark is limited by file length (eof/bof)
 [ ] fix all the extra spacing I put in the lua lsp type annotations
 [ ] scope class declaration type annotations
-[x] find out how TOhtml works with vanilla syntax and fix my vanilla syntax highlighter
 [ ] figure out why my method of loading other files at startup doesn't work for treesitter highlights but does for vanilla
+[ ] add bookmarks.nvim-style config validation
+[ ] popup with keybind info when you press g?
+[ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
+[ ] add keybind to swap waypoint and all its subindented waypoints
+[ ] allow numbers + motions
+    [ ] allow number + j/k to move up number waypoints
+    [ ] allow number + J/K to swap up number waypoints
+[ ] keybind to swap waypoint to top of file
+[ ] cache the highlights for each line to increase performance
+[x] get rid of the mark char in the floating window, it's redundant with the number
+[ ] get rid of the optimization to vary the widths of the waypoint context if it hits eof or bof
+    [ ] use the optimization afforded by that to only render waypoints + contexts currently on screen
+[ ] add annotations back in
+[ ] highlight table separators with WinSeparator
+[ ] document abbreviations
+    wp
+    linenr
+    bufnr
+    winnr
+[ ] remove index hungarian, use comments instead
 
 
 ### ADVANCED FEATURES:
@@ -73,60 +92,14 @@
 [x] quickfixlist for waypoints
 [x] telescope for waypoints
 [ ] add some features from harpoon
-  [ ] jump to first waypoint while outside the float window
   [ ] jump to currently selected waypoint while outside the float window
+  [ ] jump to first waypoint while outside the float window
+  [ ] jump to last waypoint while outside the float window
   [ ] jump to and select next waypoint while outside the float window
   [ ] jump to and select prev waypoint while outside the float window
+[ ] add visual mode
 
-
-last capture group has priority
-if it doesn't make sense to apply it, then don't
-
-have code for getting leaves, but they don't map to highlight groups in the way I was expecting
-
-:TSHighlightCapturesUnderCursor
-
-~/.local/share/nvim/site/pack/packer/start/nvim-treesitter/queries/
-
-
-MarkdownCode
-String
-@string.regexp xxx guifg=#ce9178
-@character     xxx guifg=#ce9178
-@lsp.type.regexp
-Character
-markdownLinkText
-
-unfortunately, the slow part about the vanilla syntax highlighting is
-actually getting the synstack.
-I'm not sure what to do about this.
-maybe open small other windows with the file open instead of actually pasting text into the buffer 
-    that sounds insane.
-maybe re-implementing the syntax highlighter?
-    that also sounds insane.
-
-
-:syn sync fromstart  " Ensure syntax is fully parsed
-:redir @a           " Redirect output to register 'a'
-:syntax list        " List all syntax groups
-:redir END          " Stop redirection
-:put a              " Paste the list
-
- function DumpSyntax()
-    local lines = {}
-    for i = 1, vim.fn.line('$') do
-        local line = vim.fn.getline(i)
-        for j = 1, #line do
-            local stack = vim.fn.synstack(i, j)
-            if #stack > 0 then
-                local syn = vim.fn.synIDattr(stack[#stack], 'name')
-                table.insert(lines, string.format("Line %d, Col %d: %s", i, j, syn))
-            end
-        end
-    end
-    vim.fn.writefile(lines, 'syntax_dump.txt')
-    print("Syntax dump saved to syntax_dump.txt")
-end
-
-:TOhtml
+local self = TSHighlighter.active[buf]
+there's nothing active.
+I need to find out where the active highlighter gets set.
 

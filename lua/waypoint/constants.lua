@@ -23,6 +23,7 @@ local M = {
   hl_footer_waypoint_nr = "waypoint_hl_footer_nr",
   ns = vim.api.nvim_create_namespace(augroup),
   table_separator = '│',
+  max_indent = 12,
   -- table_separator = '|'
   -- table_separator = " "
   debug = true,

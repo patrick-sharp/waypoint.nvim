@@ -4,13 +4,14 @@ local config = require("waypoint.config")
 local crud = require("waypoint.waypoint_crud")
 local constants = require("waypoint.constants")
 local state = require("waypoint.state")
-local u = require("waypoint.utils_general")
+local u = require("waypoint.utils")
 local uw = require("waypoint.utils_waypoint")
 local p = require("waypoint.print")
 local highlight = require("waypoint.highlight")
 
 local is_open = false
 local bufnr
+local bg_bufnr
 local winnr
 local bg_winnr
 -- if the user does something to move the cursor to another line, we want to set
@@ -130,7 +131,7 @@ local function draw(action)
 
   for i, waypoint in ipairs(state.waypoints) do
     --- @type waypoint.WaypointFileText
-    local waypoint_file_text = uw.get_waypoint_file_text(
+    local waypoint_file_text = uw.get_waypoint_context(
       waypoint,
       state.before_context + state.context,
       state.after_context + state.context
@@ -160,15 +161,15 @@ local function draw(action)
       if j == extmark_line_0i + 1 then
         -- if this is line the waypoint is on
         table.insert(row, tostring(i))
-        table.insert(row, config.mark_char)
+        -- table.insert(row, config.mark_char)
         table.insert(line_hlranges, {})
-        table.insert(line_hlranges, constants.hl_sign)
+        -- table.insert(line_hlranges, constants.hl_sign)
       else
         -- if this is a line in the context around the waypoint
         table.insert(row, "")
-        table.insert(row, "")
+        -- table.insert(row, "")
         table.insert(line_hlranges, {})
-        table.insert(line_hlranges, {})
+        -- table.insert(line_hlranges, {})
       end
 
       -- file path
@@ -224,7 +225,7 @@ local function draw(action)
   assert(#rows == #line_to_waypoint, "#rows == " .. #rows ..", #line_to_waypoint == " .. #line_to_waypoint .. ", but they should be the same" )
   assert(#rows == #hlranges, "#rows == " .. #rows ..", #hlranges == " .. #hlranges .. ", but they should be the same" )
 
-  local table_cell_types = {"number", "string"}
+  local table_cell_types = {"number"}
   if state.show_path then
     table.insert(table_cell_types, "string")
   end
@@ -328,7 +329,9 @@ end
 function IndentLine(increment)
   if state.wpi == nil then return end
   local indent = state.waypoints[state.wpi].indent + increment
-  state.waypoints[state.wpi].indent = u.clamp(indent, 0, 20)
+  state.waypoints[state.wpi].indent = u.clamp(
+    indent, 0, constants.max_indent * config.indent_width
+  )
   draw()
 end
 
@@ -477,7 +480,14 @@ function ToggleFileText()
   draw()
 end
 
-function ResetIndent()
+function ResetCurrentIndent()
+  if state.wpi then
+    state.waypoints[state.wpi].indent = 0
+  end
+  draw()
+end
+
+function ResetAllIndent()
   for _,waypoint in pairs(state.waypoints) do
     waypoint.indent = 0
   end
@@ -511,11 +521,13 @@ function Resize()
 end
 
 function RemoveCurrentWaypoint()
+  if #state.waypoints == 0 then return end
   crud.remove_waypoint(state.wpi, state.waypoints[state.wpi].filepath)
   if #state.waypoints == 0 then
     state.wpi = nil
+  else
+    state.wpi = u.clamp(state.wpi, 1, #state.waypoints)
   end
-  state.wpi = u.clamp(state.wpi, 1, #state.waypoints)
   draw()
 end
 
@@ -537,6 +549,78 @@ function SetQFList()
   vim.cmd('copen')
 end
 
+function ShowHelp()
+  -- -- Define the items to display in the popup
+  -- local items = { "Option 1", "Option 2", "Option 3" }
+  --
+  -- -- Define a function to show the popup
+  -- local function show_g_popup()
+  --   vim.ui.select(items, {
+  --     prompt = "Select an option:",
+  --     format_item = function(item)
+  --       return "> " .. item
+  --     end,
+  --   }, function(choice)
+  --       if choice then
+  --         print("You selected: " .. choice)
+  --       end
+  --     end)
+  -- end
+  -- show_g_popup()
+
+  -- Create a scratch buffer
+  local buf = vim.api.nvim_create_buf(false, true)
+
+  -- Set some content
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, {
+    "Press <Esc> to close",
+    "",
+    "This is a custom popup!",
+    "You can put anything here.",
+  })
+
+  -- Get current UI dimensions
+  local width = 40
+  local height = 5
+  local row = math.floor((vim.o.lines - height) / 2) - 1
+  local col = math.floor((vim.o.columns - width) / 2)
+
+  -- Create a floating window
+  local opts = {
+    style = "minimal",
+    relative = "editor",
+    width = width,
+    height = height,
+    row = row,
+    col = col,
+    border = "rounded",
+  }
+
+
+  -- to avoid triggering the autocmds that close the floating window when you leave the buffer or window
+  vim.opt.eventignore:append({ "BufLeave", "WinLeave" })  -- Disable specific events
+  local win = vim.api.nvim_open_win(buf, true, opts)
+  -- turn them back on after we're done
+  vim.opt.eventignore:remove({ "BufLeave", "WinLeave" })  -- Re-enable
+
+  vim.api.nvim_create_autocmd("WinLeave", {
+    group = constants.augroup,
+    buffer = buf,
+    callback = function()
+      vim.api.nvim_win_close(win, true)
+      vim.api.nvim_buf_delete(buf, {})
+      vim.api.nvim_set_current_win(winnr)
+    end,
+  })
+
+  -- Close on Escape
+  vim.keymap.set('n', '<Esc>', function()
+    vim.api.nvim_win_close(win, true)
+  end, { buffer = buf })
+end
+
+M.ShowHelp = ShowHelp
+
 
 function M.open()
   if is_open then
@@ -551,7 +635,7 @@ function M.open()
   local is_scratch = false
 
   bufnr = vim.api.nvim_create_buf(is_listed, is_scratch)
-  local bg_bufnr = vim.api.nvim_create_buf(is_listed, is_scratch)
+  bg_bufnr = vim.api.nvim_create_buf(is_listed, is_scratch)
 
   vim.bo[bufnr].buftype = "nofile" -- Prevents the buffer from being treated as a normal file
   vim.bo[bufnr].bufhidden = "wipe" -- Ensures the buffer is removed when closed
@@ -595,6 +679,13 @@ function M.open()
   -- Create the window
   winnr = vim.api.nvim_open_win(bufnr, true, win_opts)
 
+  -- account for some color schemes having ridiculous colors for 
+  -- the default floating window background.
+  if u.hl_background_distance("Normal", "NormalFloat") > 300 then
+    vim.api.nvim_win_set_option(winnr, 'winhl', 'NormalFloat:Normal')
+    vim.api.nvim_win_set_option(bg_winnr, 'winhl', 'NormalFloat:Normal')
+  end
+
   -- I added this because if you open waypoint from telescope, it has wrap disabled
   -- I'm sure there are a bunch of other edge cases like this lurking around
   vim.api.nvim_win_set_option(winnr, "wrap", false)
@@ -614,48 +705,53 @@ function M.open()
   highlight.highlight_custom_groups()
 
   -- keymaps
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'q',     ":lua Leave()<CR>",                   keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<esc>', ":lua Leave()<CR>",                   keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'q',     ":lua Leave()<CR>",                                        keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<esc>', ":lua Leave()<CR>",                                        keymap_opts())
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", ">",     ":lua IndentLine(3)<CR>",             keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<",     ":lua IndentLine(-3)<CR>",            keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "ri",    ":lua ResetIndent()<CR>",             keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", ">",     ":lua IndentLine(" .. config.indent_width .. ")<CR>",      keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "<",     ":lua IndentLine(" .. -1 * config.indent_width .. ")<CR>", keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "ri",    ":lua ResetCurrentIndent()<CR>",                                  keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "rI",    ":lua ResetAllIndent()<CR>",                                  keymap_opts())
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "L",     ":lua Scroll(6)<CR>",                 keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "H",     ":lua Scroll(-6)<CR>",                keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "0",     ":lua ResetScroll()<CR>",             keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "rs",    ":lua ResetScroll()<CR>",             keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "L",     ":lua Scroll(6)<CR>",                                      keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "H",     ":lua Scroll(-6)<CR>",                                     keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "0",     ":lua ResetScroll()<CR>",                                  keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "rs",    ":lua ResetScroll()<CR>",                                  keymap_opts())
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "j",     ":lua NextWaypoint()<CR>",            keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "k",     ":lua PrevWaypoint()<CR>",            keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "j",     ":lua NextWaypoint()<CR>",                                 keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "k",     ":lua PrevWaypoint()<CR>",                                 keymap_opts())
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "K",     ":lua MoveWaypointUp()<CR>",          keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "J",     ":lua MoveWaypointDown()<CR>",        keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<CR>",  ":lua GoToWaypoint()<CR>",            keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "K",     ":lua MoveWaypointUp()<CR>",                               keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "J",     ":lua MoveWaypointDown()<CR>",                             keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "<CR>",  ":lua GoToWaypoint()<CR>",                                 keymap_opts())
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "c",     ":lua IncreaseContext(1)<CR>",        keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "C",     ":lua IncreaseContext(-1)<CR>",       keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "b",     ":lua IncreaseBeforeContext(1)<CR>",  keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "B",     ":lua IncreaseBeforeContext(-1)<CR>", keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "a",     ":lua IncreaseAfterContext(1)<CR>",   keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "A",     ":lua IncreaseAfterContext(-1)<CR>",  keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "R",     ":lua ResetContext()<CR>",            keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "c",     ":lua IncreaseContext(1)<CR>",                             keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "C",     ":lua IncreaseContext(-1)<CR>",                            keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "b",     ":lua IncreaseBeforeContext(1)<CR>",                       keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "B",     ":lua IncreaseBeforeContext(-1)<CR>",                      keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "a",     ":lua IncreaseAfterContext(1)<CR>",                        keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "A",     ":lua IncreaseAfterContext(-1)<CR>",                       keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "R",     ":lua ResetContext()<CR>",                                 keymap_opts())
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tp",    ":lua TogglePath()<CR>",              keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tf",    ":lua ToggleFullPath()<CR>",          keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tl",    ":lua ToggleLineNum()<CR>",           keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tn",    ":lua ToggleLineNum()<CR>",           keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tt",    ":lua ToggleFileText()<CR>",          keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tp",    ":lua TogglePath()<CR>",                                   keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tf",    ":lua ToggleFullPath()<CR>",                               keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tl",    ":lua ToggleLineNum()<CR>",                                keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tn",    ":lua ToggleLineNum()<CR>",                                keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tt",    ":lua ToggleFileText()<CR>",                               keymap_opts())
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "dd",    ":lua RemoveCurrentWaypoint()<CR>",   keymap_opts())
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "Q",     ":lua SetQFList()<CR>",               keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "dd",    ":lua RemoveCurrentWaypoint()<CR>",                        keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "Q",     ":lua SetQFList()<CR>",                                    keymap_opts())
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "g?",    ":lua ShowHelp()<CR>",                                     keymap_opts())
 end
 
 function Close()
   vim.api.nvim_win_close(bg_winnr, true)
   vim.api.nvim_win_close(winnr, true)
+  vim.api.nvim_buf_delete(bg_bufnr, {})
+  -- vim.api.nvim_buf_delete(bufnr, {})
   is_open = false
   bufnr = nil
+  bg_bufnr = nil
   winnr = nil
   bg_winnr = nil
 end

@@ -3,7 +3,7 @@ local M = {}
 local config = require("waypoint.config")
 local constants = require("waypoint.constants")
 local state = require("waypoint.state")
-local u = require("waypoint.utils_general")
+local u = require("waypoint.utils")
 local uw = require("waypoint.utils_waypoint")
 local highlight = require("waypoint.highlight")
 

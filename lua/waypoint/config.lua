@@ -8,9 +8,9 @@
 ---@field file string
 local M = {
   color_sign = "NONE",
-  color_footer_after_context = "#ff6666",
-  color_footer_before_context = "#66ff66",
-  color_footer_context = "#6666ff",
+  color_footer_after_context = "#ff7777",
+  color_footer_before_context = "#77ff77",
+  color_footer_context = "#7777ff",
   window_width = 0.8,
   window_height = 0.8,
   file = "./nvim-waypoints.json",
@@ -27,6 +27,7 @@ local M = {
   -- mark_char = " "
   telescope_filename_width = 30,
   telescope_linenr_width = 5,
+  indent_width = 6,
 }
 
 return M

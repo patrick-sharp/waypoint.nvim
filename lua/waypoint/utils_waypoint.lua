@@ -4,7 +4,7 @@ local state = require("waypoint.state")
 local constants = require("waypoint.constants")
 local highlight_treesitter = require("waypoint.highlight_treesitter")
 local highlight_vanilla = require("waypoint.highlight_vanilla")
-local u = require("waypoint.utils_general")
+local u = require("waypoint.utils")
 local p = require ("waypoint.print")
 
 
@@ -29,22 +29,21 @@ end
 --- @param num_lines_before integer
 --- @param num_lines_after integer
 --- @return waypoint.WaypointFileText
-function M.get_waypoint_file_text(waypoint, num_lines_before, num_lines_after)
+function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
   local bufnr = vim.fn.bufnr(waypoint.filepath)
   --- @type { [1]: integer, [2]: integer }
   local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {})
 
   local extmark_line_nr_i0 = extmark[1]
 
-  local start_line_nr_i0 = u.clamp(extmark[1] - num_lines_before, 0)
+  -- zero-indexed line number
+  local start_line_nr = u.clamp(extmark[1] - num_lines_before, 0)
   local line_count = vim.api.nvim_buf_line_count(bufnr)
-  local end_line_nr_i0 = u.clamp(extmark[1] + 1 + num_lines_after, 0, line_count)
+  -- zero-indexed line number
+  local end_line_nr = u.clamp(extmark[1] + 1 + num_lines_after, 0, line_count)
 
-  local marked_line_idx_0i = extmark_line_nr_i0 - start_line_nr_i0
-  local lines = vim.api.nvim_buf_get_lines(bufnr, start_line_nr_i0, end_line_nr_i0, false)
-    -- local finish_01 = vim.loop.hrtime()
-    -- local finish_02 = vim.loop.hrtime()
-    -- print("PERFfff:", (finish_02 - finish_01) / 1e6)
+  local marked_line_idx_0i = extmark_line_nr_i0 - start_line_nr
+  local lines = vim.api.nvim_buf_get_lines(bufnr, start_line_nr, end_line_nr, false)
 
   -- figure out how each line is highlighted
   --- @type table<table<waypoint.HighlightRange>>
@@ -53,9 +52,9 @@ function M.get_waypoint_file_text(waypoint, num_lines_before, num_lines_after)
 
   local file_uses_treesitter = vim.treesitter.highlighter.active[bufnr]
   if file_uses_treesitter then
-    hlranges = highlight_treesitter.get_treesitter_syntax_highlights(bufnr, start_line_nr_i0, end_line_nr_i0)
+    hlranges = highlight_treesitter.get_treesitter_syntax_highlights(bufnr, start_line_nr, end_line_nr)
   elseif pcall(vim.api.nvim_buf_get_var, bufnr, "current_syntax") then
-    hlranges = highlight_vanilla.get_vanilla_syntax_highlights(bufnr, lines, start_line_nr_i0)
+    hlranges = highlight_vanilla.get_vanilla_syntax_highlights(bufnr, lines, start_line_nr)
   else
     no_active_highlights = true
   end
@@ -66,7 +65,7 @@ function M.get_waypoint_file_text(waypoint, num_lines_before, num_lines_after)
     extmark = extmark,
     lines = lines,
     waypoint_linenr = marked_line_idx_0i,
-    context_start_linenr = start_line_nr_i0,
+    context_start_linenr = start_line_nr,
     highlight_ranges = hlranges,
   }
 end

@@ -119,4 +119,32 @@ function M.is_file_buffer()
 end
 
 
+local function split_rgb(color)
+  local red = math.floor(color / (256 * 256))
+  local blue = math.floor(color / 256 % 256)
+  local green = color % 256
+  return red, green, blue
+end
+
+--- @param a string the first hl_group
+--- @param b string the first hl_group
+--- @return integer the sum of the absolute differences between the rgb values of the hl_groups' background colors
+function M.hl_background_distance(a, b)
+  local bg_a = vim.api.nvim_get_hl(0, {name = a, link = false}).bg
+  local bg_b = vim.api.nvim_get_hl(0, {name = b, link = false}).bg
+
+  bg_a = bg_a or 0
+  bg_b = bg_b or 0
+
+  local red_a, green_a, blue_a = split_rgb(bg_a)
+  local red_b, green_b, blue_b = split_rgb(bg_b)
+
+  -- this is a crude measure of how different the colors are.
+  local red_distance = math.abs(red_a - red_b)
+  local green_distance = math.abs(green_a - green_b)
+  local blue_distance = math.abs(blue_a - blue_b)
+  local distance = red_distance + green_distance + blue_distance
+  return distance
+end
+
 return M
