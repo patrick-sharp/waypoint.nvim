@@ -6,6 +6,11 @@
 ---@field window_width number
 ---@field window_height number
 ---@field file string
+---@field mark_char string
+---@field telescope_filename_width integer
+---@field telescope_linenr_width integer
+---@field indent_width integer
+---@field enable_highlight boolean
 local M = {
   color_sign = "NONE",
   color_footer_after_context = "#ff7777",
@@ -14,20 +19,11 @@ local M = {
   window_width = 0.8,
   window_height = 0.8,
   file = "./nvim-waypoints.json",
-  --mark_char = "★",
-  --mark_char = "⌖",
-  -- mark_char = "⚑",
-  -- mark_char = "⛯",
-  -- mark_char = "📌",
-  -- mark_char = "→",
-  -- mark_char = "➡",
-  -- mark_char = "⥤",
   mark_char = "◆",
-  -- mark_char = "►",
-  -- mark_char = " "
   telescope_filename_width = 30,
   telescope_linenr_width = 5,
   indent_width = 6,
+  enable_highlight = true,
 }
 
 return M

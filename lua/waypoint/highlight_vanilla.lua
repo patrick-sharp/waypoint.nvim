@@ -29,10 +29,6 @@ function M.get_vanilla_syntax_highlights(bufnr, lines, start_line_nr_i0)
     local line_hlranges = {}
     local col_start = 1
     local curr_hl_id = get_highlight_id_at_pos(bufnr, i + start_line_nr_i0, 1)
-    -- local curr = nil
-    -- if hl_id ~= 0 then
-    --   curr = make_curr(hl_id, 1)
-    -- end
     for col=2,#line do
       local hl_id = get_highlight_id_at_pos(bufnr, i + start_line_nr_i0, col)
       if hl_id ~= curr_hl_id then
@@ -53,7 +49,7 @@ function M.get_vanilla_syntax_highlights(bufnr, lines, start_line_nr_i0)
         nsid = 0,
         hl_group = curr_hl_id,
         col_start = col_start,
-        col_end = -1,
+        col_end = -1 --vim.fn.col('$'),
       })
     end
     table.insert(hlranges, line_hlranges)

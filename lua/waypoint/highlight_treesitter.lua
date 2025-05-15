@@ -1,6 +1,5 @@
 local M = {}
-local ts = vim.treesitter
-local highlighter = ts.highlighter
+local highlighter = vim.treesitter.highlighter
 local constants = require("waypoint.constants")
 local p = require("waypoint.print")
 
@@ -91,7 +90,7 @@ end
 --- @param bufnr      integer
 --- @param start_line integer
 --- @param end_line   integer
---- @return table<table<HighlightRange>>
+--- @return table<table<waypoint.HighlightRange>>
 function M.get_treesitter_syntax_highlights(bufnr, start_line, end_line)
   --- @type table<TreesitterHighlight>
   local treesitter_highlights = M.get_nodes_with_highlights(bufnr, start_line, end_line)
@@ -103,7 +102,7 @@ function M.get_treesitter_syntax_highlights(bufnr, start_line, end_line)
     local hl_start_line = ts_highlight.range[1]
     local hl_end_line = ts_highlight.range[3]
     local base_idx = math.max(hl_start_line - start_line + 1, 1)
-    -- p(#hlranges, base_idx, hl_start_line, hl_end_line, start_line, end_line)
+    p(#hlranges, base_idx, hl_start_line, hl_end_line, start_line, end_line)
     if hl_start_line == hl_end_line then
       table.insert(hlranges[base_idx], {
         ns = constants.ns,

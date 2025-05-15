@@ -6,7 +6,10 @@ local state = require("waypoint.state")
 local u = require("waypoint.utils")
 
 
-function M.add_waypoint(filepath, line_nr)
+---@param filepath   string
+---@param line_nr    integer
+---@param annotation string | nil
+function M.add_waypoint(filepath, line_nr, annotation)
   if not u.is_file_buffer() then return end
   local bufnr = vim.fn.bufnr(filepath)
   local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, line_nr - 1, -1, {
@@ -22,6 +25,7 @@ function M.add_waypoint(filepath, line_nr)
     extmark_id = extmark_id,
     filepath = filepath,
     indent = 0,
+    annotation = annotation,
   }
 
   table.insert(state.waypoints, waypoint)

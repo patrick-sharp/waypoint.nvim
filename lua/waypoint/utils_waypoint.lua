@@ -1,7 +1,7 @@
 local M = {}
 
-local state = require("waypoint.state")
 local constants = require("waypoint.constants")
+local config = require("waypoint.config")
 local highlight_treesitter = require("waypoint.highlight_treesitter")
 local highlight_vanilla = require("waypoint.highlight_vanilla")
 local u = require("waypoint.utils")
@@ -54,15 +54,20 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
   local no_active_highlights = false
 
   local file_uses_treesitter = vim.treesitter.highlighter.active[bufnr]
-  if file_uses_treesitter then
+  if not config.enable_highlight then
+    no_active_highlights = true
+  elseif file_uses_treesitter then
     hlranges = highlight_treesitter.get_treesitter_syntax_highlights(bufnr, start_line_nr, end_line_nr)
   elseif pcall(vim.api.nvim_buf_get_var, bufnr, "current_syntax") then
     hlranges = highlight_vanilla.get_vanilla_syntax_highlights(bufnr, lines, start_line_nr)
+    p("DRAW")
+    p(hlranges)
+    p("\n")
   else
     no_active_highlights = true
   end
 
-  assert(#lines == #hlranges  or no_active_highlights, "#lines == " .. #lines ..", #hlranges == " .. #hlranges .. ", but they should be the same" )
+  assert(#lines == #hlranges or no_active_highlights, "#lines == " .. #lines ..", #hlranges == " .. #hlranges .. ", but they should be the same" )
 
   return {
     extmark = extmark,

@@ -1,4 +1,5 @@
 local augroup = "waypoint"
+local window_augroup = "waypoint.window"
 
 ---@class Constants
 ---@field augroup string
@@ -10,8 +11,11 @@ local augroup = "waypoint"
 ---@field hl_footer_context string
 ---@field hl_footer_waypoint_nr string
 ---@field ns integer
+---@field debug boolean
+---@field debug_file string
 local M = {
   augroup = augroup,
+  window_augroup = window_augroup,
   hl_group = "waypoint_hl",
   hl_selected = "waypoint_hl_selected",
   hl_sign = "waypoint_hl_sign",
@@ -27,6 +31,7 @@ local M = {
   -- table_separator = '|'
   -- table_separator = " "
   debug = true,
+  debug_file = "./debug.log"
 }
 
 return M

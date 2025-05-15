@@ -63,7 +63,9 @@
 [ ] indicate whether context for a mark is limited by file length (eof/bof)
 [ ] fix all the extra spacing I put in the lua lsp type annotations
 [ ] scope class declaration type annotations
-[ ] figure out why my method of loading other files at startup doesn't work for treesitter highlights but does for vanilla
+[x] figure out why my method of loading other files at startup doesn't work for treesitter highlights but does for vanilla
+    [ ] figure out why some treesitter highlights aren't caught (e.g. headers in treesitter sometimes)
+    [ ] figure out why some syntax highlights aren't caught (e.g. comments in zsh)
 [ ] add bookmarks.nvim-style config validation
 [ ] g? shows keybinds
     even telescope couldn't figure out how to make the nested window thing work, so I'll do this instead
@@ -86,9 +88,12 @@
     winnr
 [ ] remove index hungarian, use comments instead
 [x] fix the bug where opening nvim-tree fucks up the window
-[ ] fix bugs around leaving the window when the g? popup is up
 [x] add ability to toggle context
-
+[ ] take indentation into account when padding rows so they all have the same number of spaces
+[ ] debug why buffers have line count 0 if you start a session made with mksession
+[ ] add tabs
+[ ] handle the case where the file doesn't exist
+[ ] handle the case where the file gets renamed
 
 ### ADVANCED FEATURES:
 [x] delete waypoint from floating window with dd
@@ -103,7 +108,10 @@
   [ ] jump to and select prev waypoint while outside the float window
 [ ] add visual mode
 
-local self = TSHighlighter.active[buf]
-there's nothing active.
-I need to find out where the active highlighter gets set.
+highlights are still odd
+regular flickering (every 10 draws it seems) for some treesitter highlights
+    only two different options to flicker between, interesting
+    note that they are both colors, not flickering between white and color
+some highlights don't get picked up
+    both treesitter and syntax
 

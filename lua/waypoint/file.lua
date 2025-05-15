@@ -34,7 +34,9 @@ local function encode()
   local state_copy = u.deep_copy(state)
   for _, waypoint in pairs(state_copy.waypoints) do
     local extmark = uw.extmark_for_waypoint(waypoint)
+    -- extmarks don't persist between sessions, so clear this information
     waypoint.extmark_id = nil
+    waypoint.extmark_bufnr = nil
     waypoint.line_number = extmark[1]
   end
 
@@ -62,51 +64,34 @@ function M.load()
   for _,waypoint in pairs(decoded.waypoints) do
     local bufnr = vim.fn.bufnr(waypoint.filepath)
     if bufnr == -1 then
+      -- TODO: check if file even exists
       bufnr = vim.fn.bufadd(waypoint.filepath)
       vim.fn.bufload(bufnr)
       -- without this, vim won't apply syntax highlighting to the new buffer
       vim.api.nvim_exec_autocmds("BufRead", { buffer = bufnr })
       vim.api.nvim_buf_set_option(bufnr, 'buflisted', true)
-      -- vim.treesitter.highlighter._on_win(nil, nil, bufnr, -1, -1)
 
-      -- vim.api.nvim_exec_autocmds("FileType", { buffer = bufnr })
-      -- vim.treesitter.start(bufnr, 'markdown')
-      -- vim.treesitter.start(bufnr)
-
-      -- do
-      --   vim.api.nvim_create_autocmd("FileType", {
-      --     pattern = "markdown",
-      --     callback = function()
-      --         pcall(vim.treesitter.start)
-      --     end
-      --   })
-      --
-      --   vim.api.nvim_exec_autocmds("FileType", { buffer = bufnr })
-      -- end
-
-      -- do
-      --   -- Step 2: Set the filetype (important for Treesitter to know which parser to use)
-      --   vim.api.nvim_buf_set_option(bufnr, 'filetype', 'markdown') -- Adjust filetype as needed
-      --   -- Step 3: Read the file content if needed
-      --   vim.api.nvim_buf_call(bufnr, function()
-      --     vim.cmd('silent! edit')  -- This loads file content without switching to it
-      --   end)
-      --   -- Step 4: Start Treesitter parser
-      --   -- vim.treesitter.start(bufnr, 'markdown')  -- Specify language explicitly
-      --   local parser = vim.treesitter.get_parser(bufnr, 'markdown')
-      --   parser:parse() -- Force initial parse
-      --
-      --   -- Step 5: Create and attach highlighter manually
-      --   local highlighter = vim.treesitter.highlighter.new(parser)
-      --     vim.api.nvim_buf_call(bufnr, function()
-      --     -- This executes in the buffer context
-      --     highlighter:highlight(0, -1)
-      --   end)
-      -- end
-
+      -- these few lines force treesitter to highlight the buffer even though it's not in an open window
+      local buf_highlighter = vim.treesitter.highlighter.active[bufnr]
+      if buf_highlighter then
+        -- one-indexed
+        local line_count = vim.api.nvim_buf_line_count(bufnr)
+        -- seems to work with marks even at end of files, so topline must be an
+        -- inclusive zero-indexed bound
+        buf_highlighter._on_win(nil, nil, bufnr, 0, line_count - 1)
+      end
     end
+    -- zero-indexed line number
     local line_nr = waypoint.line_number
     local virt_text = nil
+
+    local line_count = vim.api.nvim_buf_line_count(bufnr)
+    if line_nr >= line_count then
+      -- keep in mind that if we get here, then waypoint won't start correctly.
+      -- this is more a message for me to debug than anything else
+      print("line " .. line_nr + 1 .. " out of bounds for " .. waypoint.filepath .. " bufnr " .. bufnr .. " with line count " .. line_count)
+      line_nr = line_count - 1
+    end
     local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, line_nr, -1, {
       id = line_nr + 1,
       sign_text = config.mark_char,
@@ -115,6 +100,9 @@ function M.load()
       virt_text = virt_text,
       virt_text_pos = "eol",  -- Position at end of line
     })
+    -- if not ok then
+    --   print("line " .. line_nr + 1 .. "out of bounds for " .. waypoint.filepath)
+    -- end
     waypoint.line_number = nil
     waypoint.extmark_id = extmark_id
   end
