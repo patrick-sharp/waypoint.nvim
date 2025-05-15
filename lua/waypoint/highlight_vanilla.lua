@@ -49,7 +49,7 @@ function M.get_vanilla_syntax_highlights(bufnr, lines, start_line_nr_i0)
         nsid = 0,
         hl_group = curr_hl_id,
         col_start = col_start,
-        col_end = -1 --vim.fn.col('$'),
+        col_end = #line,
       })
     end
     table.insert(hlranges, line_hlranges)

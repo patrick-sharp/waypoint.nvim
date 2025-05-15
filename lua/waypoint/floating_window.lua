@@ -281,8 +281,8 @@ local function draw(action)
         for _,hlrange in pairs(col_highlights) do
           p(hlrange)
           vim.api.nvim_buf_set_extmark(bufnr, constants.ns, lnum - 1, hlrange.col_start + indents[lnum], {
-            end_col = hlrange.col_end + indents[lnum], -- 0-based column number
-            hl_group = hlrange.hl_group,                   -- Highlight group to apply
+            end_col = hlrange.col_end + indents[lnum], -- 0-based exclusive column upper bound is the same as 1 based inclusive
+            hl_group = hlrange.hl_group,               -- Highlight group to apply
           })
 
           -- vim.api.nvim_buf_add_highlight(

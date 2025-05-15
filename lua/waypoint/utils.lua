@@ -9,7 +9,7 @@ local M = {}
 --- @field nsid integer
 --- @field hl_group string | integer   if the range comes from treesitter, it will be an id. If it comes from vanilla vim, it will be a name.
 --- @field col_start integer one-indexed inclusive column start for highlight
---- @field col_end integer one-indexed inclusive column end for highlight. if -1, means end of line
+--- @field col_end integer one-indexed inclusive column end for highlight.
 
 function M.log(...)
   if not debug then return end
