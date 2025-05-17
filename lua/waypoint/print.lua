@@ -1,5 +1,8 @@
 local constants = require("waypoint.constants")
 
+-- delete the debug file on startup
+os.remove(constants.debug_file)
+
 -- appends the message to the debug file
 local function p(...)
   local args_table = { n = select('#', ...), ... }

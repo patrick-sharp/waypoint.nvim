@@ -65,7 +65,7 @@
 [ ] scope class declaration type annotations
 [x] figure out why my method of loading other files at startup doesn't work for treesitter highlights but does for vanilla
     [ ] figure out why some treesitter highlights aren't caught (e.g. headers in treesitter sometimes)
-    [ ] figure out why some syntax highlights aren't caught (e.g. comments in zsh)
+    [x] figure out why some syntax highlights aren't caught (e.g. comments in zsh)
 [ ] add bookmarks.nvim-style config validation
 [ ] g? shows keybinds
     even telescope couldn't figure out how to make the nested window thing work, so I'll do this instead
@@ -81,7 +81,7 @@
     [ ] use the optimization afforded by that to only render waypoints + contexts currently on screen
 [ ] add annotations back in
 [ ] highlight table separators with WinSeparator
-[ ] document abbreviations
+[ ] document common abbreviations in a comment somewhere
     wp
     linenr
     bufnr
@@ -91,9 +91,15 @@
 [x] add ability to toggle context
 [ ] take indentation into account when padding rows so they all have the same number of spaces
 [ ] debug why buffers have line count 0 if you start a session made with mksession
-[ ] add tabs
+[ ] add ability to move to next waypoint at the same indentation level
+[ ] add ability to move to previous waypoint at one fewer indentation
+[ ] add ability to move to previous waypoint at no indentation
 [ ] handle the case where the file doesn't exist
 [ ] handle the case where the file gets renamed
+[x] fix bug where vanilla highlights at end of line don't get applied
+[ ] make indentation saved by number of indents, not number of spaces
+[ ] when you expand the context, keep the selected waypoint at the same point in the window rather than centering on it
+[ ] try this: instead of aligning every waypoint with every other one, only align a waypoint with its neighbors who have the same parent
 
 ### ADVANCED FEATURES:
 [x] delete waypoint from floating window with dd

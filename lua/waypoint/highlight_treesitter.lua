@@ -98,11 +98,11 @@ function M.get_treesitter_syntax_highlights(bufnr, start_line, end_line)
   for _=1,(end_line-start_line) do
     table.insert(hlranges, {})
   end
+  p(vim.fn.bufname(bufnr))
   for _,ts_highlight in pairs(treesitter_highlights) do
     local hl_start_line = ts_highlight.range[1]
     local hl_end_line = ts_highlight.range[3]
     local base_idx = math.max(hl_start_line - start_line + 1, 1)
-    p(#hlranges, base_idx, hl_start_line, hl_end_line, start_line, end_line)
     if hl_start_line == hl_end_line then
       table.insert(hlranges[base_idx], {
         ns = constants.ns,
@@ -111,38 +111,39 @@ function M.get_treesitter_syntax_highlights(bufnr, start_line, end_line)
         col_end = ts_highlight.range[4],
       })
     else
-      local start_i
-      if hl_start_line >= start_line then
-        -- p(base_idx)
-        start_i = hl_start_line + 1
-        -- table.insert(hlranges[base_idx], {
-        --   ns = constants.ns,
-        --   hl_group = ts_highlight.hl_id,
-        --   col_start = ts_highlight.range[2],
-        --   col_end = -1,
-        -- })
-      else
-        start_i = start_line + 1
-      end
-      local end_i = math.min(hl_end_line, end_line) - 1
-      for i=start_i,end_i do
-        -- p(base_idx + i - 1)
-        -- table.insert(hlranges[base_idx + i - 1], {
-        --   ns = constants.ns,
-        --   hl_group = ts_highlight.hl_id,
-        --   col_start = 0,
-        --   col_end = -1,
-        -- })
-      end
-      if hl_end_line <= end_line then
-        -- p(hl_end_line - hl_start_line)
-        -- table.insert(hlranges[hl_end_line - start_line], {
-        --   ns = constants.ns,
-        --   hl_group = ts_highlight.hl_id,
-        --   col_start = 0,
-        --   col_end = ts_highlight.range[4],
-        -- })
-      end
+      p(ts_highlight)
+      -- local start_i
+      -- if hl_start_line >= start_line then
+      --   -- p(base_idx)
+      --   start_i = hl_start_line + 1
+      --   -- table.insert(hlranges[base_idx], {
+      --   --   ns = constants.ns,
+      --   --   hl_group = ts_highlight.hl_id,
+      --   --   col_start = ts_highlight.range[2],
+      --   --   col_end = -1,
+      --   -- })
+      -- else
+      --   start_i = start_line + 1
+      -- end
+      -- local end_i = math.min(hl_end_line, end_line) - 1
+      -- for i=start_i,end_i do
+      --   -- p(base_idx + i - 1)
+      --   -- table.insert(hlranges[base_idx + i - 1], {
+      --   --   ns = constants.ns,
+      --   --   hl_group = ts_highlight.hl_id,
+      --   --   col_start = 0,
+      --   --   col_end = -1,
+      --   -- })
+      -- end
+      -- if hl_end_line <= end_line then
+      --   -- p(hl_end_line - hl_start_line)
+      --   -- table.insert(hlranges[hl_end_line - start_line], {
+      --   --   ns = constants.ns,
+      --   --   hl_group = ts_highlight.hl_id,
+      --   --   col_start = 0,
+      --   --   col_end = ts_highlight.range[4],
+      --   -- })
+      -- end
     end
   end
   return hlranges

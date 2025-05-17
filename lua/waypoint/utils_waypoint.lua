@@ -53,16 +53,17 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
   local hlranges = {}
   local no_active_highlights = false
 
-  local file_uses_treesitter = vim.treesitter.highlighter.active[bufnr]
-  if not config.enable_highlight then
-    no_active_highlights = true
-  elseif file_uses_treesitter then
-    hlranges = highlight_treesitter.get_treesitter_syntax_highlights(bufnr, start_line_nr, end_line_nr)
-  elseif pcall(vim.api.nvim_buf_get_var, bufnr, "current_syntax") then
-    hlranges = highlight_vanilla.get_vanilla_syntax_highlights(bufnr, lines, start_line_nr)
-    p("DRAW")
-    p(hlranges)
-    p("\n")
+  if constants.highlights_on then
+    local file_uses_treesitter = vim.treesitter.highlighter.active[bufnr]
+    if not config.enable_highlight then
+      no_active_highlights = true
+    elseif file_uses_treesitter then
+      hlranges = highlight_treesitter.get_treesitter_syntax_highlights(bufnr, start_line_nr, end_line_nr)
+    elseif pcall(vim.api.nvim_buf_get_var, bufnr, "current_syntax") then
+      hlranges = highlight_vanilla.get_vanilla_syntax_highlights(bufnr, lines, start_line_nr)
+    else
+      no_active_highlights = true
+    end
   else
     no_active_highlights = true
   end

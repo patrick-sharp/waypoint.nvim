@@ -22,7 +22,7 @@ local M = {
   mark_char = "◆",
   telescope_filename_width = 30,
   telescope_linenr_width = 5,
-  indent_width = 6,
+  indent_width = 4,
   enable_highlight = true,
 }
 

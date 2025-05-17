@@ -6,6 +6,7 @@ local state = require("waypoint.state")
 local u = require("waypoint.utils")
 local uw = require("waypoint.utils_waypoint")
 local highlight = require("waypoint.highlight")
+local pretty = require "waypoint.prettycjson"
 
 local function write_file(path, content)
   local uv = vim.uv or vim.loop  -- Compatibility for different Neovim versions
@@ -40,7 +41,7 @@ local function encode()
     waypoint.line_number = extmark[1]
   end
 
-  local data = vim.json.encode(state_copy)
+  local data = pretty(state_copy)
   return data
 end
 

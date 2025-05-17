@@ -11,6 +11,7 @@ local window_augroup = "waypoint.window"
 ---@field hl_footer_context string
 ---@field hl_footer_waypoint_nr string
 ---@field ns integer
+---@field highlights_on boolean
 ---@field debug boolean
 ---@field debug_file string
 local M = {
@@ -26,12 +27,64 @@ local M = {
   hl_footer_context = "waypoint_hl_footer_c",
   hl_footer_waypoint_nr = "waypoint_hl_footer_nr",
   ns = vim.api.nvim_create_namespace(augroup),
-  table_separator = '│',
   max_indent = 12,
-  -- table_separator = '|'
-  -- table_separator = " "
+  table_separator = '│',
+  -- ┼ ┴ ┬ ╵ ╷ 
+  -- table_separator = '|',
+  -- table_separator = '-',
+  -- table_separator = '–',
+  -- table_separator = '—',
+  -- table_separator = " ",
+  -- table_separator = "   ",
+  -- table_separator = "·",
+  -- table_separator = "···",
+  highlights_on = true,
   debug = true,
   debug_file = "./debug.log"
 }
+
+
+-- candidate indentation styles
+-- https://en.wikipedia.org/wiki/Box-drawing_characters
+--
+-- 7 │ README.md      │   6 │
+-- 7 │ README.md      │   6 │
+-- 7 ╵ README.md      ╵   6 ╵
+--     7 ╷ README.md      ╷   6 ╷
+--     7 │ README.md      │   6 │
+--     7 │ README.md      │   6 │
+--
+-- 7 │ README.md      │   6 │
+-- 7 │ README.md      │   6 │
+-- 7 ┼ README.md      ┼   6 ┼
+--     7 ┼ README.md      ┼   6 ┼
+--     7 │ README.md      │   6 │
+--     7 │ README.md      │   6 │
+--
+-- 7 │ README.md      │   6 │
+-- 7 │ README.md      │   6 │
+-- 7 ┴ README.md      ┴   6 ┴
+--     7 ┬ README.md      ┬   6 ┬
+--     7 │ README.md      │   6 │
+--     7 │ README.md      │   6 │
+--
+-- 7 │ README.md      │   6 │
+-- 7 │ README.md      │   6 │
+-- 7 │ README.md      │   6 │
+--   ┴   ┬            ┴   ┬ ┴   ┬
+--     7 │   README.md    │   6 │
+--     7 │ README.md      │   6 │
+--     7 │ README.md      │   6 │
+--
+-- 7 │ README.md      │   6 │
+-- 7 │ README.md      │   6 │
+-- 7 │ README.md      │   6 │
+--   ╵   ╷            ╵   ╷ ╵   ╷
+--     7 │ README.md      │   6 │
+--     7 │ README.md      │   6 │
+--     7 │ README.md      │   6 │
+--       ╵   ╷            ╵   ╷ ╵   ╷
+--         7 │ readme.md      │   6 │
+--         7 │ readme.md      │   6 │
 
 return M
