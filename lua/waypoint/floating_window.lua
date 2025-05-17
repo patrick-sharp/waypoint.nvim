@@ -156,8 +156,8 @@ local function draw(action)
       num_lines_after
     )
     local extmark_lines = waypoint_file_text.lines
-    local extmark_line_0i = waypoint_file_text.waypoint_linenr
-    local context_start_line_nr_0i = waypoint_file_text.context_start_linenr
+    local extmark_line = waypoint_file_text.waypoint_linenr -- zero-indexed
+    local context_start_linenr = waypoint_file_text.context_start_linenr -- zero-indexed
     local extmark_hlranges = waypoint_file_text.highlight_ranges
     assert(extmark_lines)
 
@@ -165,7 +165,7 @@ local function draw(action)
       highlight_start = #rows
       waypoint_topline = #rows + 1
       waypoint_bottomline = #rows + #extmark_lines
-      cursor_line = #rows + extmark_line_0i
+      cursor_line = #rows + extmark_line
     end
 
     for j, line_text in ipairs(extmark_lines) do
@@ -177,7 +177,7 @@ local function draw(action)
       local row = {}
 
       -- waypoint number
-      if j == extmark_line_0i + 1 then
+      if j == extmark_line + 1 then
         -- if this is line the waypoint is on
         table.insert(row, tostring(i))
         table.insert(line_hlranges, {})
@@ -189,7 +189,7 @@ local function draw(action)
 
       -- file path
       if state.show_path then
-        if j == extmark_line_0i + 1 then
+        if j == extmark_line + 1 then
           -- if this is line the waypoint is on
           if state.show_full_path then
             -- if we're showing the full path
@@ -210,7 +210,7 @@ local function draw(action)
 
       -- line number
       if state.show_line_num then
-        table.insert(row, tostring(context_start_line_nr_0i + j))
+        table.insert(row, tostring(context_start_linenr + j))
         table.insert(line_hlranges, constants.hl_linenr)
       end
 
@@ -278,10 +278,23 @@ local function draw(action)
       if type(col_highlights) == "string" then
         assert(false, "This should not happen, align_waypoint_table should change all column-wide highlights to a HighlightRange")
       else
-        for _,hlrange in pairs(col_highlights) do
+        for i,hlrange in pairs(col_highlights) do
           vim.api.nvim_buf_set_extmark(bufnr, constants.ns, lnum - 1, hlrange.col_start + indents[lnum], {
             end_col = hlrange.col_end + indents[lnum], -- 0-based exclusive column upper bound is the same as 1 based inclusive
             hl_group = hlrange.hl_group,               -- Highlight group to apply
+            -- need to set priority here because extmarks don't override each
+            -- other. I had a bug where the color of a highlighted range would
+            -- change every n keypresses, where n was something like 10. I have
+            -- no idea why, but the cause seems to be that in treesitter, some
+            -- highlights cover the exact same area but with a different color.
+            -- Treesitter seems to always return the highest priority highlight
+            -- range last, but in neovim it appears that if you draw an extmark,
+            -- then draw an extmark with a different color in the exact same
+            -- range as the other one, it won't necessarily override. to fix 
+            -- this, I set the priority of the extmark to be its position in the
+            -- list. This makes sure that highlights treesitter puts later get
+            -- higher priority.
+            priority=i,
           })
 
           -- vim.api.nvim_buf_add_highlight(

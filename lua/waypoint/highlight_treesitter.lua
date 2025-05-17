@@ -105,7 +105,6 @@ function M.get_treesitter_syntax_highlights(bufnr, lines, start_line, end_line)
     table.insert(hlranges, {})
   end
   for _,ts_highlight in pairs(treesitter_highlights) do
-    p(ts_highlight)
     local hl_start_line = ts_highlight.range[1]
     local hl_end_line = ts_highlight.range[3]
     -- one-indexed index into the highlight ranges table.
@@ -135,9 +134,7 @@ function M.get_treesitter_syntax_highlights(bufnr, lines, start_line, end_line)
       end
       -- these are both one-indexed inclusive
       local start_i = range_start_line - start_line + 1
-      local end_i = range_end_line - start_line
-      p(start_i, end_i)
-      p(lines)
+      local end_i = range_end_line - start_line + 1
       for i = start_i, end_i do
         local col_start
         if i == start_i then

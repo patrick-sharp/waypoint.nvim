@@ -7,10 +7,6 @@ local highlight_vanilla = require("waypoint.highlight_vanilla")
 local u = require("waypoint.utils")
 local p = require ("waypoint.print")
 
---- indexed by bufnr, linenr. Final table is list of highlight ranges on a line
---- @type table<integer, table<integer, table<waypoint.HighlightRange>>>
-local hlrange_cache = {}
-
 --- @param waypoint Waypoint
 --- @return { [1]: integer, [2]: integer }
 function M.extmark_for_waypoint(waypoint)
@@ -45,7 +41,7 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
   -- zero-indexed line number, exclusive bound
   local end_line_nr = u.clamp(extmark[1] + 1 + num_lines_after, 0, line_count)
 
-  local marked_line_idx_0i = extmark_line_nr - start_line_nr
+  local marked_line_idx = extmark_line_nr - start_line_nr -- zero-indexed
   local lines = vim.api.nvim_buf_get_lines(bufnr, start_line_nr, end_line_nr, false)
 
   -- figure out how each line is highlighted
@@ -73,7 +69,7 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
   return {
     extmark = extmark,
     lines = lines,
-    waypoint_linenr = marked_line_idx_0i,
+    waypoint_linenr = marked_line_idx,
     context_start_linenr = start_line_nr,
     highlight_ranges = hlranges,
   }

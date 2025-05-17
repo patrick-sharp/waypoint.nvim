@@ -64,9 +64,11 @@
 [ ] fix all the extra spacing I put in the lua lsp type annotations
 [ ] scope class declaration type annotations
 [x] figure out why my method of loading other files at startup doesn't work for treesitter highlights but does for vanilla
-    [ ] figure out why some treesitter highlights aren't caught (e.g. headers in treesitter sometimes)
+    [x] figure out why some treesitter highlights aren't caught (e.g. headers in treesitter sometimes)
+    [x] figure out why some treesitter highlights seem to flicker
     [x] figure out why some syntax highlights aren't caught (e.g. comments in zsh)
 [ ] add bookmarks.nvim-style config validation
+[x] g? shows an alternate informational buffer when pressed in the floating window
 [ ] g? shows keybinds
     even telescope couldn't figure out how to make the nested window thing work, so I'll do this instead
 [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
@@ -75,7 +77,7 @@
     [ ] allow number + j/k to move up number waypoints
     [ ] allow number + J/K to swap up number waypoints
 [ ] keybind to swap waypoint to top of file
-[ ] cache the highlights for each line to increase performance
+[ ] increase the performance of highlights and draw calls in general
 [x] get rid of the mark char in the floating window, it's redundant with the number
 [ ] get rid of the optimization to vary the widths of the waypoint context if it hits eof or bof
     [ ] use the optimization afforded by that to only render waypoints + contexts currently on screen
@@ -86,7 +88,7 @@
     linenr
     bufnr
     winnr
-[ ] remove index hungarian, use comments instead
+[x] remove index hungarian, use comments instead
 [x] fix the bug where opening nvim-tree fucks up the window
 [x] add ability to toggle context
 [ ] take indentation into account when padding rows so they all have the same number of spaces
@@ -97,9 +99,8 @@
 [ ] handle the case where the file doesn't exist
 [ ] handle the case where the file gets renamed
 [x] fix bug where vanilla highlights at end of line don't get applied
-[ ] make indentation saved by number of indents, not number of spaces
+[x] make indentation saved by number of indents, not number of spaces
 [ ] when you expand the context, keep the selected waypoint at the same point in the window rather than centering on it
-[ ] try this: instead of aligning every waypoint with every other one, only align a waypoint with its neighbors who have the same parent
 
 ### ADVANCED FEATURES:
 [x] delete waypoint from floating window with dd
@@ -121,3 +122,13 @@ regular flickering (every 10 draws it seems) for some treesitter highlights
 some highlights don't get picked up
     both treesitter and syntax
 
+
+hl_name = "@variable.tsx",    light blue
+hl_name = "@type.tsx",        teal
+hl_name = "@tag.builtin.tsx", dark blue
+hl_name = "@tag.tsx",         dark blue
+hl_name = "@type.tsx",        teal
+
+the flickering was due to extmarks with the same priority not overriding each other deterministically, so sometimes the earlier extmark's color would show up.
+doesn't even seem to matter what order the extmark was applied in.
+would expect hashmap order randomization to not be cyclical.

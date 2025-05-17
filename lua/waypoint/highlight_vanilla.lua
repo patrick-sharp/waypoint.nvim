@@ -19,18 +19,18 @@ local function get_highlight_id_at_pos(bufnr, line, col)
   return hl_id
 end
 
---- @param bufnr            integer
---- @param lines            table<string>
---- @param start_line_nr_i0 integer
+--- @param bufnr      integer
+--- @param lines      table<string>
+--- @param start_line integer zero-indexed
 --- @return table<table<waypoint.HighlightRange>> length of returned table is equal to number of lines.
-function M.get_vanilla_syntax_highlights(bufnr, lines, start_line_nr_i0)
+function M.get_vanilla_syntax_highlights(bufnr, lines, start_line)
   local hlranges = {}
   for i,line in pairs(lines) do
     local line_hlranges = {}
     local col_start = 1
-    local curr_hl_id = get_highlight_id_at_pos(bufnr, i + start_line_nr_i0, 1)
+    local curr_hl_id = get_highlight_id_at_pos(bufnr, i + start_line, 1)
     for col=2,#line do
-      local hl_id = get_highlight_id_at_pos(bufnr, i + start_line_nr_i0, col)
+      local hl_id = get_highlight_id_at_pos(bufnr, i + start_line, col)
       if hl_id ~= curr_hl_id then
         if curr_hl_id ~= 0 then
           table.insert(line_hlranges, {
