@@ -15,7 +15,7 @@
   [x] color for annotation
 
 ### POLISH:
-[x] Bookmarks window automatically resizes when window resizes
+[x] Waypoint window automatically resizes when window resizes
 [x] nicer colors / chars
   [x] nicer unicode table chars
   [x] nicer mark indicator chars
@@ -37,7 +37,7 @@
 [x] bug when navigated to from telescope
 [x] fix toggle bug
 [x] fix highlight when creating but not loading bug
-[x] only allow bookmarks in files (e.g. not in nvim-tree)
+[x] only allow waypoints in files (e.g. not in nvim-tree)
 [x] remove annotations
 [x] left pad the file numbers instead of right padding
 [x] move cursor without triggering autocmd (excess draws)
@@ -114,21 +114,3 @@
   [ ] jump to and select next waypoint while outside the float window
   [ ] jump to and select prev waypoint while outside the float window
 [ ] add visual mode
-
-highlights are still odd
-regular flickering (every 10 draws it seems) for some treesitter highlights
-    only two different options to flicker between, interesting
-    note that they are both colors, not flickering between white and color
-some highlights don't get picked up
-    both treesitter and syntax
-
-
-hl_name = "@variable.tsx",    light blue
-hl_name = "@type.tsx",        teal
-hl_name = "@tag.builtin.tsx", dark blue
-hl_name = "@tag.tsx",         dark blue
-hl_name = "@type.tsx",        teal
-
-the flickering was due to extmarks with the same priority not overriding each other deterministically, so sometimes the earlier extmark's color would show up.
-doesn't even seem to matter what order the extmark was applied in.
-would expect hashmap order randomization to not be cyclical.

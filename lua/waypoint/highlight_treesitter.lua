@@ -122,7 +122,7 @@ function M.get_treesitter_syntax_highlights(bufnr, lines, start_line, end_line)
       -- all are zero indexed. lower bound inclusive, upper bound exclusive
       local range_start_line = math.max(ts_highlight.range[1], start_line) -- make sure we only add highlight ranges for lines in the context, not before
       local range_start_col = ts_highlight.range[2]
-      local range_end_line = math.min(ts_highlight.range[3], end_line) -- make sure we only add highlight ranges for lines in the context, not after
+      local range_end_line = math.min(ts_highlight.range[3], end_line - 1) -- make sure we only add highlight ranges for lines in the context, not after
       local range_end_col = ts_highlight.range[4]
       if range_end_col == 0 then
         -- since treesitter highlight range upper bound is exclusive, if a
@@ -135,6 +135,7 @@ function M.get_treesitter_syntax_highlights(bufnr, lines, start_line, end_line)
       -- these are both one-indexed inclusive
       local start_i = range_start_line - start_line + 1
       local end_i = range_end_line - start_line + 1
+      p(start_i, end_i, #lines)
       for i = start_i, end_i do
         local col_start
         if i == start_i then
