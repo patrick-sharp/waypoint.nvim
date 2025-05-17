@@ -39,10 +39,10 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
   -- zero-indexed line number
   local extmark_line_nr = extmark[1]
 
-  -- zero-indexed line number
+  -- zero-indexed line number, inclusive bound
   local start_line_nr = u.clamp(extmark[1] - num_lines_before, 0)
   local line_count = vim.api.nvim_buf_line_count(bufnr)
-  -- zero-indexed line number
+  -- zero-indexed line number, exclusive bound
   local end_line_nr = u.clamp(extmark[1] + 1 + num_lines_after, 0, line_count)
 
   local marked_line_idx_0i = extmark_line_nr - start_line_nr
@@ -58,7 +58,7 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
     if not config.enable_highlight then
       no_active_highlights = true
     elseif file_uses_treesitter then
-      hlranges = highlight_treesitter.get_treesitter_syntax_highlights(bufnr, start_line_nr, end_line_nr)
+      hlranges = highlight_treesitter.get_treesitter_syntax_highlights(bufnr, lines, start_line_nr, end_line_nr)
     elseif pcall(vim.api.nvim_buf_get_var, bufnr, "current_syntax") then
       hlranges = highlight_vanilla.get_vanilla_syntax_highlights(bufnr, lines, start_line_nr)
     else

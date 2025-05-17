@@ -674,12 +674,6 @@ function M.open()
   -- I'm sure there are a bunch of other edge cases like this lurking around
   vim.api.nvim_win_set_option(winnr, "wrap", false)
 
-  state.view.leftcol = 0
-  draw("move_to_waypoint")
-
-  -- highlight
-  highlight.highlight_custom_groups()
-
   -- keymaps
   vim.api.nvim_buf_set_keymap(bufnr, 'n', 'q',     ":lua Leave()<CR>",                   keymap_opts)
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<esc>', ":lua Leave()<CR>",                   keymap_opts)
@@ -721,6 +715,12 @@ function M.open()
   vim.api.nvim_buf_set_keymap(bufnr, "n", "dd",    ":lua RemoveCurrentWaypoint()<CR>",   keymap_opts)
   vim.api.nvim_buf_set_keymap(bufnr, "n", "Q",     ":lua SetQFList()<CR>",               keymap_opts)
   vim.api.nvim_buf_set_keymap(bufnr, "n", "g?",    ":lua ToggleHelp()<CR>",              keymap_opts)
+
+  state.view.leftcol = 0
+  draw("move_to_waypoint")
+
+  -- highlight
+  highlight.highlight_custom_groups()
 end
 
 function Close()
