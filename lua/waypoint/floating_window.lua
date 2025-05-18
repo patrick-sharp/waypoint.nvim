@@ -12,7 +12,7 @@ local highlight = require("waypoint.highlight")
 -- these are some pieces of window state that don't belong in the main state
 -- table because they shouldn't be persisted to a file
 local is_open = false
-local bufnr
+local wp_bufnr
 local bg_bufnr
 local help_bufnr
 local winnr
@@ -33,7 +33,7 @@ local keymap_opts = {
 -- isn't a catastrophe waiting to happen
 local ignore_next_cursormoved
 
-local function set_modifiable(is_modifiable)
+local function set_modifiable(bufnr, is_modifiable)
   if bufnr == nil then error("Should not be called before initializing window") end
   vim.bo[bufnr].modifiable = is_modifiable
   vim.bo[bufnr].readonly = not is_modifiable
@@ -118,8 +118,8 @@ end
 
 
 local function draw(action)
-  set_modifiable(true)
-  vim.api.nvim_buf_clear_namespace(bufnr, constants.ns, 0, -1)
+  set_modifiable(wp_bufnr, true)
+  vim.api.nvim_buf_clear_namespace(wp_bufnr, constants.ns, 0, -1)
   local rows = {}
   local indents = {}
   line_to_waypoint = {}
@@ -261,7 +261,7 @@ local function draw(action)
   end
 
   local win_width = get_floating_window_width()
-  local aligned = uw.align_waypoint_table(rows, table_cell_types, hlranges, win_width)
+  local aligned = uw.align_waypoint_table(rows, table_cell_types, hlranges, true, win_width)
 
   longest_line_len = 0
   for i, line in pairs(aligned) do
@@ -270,7 +270,7 @@ local function draw(action)
   end
 
   -- Set text in the buffer
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, aligned)
+  vim.api.nvim_buf_set_lines(wp_bufnr, 0, -1, true, aligned)
 
   -- highlight the text in the buffer
   for lnum,line_hlranges in pairs(hlranges) do
@@ -279,7 +279,7 @@ local function draw(action)
         assert(false, "This should not happen, align_waypoint_table should change all column-wide highlights to a HighlightRange")
       else
         for i,hlrange in pairs(col_highlights) do
-          vim.api.nvim_buf_set_extmark(bufnr, constants.ns, lnum - 1, hlrange.col_start + indents[lnum], {
+          vim.api.nvim_buf_set_extmark(wp_bufnr, constants.ns, lnum - 1, hlrange.col_start + indents[lnum], {
             end_col = hlrange.col_end + indents[lnum], -- 0-based exclusive column upper bound is the same as 1 based inclusive
             hl_group = hlrange.hl_group,               -- Highlight group to apply
             -- need to set priority here because extmarks don't override each
@@ -340,7 +340,7 @@ local function draw(action)
 
 
     for i=highlight_start,highlight_end-1 do
-      vim.api.nvim_buf_add_highlight(bufnr, 0, constants.hl_selected, i, 0, -1)
+      vim.api.nvim_buf_add_highlight(wp_bufnr, 0, constants.hl_selected, i, 0, -1)
     end
   end
 
@@ -350,7 +350,7 @@ local function draw(action)
   vim.api.nvim_win_set_config(winnr, win_opts)
   vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
 
-  set_modifiable(false)
+  set_modifiable(wp_bufnr, false)
   if action == "center" or action == "context" then
     vim.api.nvim_command("normal! zz")
   end
@@ -359,6 +359,139 @@ local function draw(action)
   end
 end
 
+-- shared between the help buffer and the waypoint buffer
+local function set_shared_keybinds(bufnr)
+  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'mf',    ":lua Leave()<CR>",                            keymap_opts)
+
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "c",     ":<C-u>lua IncreaseContext(1)<CR>",            keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "C",     ":<C-u>lua IncreaseContext(-1)<CR>",           keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "b",     ":<C-u>lua IncreaseBeforeContext(1)<CR>",      keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "B",     ":<C-u>lua IncreaseBeforeContext(-1)<CR>",     keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "a",     ":<C-u>lua IncreaseAfterContext(1)<CR>",       keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "A",     ":<C-u>lua IncreaseAfterContext(-1)<CR>",      keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "R",     ":<C-u>lua ResetContext()<CR>",                keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "rc",    ":<C-u>lua ResetContext()<CR>",                keymap_opts)
+
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "ta",    ":lua ToggleAnnotation()<CR>",                 keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tp",    ":lua TogglePath()<CR>",                       keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tf",    ":lua ToggleFullPath()<CR>",                   keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tl",    ":lua ToggleLineNum()<CR>",                    keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tn",    ":lua ToggleLineNum()<CR>",                    keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tt",    ":lua ToggleFileText()<CR>",                   keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tc",    ":lua ToggleContext()<CR>",                    keymap_opts)
+
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "Q",     ":<C-u>lua SetQFList()<CR>",                   keymap_opts)
+end
+
+local function set_help_keybinds()
+  set_shared_keybinds(help_bufnr)
+
+  vim.api.nvim_buf_set_keymap(help_bufnr, 'n', 'q',     ":lua ToggleHelp()<CR>",                  keymap_opts)
+  vim.api.nvim_buf_set_keymap(help_bufnr, 'n', '<esc>', ":lua ToggleHelp()<CR>",                  keymap_opts)
+  vim.api.nvim_buf_set_keymap(help_bufnr, "n", "g?", ":lua ToggleHelp(" .. help_bufnr .. ")<CR>", keymap_opts)
+end
+
+
+local function set_waypoint_keybinds()
+  set_shared_keybinds(wp_bufnr)
+
+  vim.api.nvim_buf_set_keymap(wp_bufnr, 'n', 'q',     ":lua Leave()<CR>",                         keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, 'n', '<esc>', ":lua Leave()<CR>",                         keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "g?",    ":<C-u>lua ToggleHelp()<CR>",               keymap_opts)
+
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", ">",     ":<C-u>lua IndentLine(1)<CR>",              keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "<",     ":<C-u>lua IndentLine(-1)<CR>",             keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "ri",    ":lua ResetCurrentIndent()<CR>",            keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "rI",    ":lua ResetAllIndent()<CR>",                keymap_opts)
+
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "zL",    ":<C-u>lua Scroll(1)<CR>",                  keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "zH",    ":<C-u>lua Scroll(-1)<CR>",                 keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "0",     ":lua ResetScroll()<CR>",                   keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "rs",    ":lua ResetScroll()<CR>",                   keymap_opts)
+
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "j",     ":lua NextWaypoint()<CR>",                  keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "k",     ":lua PrevWaypoint()<CR>",                  keymap_opts)
+
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "K",     ":<C-u>lua MoveWaypointUp()<CR>",           keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "J",     ":<C-u>lua MoveWaypointDown()<CR>",         keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "sg",    ":lua MoveWaypointToTop()<CR>",             keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "sG",    ":lua MoveWaypointToBottom()<CR>",          keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "<CR>",  ":lua GoToCurrentWaypoint()<CR>",           keymap_opts)
+
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "dd",    ":<C-u>lua RemoveCurrentWaypoint()<CR>",    keymap_opts)
+end
+
+local function draw_help()
+  set_modifiable(help_bufnr, true)
+  local lines = {}
+  local highlights = {}
+
+  -- info about state
+  local prop_names = {
+    {"show_annotation", "Show annotation:"},
+    {"show_path", "Show file path:"},
+    {"show_full_path", "Show full file path:"},
+    {"show_file_text", "Show file text:"},
+    {"show_context", "Show context:"},
+  }
+
+  ---@type table<table<string>>
+  local toggles = {}
+  ---@type table<table<table<waypoint.HighlightRange>>>
+  local toggle_highlights = {}
+  for _,key_name in pairs(prop_names) do
+    local key = key_name[1]
+    local name = key_name[2]
+    local on_off
+    local hl_group
+    if state[key] then
+      on_off = "ON"
+      hl_group = constants.hl_toggle_on
+    else
+      on_off = "OFF"
+      hl_group = constants.hl_toggle_off
+    end
+    table.insert(toggles, { name, on_off })
+    table.insert(toggle_highlights,
+      {{}, {{
+        nsid = constants.ns,
+        hl_group = hl_group,
+        col_start = 1,
+        col_end = #on_off,
+      }}}
+    )
+  end
+  local aligned_toggles = uw.align_waypoint_table(toggles, {"string", "string"}, toggle_highlights, false, nil)
+  table.insert(lines, "Toggles")
+  table.insert(lines, "")
+  table.insert(highlights, {})
+  table.insert(highlights, {})
+  for i=1,#toggles do
+    table.insert(lines, aligned_toggles[i])
+    local row_highlights = {}
+    for j=1,#toggle_highlights[i] do
+      for k=1,#toggle_highlights[i][j] do
+        table.insert(row_highlights, toggle_highlights[i][j][k])
+      end
+    end
+    table.insert(highlights, row_highlights)
+  end
+
+  p(lines)
+  p(highlights)
+
+  vim.api.nvim_buf_set_lines(help_bufnr, 0, -1, true, lines)
+  -- hlranges is the set of highlight ranges for this line of the help
+  for i,hlranges in pairs(highlights) do
+    for _,hlrange in pairs(hlranges) do
+      vim.api.nvim_buf_set_extmark(help_bufnr, constants.ns, i - 1, hlrange.col_start, {
+        end_col = hlrange.col_end,
+        hl_group = hlrange.hl_group,
+      })
+    end
+  end
+  set_modifiable(help_bufnr, false)
+end
 
 local function open_help()
   local is_listed = false
@@ -374,15 +507,11 @@ local function open_help()
   })
 
   vim.api.nvim_win_set_buf(winnr, help_bufnr)
-  local lines = {"this will contain info about keybinds", "line 2"}
 
-  vim.api.nvim_buf_set_lines(help_bufnr, 0, -1, true, lines)
-  vim.api.nvim_buf_set_keymap(help_bufnr, "n", "g?", ":lua ToggleHelp(" .. help_bufnr .. ")<CR>", keymap_opts)
-  vim.bo[help_bufnr].modifiable = false
-  vim.bo[help_bufnr].readonly = true
+  set_help_keybinds()
+  draw_help()
+  highlight.highlight_custom_groups()
 end
-
-
 
 -- Function to indent or unindent the current line by 2 spaces
 -- if doIndent is true, indent. otherwise unindent
@@ -397,8 +526,6 @@ function IndentLine(increment)
   draw()
 end
 
-
-
 function MoveWaypointUp()
   if #state.waypoints <= 1 or (state.wpi == 1) then return end
   for _=1, vim.v.count1 do
@@ -409,8 +536,6 @@ function MoveWaypointUp()
   end
   draw("swap")
 end
-
-
 
 function MoveWaypointDown()
   if #state.waypoints <= 1 or (state.wpi == #state.waypoints) then return end
@@ -423,8 +548,6 @@ function MoveWaypointDown()
   draw("swap")
 end
 
-
-
 function MoveWaypointToTop()
   if #state.waypoints <= 2 or state.wpi == 1 then return end
   local temp = state.waypoints[state.wpi]
@@ -435,8 +558,6 @@ function MoveWaypointToTop()
   state.wpi = 1
   draw("swap")
 end
-
-
 
 function MoveWaypointToBottom()
   if #state.waypoints <= 2 or state.wpi == #state.waypoints then return end
@@ -449,8 +570,6 @@ function MoveWaypointToBottom()
   draw("swap")
 end
 
-
-
 function NextWaypoint()
   if state.wpi == nil or state.wpi == #state.waypoints then return end
   for _=1, vim.v.count1 do
@@ -462,12 +581,10 @@ function NextWaypoint()
     -- center on selected waypoint
     state.view.lnum = nil
   end
-  if bufnr then
+  if wp_bufnr then
     draw("move_to_waypoint")
   end
 end
-
-
 
 function PrevWaypoint()
   if state.wpi == nil or state.wpi == 1 then return end
@@ -478,17 +595,15 @@ function PrevWaypoint()
       #state.waypoints
     )
   end
-  if bufnr then
+  if wp_bufnr then
     draw("move_to_waypoint")
   end
 end
 
-
-
 function M.GoToCurrentWaypoint()
   if state.wpi == nil then return end
 
-  if bufnr then Leave() end
+  if wp_bufnr then Leave() end
 
   --- @type waypoint.Waypoint | nil 
   local waypoint = state.waypoints[state.wpi]
@@ -533,7 +648,6 @@ function M.GoToLastWaypoint()
   GoToCurrentWaypoint()
 end
 
-
 function IncreaseContext(increment)
   for _=1, vim.v.count1 do
     state.context = u.clamp(state.context + increment, 0)
@@ -543,7 +657,6 @@ function IncreaseContext(increment)
   clamp_view()
   draw("context")
 end
-
 
 function IncreaseBeforeContext(increment)
   for _=1, vim.v.count1 do
@@ -555,7 +668,6 @@ function IncreaseBeforeContext(increment)
   draw("context")
 end
 
-
 function IncreaseAfterContext(increment)
   for _=1, vim.v.count1 do
     state.after_context = u.clamp(state.after_context + increment, 0)
@@ -566,14 +678,12 @@ function IncreaseAfterContext(increment)
   draw("context")
 end
 
-
 function ResetContext()
   state.context = 0
   state.before_context = 0
   state.after_context = 0
   draw()
 end
-
 
 function Scroll(increment)
   local width = vim.api.nvim_get_option("columns")
@@ -586,7 +696,6 @@ function Scroll(increment)
   draw("scroll")
 end
 
-
 function ResetScroll()
   state.view.col = 0
   state.view.leftcol = 0
@@ -594,29 +703,58 @@ function ResetScroll()
 end
 
 
+function ToggleAnnotation()
+  state.show_annotation = not state.show_annotation
+  if help_bufnr then
+    draw_help()
+  else
+    draw()
+  end
+end
+
 function TogglePath()
   state.show_path = not state.show_path
-  draw()
+  if help_bufnr then
+    draw_help()
+  else
+    draw()
+  end
 end
 
 function ToggleFullPath()
   state.show_full_path = not state.show_full_path
-  draw()
+  if help_bufnr then
+    draw_help()
+  else
+    draw()
+  end
 end
 
 function ToggleLineNum()
   state.show_line_num = not state.show_line_num
-  draw()
+  if help_bufnr then
+    draw_help()
+  else
+    draw()
+  end
 end
 
 function ToggleFileText()
   state.show_file_text = not state.show_file_text
-  draw()
+  if help_bufnr then
+    draw_help()
+  else
+    draw()
+  end
 end
 
 function ToggleContext()
   state.show_context = not state.show_context
-  draw()
+  if help_bufnr then
+    draw_help()
+  else
+    draw()
+  end
 end
 
 function ResetCurrentIndent()
@@ -632,6 +770,8 @@ function ResetAllIndent()
   end
   draw()
 end
+
+
 
 function SetWaypointForCursor()
   if ignore_next_cursormoved then
@@ -672,10 +812,10 @@ end
 function SetQFList()
   local qflist = {}
   for _,waypoint in pairs(state.waypoints) do
-    local wp_bufnr = vim.fn.bufnr(waypoint.filepath)
-    local extmark = vim.api.nvim_buf_get_extmark_by_id(wp_bufnr, constants.ns, waypoint.extmark_id, {})
+    local bufnr = vim.fn.bufnr(waypoint.filepath)
+    local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {})
     local lnum = extmark[1]
-    local line = vim.api.nvim_buf_get_lines(wp_bufnr, lnum, lnum + 1, false)[1]
+    local line = vim.api.nvim_buf_get_lines(bufnr, lnum, lnum + 1, false)[1]
     table.insert(qflist, {
       filename = waypoint.filepath,
       lnum = lnum,
@@ -689,7 +829,7 @@ end
 
 function ToggleHelp()
   if help_bufnr then
-    vim.api.nvim_win_set_buf(winnr, bufnr)
+    vim.api.nvim_win_set_buf(winnr, wp_bufnr)
     help_bufnr = nil
     draw()
   else
@@ -712,26 +852,26 @@ function M.open()
 
   local is_listed = false
   local is_scratch = false
-  bufnr = vim.api.nvim_create_buf(is_listed, is_scratch)
+  wp_bufnr = vim.api.nvim_create_buf(is_listed, is_scratch)
   bg_bufnr = vim.api.nvim_create_buf(is_listed, is_scratch)
 
-  vim.bo[bufnr].buftype = "nofile" -- Prevents the buffer from being treated as a normal file
+  vim.bo[wp_bufnr].buftype = "nofile" -- Prevents the buffer from being treated as a normal file
   -- vim.bo[bufnr].bufhidden = "wipe" -- Ensures the buffer is removed when closed
-  vim.bo[bufnr].swapfile = false   -- Prevents swap file creation
+  vim.bo[wp_bufnr].swapfile = false   -- Prevents swap file creation
 
   -- this extension does not support wrap, all long lines will overflow off the
   -- edge of the screen
-  vim.api.nvim_buf_set_option(bufnr, 'wrap', false)
+  vim.api.nvim_buf_set_option(wp_bufnr, 'wrap', false)
 
   vim.api.nvim_create_autocmd("WinLeave", {
     group = constants.window_augroup,
-    buffer = bufnr,
+    buffer = wp_bufnr,
     callback = Close,
   })
 
   vim.api.nvim_create_autocmd("CursorMoved", {
     group = constants.window_augroup,
-    buffer = bufnr,
+    buffer = wp_bufnr,
     callback = SetWaypointForCursor,
   })
 
@@ -747,7 +887,7 @@ function M.open()
   bg_winnr = vim.api.nvim_open_win(bg_bufnr, false, bg_win_opts)
 
   -- Create the window
-  winnr = vim.api.nvim_open_win(bufnr, true, win_opts)
+  winnr = vim.api.nvim_open_win(wp_bufnr, true, win_opts)
 
   -- account for some color schemes having ridiculous colors for 
   -- the default floating window background.
@@ -771,65 +911,23 @@ function M.open()
   -- to the colon in command mode.
   -- the actual function you're binding has to access vim.v.count or 
   -- vim.v.count1 to access the count.
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'q',     ":lua Leave()<CR>",                        keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<esc>', ":lua Leave()<CR>",                        keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'mf',    ":lua Leave()<CR>",                        keymap_opts)
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", ">",     ":<C-u>lua IndentLine(1)<CR>",             keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<",     ":<C-u>lua IndentLine(-1)<CR>",            keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "ri",    ":lua ResetCurrentIndent()<CR>",           keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "rI",    ":lua ResetAllIndent()<CR>",               keymap_opts)
-
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "zL",    ":<C-u>lua Scroll(1)<CR>",                 keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "zH",    ":<C-u>lua Scroll(-1)<CR>",                keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "0",     ":lua ResetScroll()<CR>",                  keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "rs",    ":lua ResetScroll()<CR>",                  keymap_opts)
-
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "j",     ":lua NextWaypoint()<CR>",                 keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "k",     ":lua PrevWaypoint()<CR>",                 keymap_opts)
-
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "K",     ":<C-u>lua MoveWaypointUp()<CR>",          keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "J",     ":<C-u>lua MoveWaypointDown()<CR>",        keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "sg",    ":lua MoveWaypointToTop()<CR>",            keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "sG",    ":lua MoveWaypointToBottom()<CR>",         keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<CR>",  ":lua GoToCurrentWaypoint()<CR>",                 keymap_opts)
-
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "c",     ":<C-u>lua IncreaseContext(1)<CR>",        keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "C",     ":<C-u>lua IncreaseContext(-1)<CR>",       keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "b",     ":<C-u>lua IncreaseBeforeContext(1)<CR>",  keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "B",     ":<C-u>lua IncreaseBeforeContext(-1)<CR>", keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "a",     ":<C-u>lua IncreaseAfterContext(1)<CR>",   keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "A",     ":<C-u>lua IncreaseAfterContext(-1)<CR>",  keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "R",     ":<C-u>lua ResetContext()<CR>",            keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "rc",    ":<C-u>lua ResetContext()<CR>",            keymap_opts)
-
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tp",    ":lua TogglePath()<CR>",                   keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tf",    ":lua ToggleFullPath()<CR>",               keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tl",    ":lua ToggleLineNum()<CR>",                keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tn",    ":lua ToggleLineNum()<CR>",                keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tt",    ":lua ToggleFileText()<CR>",               keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tc",    ":lua ToggleContext()<CR>",                keymap_opts)
-
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "dd",    ":<C-u>lua RemoveCurrentWaypoint()<CR>",   keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "Q",     ":<C-u>lua SetQFList()<CR>",               keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "g?",    ":<C-u>lua ToggleHelp()<CR>",              keymap_opts)
+  set_waypoint_keybinds()
 
   state.view.leftcol = 0
   draw("move_to_waypoint")
-
-  -- highlight
   highlight.highlight_custom_groups()
 end
 
 function Close()
-  vim.api.nvim_buf_clear_namespace(bufnr, constants.ns, 0, -1)
+  vim.api.nvim_buf_clear_namespace(wp_bufnr, constants.ns, 0, -1)
   vim.api.nvim_win_close(bg_winnr, true)
   vim.api.nvim_win_close(winnr, true)
-  vim.api.nvim_buf_delete(bufnr, {})
+  vim.api.nvim_buf_delete(wp_bufnr, {})
   vim.api.nvim_buf_delete(bg_bufnr, {})
   vim.api.nvim_del_augroup_by_name(constants.window_augroup)
   is_open = false
-  bufnr = nil
+  wp_bufnr = nil
   bg_bufnr = nil
   winnr = nil
   bg_winnr = nil

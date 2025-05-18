@@ -90,24 +90,32 @@ I frequently use the following abbreviations in this codebase:
 [x] debug why buffers have line count 0 if you start a session made with mksession
 [x] fix bug where vanilla highlights at end of line don't get applied
 [x] make indentation saved by number of indents, not number of spaces
+config
 [ ] g? shows keybinds
 [ ] add bookmarks.nvim-style config validation
 [ ] think about persisting waypoints on every waypoint state change
-[ ] indicate whether context for a mark is limited by file length (eof/bof)
 [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
+    https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua
+    maybe use vim.schedule to do it async if worried about perf?
 [ ] get rid of the optimization to vary the widths of the waypoint context if it hits eof or bof
     [ ] use the optimization afforded by that to only render waypoints + contexts currently on screen
-[ ] add annotations back in
 [ ] highlight table separators with WinSeparator
 [ ] take indentation into account when padding rows so they all have the same number of spaces
+[ ] find out how nvim tree seems to dynamically adjust the brightness of the cursorline (NvimTreeCursorLine)
+keybinds
 [ ] add keybind to swap waypoint and all its subindented waypoints
 [ ] add ability to move to next waypoint at the same indentation level
 [ ] add ability to move to previous waypoint at one fewer indentation
 [ ] add ability to move to previous waypoint at no indentation
+bugs
 [ ] fix bugs around closing buffers with waypoints in them
 [ ] handle the case where the file doesn't exist when opening
 [ ] handle the case where the file gets renamed while open
 [ ] when you expand the context, keep the selected waypoint at the same point in the window rather than centering on it
+features
+[ ] add annotations back in
+[ ] indicate whether context for a mark is limited by file length (eof/bof)
+[ ] limit context size to the size of the window
 
 ### ADVANCED FEATURES:
 [x] delete waypoint from floating window with dd

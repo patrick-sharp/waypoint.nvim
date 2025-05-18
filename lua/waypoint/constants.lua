@@ -26,8 +26,12 @@ local M = {
   hl_footer_before_context = "waypoint_hl_footer_b",
   hl_footer_context = "waypoint_hl_footer_c",
   hl_footer_waypoint_nr = "waypoint_hl_footer_nr",
+  hl_toggle_on = "waypoint_hl_toggle_on",
+  hl_toggle_off = "waypoint_hl_toggle_off",
+  color_toggle_on = "#00ff00",
+  color_toggle_off = "#ff0000",
   ns = vim.api.nvim_create_namespace(augroup),
-  max_indent = 12,
+  max_indent = 16,
   table_separator = '│',
   -- ┼ ┴ ┬ ╵ ╷ 
   -- table_separator = '|',

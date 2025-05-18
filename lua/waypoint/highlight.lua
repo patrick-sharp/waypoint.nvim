@@ -52,13 +52,14 @@ function M.highlight_custom_groups()
 
   vim.cmd("highlight " .. constants.hl_selected .. " guibg=" .. color_cursor_line_hex)
   vim.cmd("highlight " .. constants.hl_sign .. " guifg=" .. config.color_sign .. " guibg=NONE")
-  -- vim.cmd("highlight link " .. constants.hl_sign .. " SpecialKey ")
   vim.cmd("highlight " .. constants.hl_directory .. " guifg=" .. color_dir_hex)
   vim.cmd("highlight " .. constants.hl_linenr .. " guifg=" .. color_nr_hex)
   vim.cmd("highlight " .. constants.hl_footer_after_context .. " guifg=" .. config.color_footer_after_context .. " guibg=" .. float_border_bg)
   vim.cmd("highlight " .. constants.hl_footer_before_context .. " guifg=" .. config.color_footer_before_context .. " guibg=" .. float_border_bg)
   vim.cmd("highlight " .. constants.hl_footer_context .. " guifg=" .. config.color_footer_context .. " guibg=" .. float_border_bg)
   vim.cmd("highlight " .. constants.hl_footer_waypoint_nr ..  " guibg=" .. float_border_bg)
+  vim.cmd("highlight " .. constants.hl_toggle_on ..  " guifg=" .. constants.color_toggle_on)
+  vim.cmd("highlight " .. constants.hl_toggle_off ..  " guifg=" .. constants.color_toggle_off)
 end
 
 return M

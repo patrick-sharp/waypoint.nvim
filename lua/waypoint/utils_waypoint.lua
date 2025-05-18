@@ -79,9 +79,10 @@ end
 --- @param t table<table<string>>
 --- @param table_cell_types table<string>
 --- @param highlights table<table<string | table<waypoint.HighlightRange>>>   rows x columns x (optionally) multiple highlights for a given column. This parameter is mutated to adjust the highlights of each line so they will work after the alignment.
---- @param win_width integer
+--- @param include_separator boolean if true, add constants.table_separator between each column
+--- @param win_width integer | nil if this is non-nil, add spaces to the right of each row to pad to this width
 --- @return table<string>
-function M.align_waypoint_table(t, table_cell_types, highlights, win_width)
+function M.align_waypoint_table(t, table_cell_types, highlights, include_separator, win_width)
   if #t == 0 then
     return {}
   end
@@ -125,8 +126,13 @@ function M.align_waypoint_table(t, table_cell_types, highlights, win_width)
           hlrange.col_end = hlrange.col_end + offset
         end
       end
-      -- the extra 2 for the spaces on either side of the table separator
-      offset = offset + padded_byte_length + #constants.table_separator + 2
+      if include_separator then
+        -- the extra 2 for the spaces on either side of the table separator
+        offset = offset + padded_byte_length + #constants.table_separator + 2
+      else
+        -- the extra 1 is the space between columns
+        offset = offset + padded_byte_length + 1
+      end
     end
   end
 
@@ -148,16 +154,24 @@ function M.align_waypoint_table(t, table_cell_types, highlights, win_width)
         end
         table.insert(fields, padded)
       end
-      table.insert(result, table.concat(fields, " " .. constants.table_separator .. " "))
-      local row_len = u.vislen(result[#result])
-      if row_len < win_width then
-        local num_padding_spaces = win_width - row_len
-        result[#result] = result[#result] .. string.rep(" ", num_padding_spaces)
+      if include_separator then
+        table.insert(result, table.concat(fields, " " .. constants.table_separator .. " "))
+      else
+        table.insert(result, table.concat(fields, " "))
+      end
+
+      if win_width then
+        local row_len = u.vislen(result[#result])
+        if row_len < win_width then
+          local num_padding_spaces = win_width - row_len
+          result[#result] = result[#result] .. string.rep(" ", num_padding_spaces)
+        end
       end
     end
   end
   return result
 end
+
 
 
 return M
