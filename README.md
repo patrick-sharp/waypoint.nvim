@@ -1,5 +1,16 @@
 # waypoint.nvim
 
+## Abbreviations used in this codebase
+
+I frequently use the following abbreviations in this codebase:
+* wp: waypoint
+* wpi: waypoint index, the index of the currently selected waypoint
+* bufnr: buffer number
+* linenr: line number
+* winnr: window numbe
+* ts: treesitter, the language parser library
+
+
 ## TODO:
 
 ### MVP:
@@ -58,11 +69,10 @@
 [x] increase performance of highlighting
 [x] find out how TOhtml works with vanilla syntax and fix my vanilla syntax highlighter
 [ ] fix bugs around closing buffers with waypoints in them
-[ ] indent after the waypoint number (this will be a pain)
 [ ] think about persisting waypoints on every waypoint state change
 [ ] indicate whether context for a mark is limited by file length (eof/bof)
 [ ] fix all the extra spacing I put in the lua lsp type annotations
-[ ] scope class declaration type annotations
+[x] scope class declaration type annotations
 [x] figure out why my method of loading other files at startup doesn't work for treesitter highlights but does for vanilla
     [x] figure out why some treesitter highlights aren't caught (e.g. headers in treesitter sometimes)
     [x] figure out why some treesitter highlights seem to flicker
@@ -73,9 +83,10 @@
     even telescope couldn't figure out how to make the nested window thing work, so I'll do this instead
 [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
 [ ] add keybind to swap waypoint and all its subindented waypoints
-[ ] allow numbers + motions
-    [ ] allow number + j/k to move up number waypoints
-    [ ] allow number + J/K to swap up number waypoints
+[x] allow numbers + motions
+    [x] allow number + j/k to move up number waypoints
+    [x] allow number + J/K to swap up number waypoints
+    [x] allow number + <> to indent number of times
 [ ] keybind to swap waypoint to top of file
 [ ] increase the performance of highlights and draw calls in general
 [x] get rid of the mark char in the floating window, it's redundant with the number
@@ -83,16 +94,12 @@
     [ ] use the optimization afforded by that to only render waypoints + contexts currently on screen
 [ ] add annotations back in
 [ ] highlight table separators with WinSeparator
-[ ] document common abbreviations in a comment somewhere
-    wp
-    linenr
-    bufnr
-    winnr
+[x] document common abbreviations in a comment somewhere
 [x] remove index hungarian, use comments instead
 [x] fix the bug where opening nvim-tree fucks up the window
 [x] add ability to toggle context
 [ ] take indentation into account when padding rows so they all have the same number of spaces
-[ ] debug why buffers have line count 0 if you start a session made with mksession
+[x] debug why buffers have line count 0 if you start a session made with mksession
 [ ] add ability to move to next waypoint at the same indentation level
 [ ] add ability to move to previous waypoint at one fewer indentation
 [ ] add ability to move to previous waypoint at no indentation

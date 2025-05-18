@@ -10,15 +10,6 @@ local constants = require("waypoint.constants")
 local config = require("waypoint.config")
 local p = require("waypoint.print")
 
--- function Wacka()
---   ts.get_nodes_in_linewise_range(
---     vim.fn.bufnr(),
---     vim.fn.line('.'),
---     vim.fn.line('.') + 10
---   )
--- end
---
-
 function M.setup(opts)
   -- set up config
   for k, v in pairs(opts) do

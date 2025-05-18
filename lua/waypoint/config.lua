@@ -1,4 +1,4 @@
----@class Config
+---@class waypoint.Config
 ---@field color_sign string
 ---@field color_footer_after_context string
 ---@field color_footer_before_context string
@@ -10,7 +10,10 @@
 ---@field telescope_filename_width integer
 ---@field telescope_linenr_width integer
 ---@field indent_width integer
+---@field scroll_increment integer
 ---@field enable_highlight boolean
+
+---@type waypoint.Config
 local M = {
   color_sign = "NONE",
   color_footer_after_context = "#ff7777",
@@ -23,6 +26,7 @@ local M = {
   telescope_filename_width = 30,
   telescope_linenr_width = 5,
   indent_width = 4,
+  scroll_increment = 6,
   enable_highlight = true,
 }
 

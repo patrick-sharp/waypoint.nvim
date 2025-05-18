@@ -7,7 +7,7 @@ local highlight_vanilla = require("waypoint.highlight_vanilla")
 local u = require("waypoint.utils")
 local p = require ("waypoint.print")
 
---- @param waypoint Waypoint
+--- @param waypoint waypoint.Waypoint
 --- @return { [1]: integer, [2]: integer }
 function M.extmark_for_waypoint(waypoint)
   local bufnr = vim.fn.bufnr(waypoint.filepath)
@@ -23,7 +23,7 @@ end
 --- @field context_start_linenr integer the zero-indexed line number within the file of the first line of the context
 --- @field highlight_ranges waypoint.HighlightRange[][] the syntax highlights for each line in lines. This table will have the same number of elements as lines.
 
---- @param waypoint Waypoint
+--- @param waypoint waypoint.Waypoint
 --- @param num_lines_before integer
 --- @param num_lines_after integer
 --- @return waypoint.WaypointFileText

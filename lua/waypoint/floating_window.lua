@@ -310,7 +310,7 @@ local function draw(action)
     end
   end
   if state.wpi and highlight_start and highlight_end and cursor_line then
-    if action == "move_to_waypoint" or action == "context" then
+    if action == "move_to_waypoint" or action == "context" or action == "swap" then
       vim.fn.setcursorcharpos(cursor_line + 1, state.view.col + 1)
     end
 
@@ -388,10 +388,12 @@ end
 -- if doIndent is true, indent. otherwise unindent
 function IndentLine(increment)
   if state.wpi == nil then return end
-  local indent = state.waypoints[state.wpi].indent + increment
-  state.waypoints[state.wpi].indent = u.clamp(
-    indent, 0, constants.max_indent
-  )
+  for _=1, vim.v.count1 do
+    local indent = state.waypoints[state.wpi].indent + increment
+    state.waypoints[state.wpi].indent = u.clamp(
+      indent, 0, constants.max_indent
+    )
+  end
   draw()
 end
 
@@ -399,35 +401,41 @@ end
 
 function MoveWaypointUp()
   if #state.waypoints <= 1 or (state.wpi == 1) then return end
-  local temp = state.waypoints[state.wpi - 1]
-  state.waypoints[state.wpi - 1] = state.waypoints[state.wpi]
-  state.waypoints[state.wpi] = temp
-  state.wpi = state.wpi - 1
-  draw()
+  for _=1, vim.v.count1 do
+    local temp = state.waypoints[state.wpi - 1]
+    state.waypoints[state.wpi - 1] = state.waypoints[state.wpi]
+    state.waypoints[state.wpi] = temp
+    state.wpi = state.wpi - 1
+  end
+  draw("swap")
 end
 
 
 
 function MoveWaypointDown()
   if #state.waypoints <= 1 or (state.wpi == #state.waypoints) then return end
-  local temp = state.waypoints[state.wpi + 1]
-  state.waypoints[state.wpi + 1] = state.waypoints[state.wpi]
-  state.waypoints[state.wpi] = temp
-  state.wpi = state.wpi + 1
-  draw()
+  for _=1, vim.v.count1 do
+    local temp = state.waypoints[state.wpi + 1]
+    state.waypoints[state.wpi + 1] = state.waypoints[state.wpi]
+    state.waypoints[state.wpi] = temp
+    state.wpi = state.wpi + 1
+  end
+  draw("swap")
 end
 
 
 
 function NextWaypoint()
   if state.wpi == nil or state.wpi == #state.waypoints then return end
-  state.wpi = u.clamp(
-    state.wpi + 1,
-    1,
-    #state.waypoints
-  )
-  -- center on selected waypoint
-  state.view.lnum = nil
+  for _=1, vim.v.count1 do
+    state.wpi = u.clamp(
+      state.wpi + 1,
+      1,
+      #state.waypoints
+    )
+    -- center on selected waypoint
+    state.view.lnum = nil
+  end
   draw("move_to_waypoint")
 end
 
@@ -435,11 +443,13 @@ end
 
 function PrevWaypoint()
   if state.wpi == nil or state.wpi == 1 then return end
-  state.wpi = u.clamp(
-    state.wpi - 1,
-    1,
-    #state.waypoints
-  )
+  for _=1, vim.v.count1 do
+    state.wpi = u.clamp(
+      state.wpi - 1,
+      1,
+      #state.waypoints
+    )
+  end
   draw("move_to_waypoint")
 end
 
@@ -449,7 +459,7 @@ function GoToWaypoint()
   if state.wpi == nil then return end
 
   Leave()
-  --- @type Waypoint | nil 
+  --- @type waypoint.Waypoint | nil 
   local waypoint = state.waypoints[state.wpi]
   if waypoint == nil then vim.api.nvim_err_writeln("waypoint should not be nil") return end
   local extmark = uw.extmark_for_waypoint(waypoint)
@@ -470,16 +480,21 @@ end
 
 
 function IncreaseContext(increment)
-  state.context = u.clamp(state.context + increment, 0)
-  state.view.lnum = nil
+  for _=1, vim.v.count1 do
+    state.context = u.clamp(state.context + increment, 0)
+    state.view.lnum = nil
+  end
+
   clamp_view()
   draw("context")
 end
 
 
 function IncreaseBeforeContext(increment)
-  state.before_context = u.clamp(state.before_context + increment, 0)
-  state.view.lnum = nil
+  for _=1, vim.v.count1 do
+    state.before_context = u.clamp(state.before_context + increment, 0)
+    state.view.lnum = nil
+  end
 
   clamp_view()
   draw("context")
@@ -487,8 +502,10 @@ end
 
 
 function IncreaseAfterContext(increment)
-  state.after_context = u.clamp(state.after_context + increment, 0)
-  state.view.lnum = nil
+  for _=1, vim.v.count1 do
+    state.after_context = u.clamp(state.after_context + increment, 0)
+    state.view.lnum = nil
+  end
 
   clamp_view()
   draw("context")
@@ -506,9 +523,11 @@ end
 function Scroll(increment)
   local width = vim.api.nvim_get_option("columns")
   local win_width = math.ceil(width * config.window_width)
-  local leftcol_max = u.clamp(longest_line_len - win_width, 0)
-  state.view.leftcol = u.clamp(state.view.leftcol + increment, 0, leftcol_max)
-  state.view.col = u.clamp(state.view.col, state.view.leftcol, state.view.leftcol + win_width - 1)
+  for _=1, vim.v.count1 do
+    local leftcol_max = u.clamp(longest_line_len - win_width, 0)
+    state.view.leftcol = u.clamp(state.view.leftcol + increment, 0, leftcol_max)
+    state.view.col = u.clamp(state.view.col, state.view.leftcol, state.view.leftcol + win_width - 1)
+  end
   draw("scroll")
 end
 
@@ -688,46 +707,56 @@ function M.open()
   vim.api.nvim_win_set_option(winnr, "wrap", false)
 
   -- keymaps
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'q',     ":lua Leave()<CR>",                   keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<esc>', ":lua Leave()<CR>",                   keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'mf',    ":lua Leave()<CR>",                   keymap_opts)
+  -- the <C-u> before the colon some keymaps allows them to be used with counts.
+  -- normally, typing a count and then colon will put you in command mode with 
+  -- .,.+count in front, which applies the command to the next <count> lines. 
+  -- for example, type 6 and then : will put you into command mode with :.,.+5
+  -- preset. If you run :.,.+5yank you will copy the current line and the 5 
+  -- lines after it.
+  -- The <C-u> is the bind to delete everything from the current cursor position
+  -- to the colon in command mode.
+  -- the actual function you're binding has to access vim.v.count or 
+  -- vim.v.count1 to access the count.
+  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'q',     ":lua Leave()<CR>",                        keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<esc>', ":lua Leave()<CR>",                        keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'mf',    ":lua Leave()<CR>",                        keymap_opts)
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", ">",     ":lua IndentLine(1)<CR>",             keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<",     ":lua IndentLine(-1)<CR>",            keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "ri",    ":lua ResetCurrentIndent()<CR>",      keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "rI",    ":lua ResetAllIndent()<CR>",          keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", ">",     ":<C-u>lua IndentLine(1)<CR>",             keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "<",     ":<C-u>lua IndentLine(-1)<CR>",            keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "ri",    ":lua ResetCurrentIndent()<CR>",           keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "rI",    ":lua ResetAllIndent()<CR>",               keymap_opts)
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "L",     ":lua Scroll(6)<CR>",                 keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "H",     ":lua Scroll(-6)<CR>",                keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "0",     ":lua ResetScroll()<CR>",             keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "rs",    ":lua ResetScroll()<CR>",             keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "zl",    ":<C-u>lua Scroll(1)<CR>",                 keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "zh",    ":<C-u>lua Scroll(-1)<CR>",                keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "0",     ":lua ResetScroll()<CR>",                  keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "rs",    ":lua ResetScroll()<CR>",                  keymap_opts)
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "j",     ":lua NextWaypoint()<CR>",            keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "k",     ":lua PrevWaypoint()<CR>",            keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "j",     ":lua NextWaypoint()<CR>",                 keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "k",     ":lua PrevWaypoint()<CR>",                 keymap_opts)
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "K",     ":lua MoveWaypointUp()<CR>",          keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "J",     ":lua MoveWaypointDown()<CR>",        keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<CR>",  ":lua GoToWaypoint()<CR>",            keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "K",     ":<C-u>lua MoveWaypointUp()<CR>",          keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "J",     ":<C-u>lua MoveWaypointDown()<CR>",        keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "<CR>",  ":lua GoToWaypoint()<CR>",                 keymap_opts)
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "c",     ":lua IncreaseContext(1)<CR>",        keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "C",     ":lua IncreaseContext(-1)<CR>",       keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "b",     ":lua IncreaseBeforeContext(1)<CR>",  keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "B",     ":lua IncreaseBeforeContext(-1)<CR>", keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "a",     ":lua IncreaseAfterContext(1)<CR>",   keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "A",     ":lua IncreaseAfterContext(-1)<CR>",  keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "R",     ":lua ResetContext()<CR>",            keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "rc",    ":lua ResetContext()<CR>",            keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "c",     ":<C-u>lua IncreaseContext(1)<CR>",        keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "C",     ":<C-u>lua IncreaseContext(-1)<CR>",       keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "b",     ":<C-u>lua IncreaseBeforeContext(1)<CR>",  keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "B",     ":<C-u>lua IncreaseBeforeContext(-1)<CR>", keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "a",     ":<C-u>lua IncreaseAfterContext(1)<CR>",   keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "A",     ":<C-u>lua IncreaseAfterContext(-1)<CR>",  keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "R",     ":<C-u>lua ResetContext()<CR>",            keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "rc",    ":<C-u>lua ResetContext()<CR>",            keymap_opts)
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tp",    ":lua TogglePath()<CR>",              keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tf",    ":lua ToggleFullPath()<CR>",          keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tl",    ":lua ToggleLineNum()<CR>",           keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tn",    ":lua ToggleLineNum()<CR>",           keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tt",    ":lua ToggleFileText()<CR>",          keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tc",    ":lua ToggleContext()<CR>",           keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tp",    ":lua TogglePath()<CR>",                   keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tf",    ":lua ToggleFullPath()<CR>",               keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tl",    ":lua ToggleLineNum()<CR>",                keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tn",    ":lua ToggleLineNum()<CR>",                keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tt",    ":lua ToggleFileText()<CR>",               keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tc",    ":lua ToggleContext()<CR>",                keymap_opts)
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "dd",    ":lua RemoveCurrentWaypoint()<CR>",   keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "Q",     ":lua SetQFList()<CR>",               keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "g?",    ":lua ToggleHelp()<CR>",              keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "dd",    ":<C-u>lua RemoveCurrentWaypoint()<CR>",   keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "Q",     ":<C-u>lua SetQFList()<CR>",               keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "g?",    ":<C-u>lua ToggleHelp()<CR>",              keymap_opts)
 
   state.view.leftcol = 0
   draw("move_to_waypoint")
