@@ -6,7 +6,8 @@ local state = require("waypoint.state")
 local u = require("waypoint.utils")
 local uw = require("waypoint.utils_waypoint")
 local highlight = require("waypoint.highlight")
-local pretty = require "waypoint.prettycjson"
+local pretty = require "waypoint.prettyjson"
+local p = require "waypoint.print"
 
 local function write_file(path, content)
   local uv = vim.uv or vim.loop  -- Compatibility for different Neovim versions
@@ -53,6 +54,25 @@ function M.save()
   write_file(config.file, data)
 end
 
+-- loads the buffer (so its text can be accessed) and triggers syntax
+-- highlighting for the buffer
+local function buffer_init(bufnr)
+  vim.fn.bufload(bufnr)
+  -- without this, vim won't apply syntax highlighting to the new buffer
+  vim.api.nvim_exec_autocmds("BufRead", { buffer = bufnr })
+  vim.api.nvim_buf_set_option(bufnr, 'buflisted', true)
+
+  -- these few lines force treesitter to highlight the buffer even though it's not in an open window
+  local buf_highlighter = vim.treesitter.highlighter.active[bufnr]
+  if buf_highlighter then
+    -- one-indexed
+    local line_count = vim.api.nvim_buf_line_count(bufnr)
+    -- seems to work with marks even at end of files, so topline must be an
+    -- inclusive zero-indexed bound
+    buf_highlighter._on_win(nil, nil, bufnr, 0, line_count - 1)
+  end
+end
+
 function M.load()
   local data = read_file(config.file)
   if data == nil then return end
@@ -67,45 +87,34 @@ function M.load()
     if bufnr == -1 then
       -- TODO: check if file even exists
       bufnr = vim.fn.bufadd(waypoint.filepath)
-      vim.fn.bufload(bufnr)
-      -- without this, vim won't apply syntax highlighting to the new buffer
-      vim.api.nvim_exec_autocmds("BufRead", { buffer = bufnr })
-      vim.api.nvim_buf_set_option(bufnr, 'buflisted', true)
-
-      -- these few lines force treesitter to highlight the buffer even though it's not in an open window
-      local buf_highlighter = vim.treesitter.highlighter.active[bufnr]
-      if buf_highlighter then
-        -- one-indexed
-        local line_count = vim.api.nvim_buf_line_count(bufnr)
-        -- seems to work with marks even at end of files, so topline must be an
-        -- inclusive zero-indexed bound
-        buf_highlighter._on_win(nil, nil, bufnr, 0, line_count - 1)
-      end
+      buffer_init(bufnr)
+    else
+      --elseif not vim.fn.bufloaded(bufnr) then
+      -- if the buffer is added, but not loaded. can happen when loading session file created by the mksession command
+      buffer_init(bufnr)
     end
     -- zero-indexed line number
     local line_nr = waypoint.line_number
     local virt_text = nil
 
     local line_count = vim.api.nvim_buf_line_count(bufnr)
-    if line_nr >= line_count then
+    if line_nr < line_count then
+      local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, line_nr, -1, {
+        id = line_nr + 1,
+        sign_text = config.mark_char,
+        priority = 1,
+        sign_hl_group = constants.hl_sign,
+        virt_text = virt_text,
+        virt_text_pos = "eol",  -- Position at end of line
+      })
+      waypoint.line_number = nil
+      waypoint.extmark_id = extmark_id
+    else
+      -- TODO: handle errors in such a way that the user can go check them out later
       -- keep in mind that if we get here, then waypoint won't start correctly.
       -- this is more a message for me to debug than anything else
       print("line " .. line_nr + 1 .. " out of bounds for " .. waypoint.filepath .. " bufnr " .. bufnr .. " with line count " .. line_count)
-      line_nr = line_count - 1
     end
-    local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, line_nr, -1, {
-      id = line_nr + 1,
-      sign_text = config.mark_char,
-      priority = 1,
-      sign_hl_group = constants.hl_sign,
-      virt_text = virt_text,
-      virt_text_pos = "eol",  -- Position at end of line
-    })
-    -- if not ok then
-    --   print("line " .. line_nr + 1 .. "out of bounds for " .. waypoint.filepath)
-    -- end
-    waypoint.line_number = nil
-    waypoint.extmark_id = extmark_id
   end
 
   highlight.highlight_custom_groups()
