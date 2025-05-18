@@ -462,7 +462,9 @@ function NextWaypoint()
     -- center on selected waypoint
     state.view.lnum = nil
   end
-  draw("move_to_waypoint")
+  if bufnr then
+    draw("move_to_waypoint")
+  end
 end
 
 
@@ -476,15 +478,18 @@ function PrevWaypoint()
       #state.waypoints
     )
   end
-  draw("move_to_waypoint")
+  if bufnr then
+    draw("move_to_waypoint")
+  end
 end
 
 
 
-function GoToWaypoint()
+function M.GoToCurrentWaypoint()
   if state.wpi == nil then return end
 
-  Leave()
+  if bufnr then Leave() end
+
   --- @type waypoint.Waypoint | nil 
   local waypoint = state.waypoints[state.wpi]
   if waypoint == nil then vim.api.nvim_err_writeln("waypoint should not be nil") return end
@@ -502,6 +507,30 @@ local function clamp_view()
   local leftcol_max = u.clamp(longest_line_len - win_width, 0)
   state.view.leftcol = u.clamp(state.view.leftcol, 0, leftcol_max)
   state.view.col = u.clamp(state.view.col, state.view.leftcol, state.view.leftcol + win_width - 1)
+end
+
+GoToCurrentWaypoint = M.GoToCurrentWaypoint
+
+function M.GoToNextWaypoint()
+  NextWaypoint()
+  GoToCurrentWaypoint()
+end
+
+function M.GoToPrevWaypoint()
+  PrevWaypoint()
+  GoToCurrentWaypoint()
+end
+
+function M.GoToFirstWaypoint()
+  if state.wpi == nil then return end
+  state.wpi = 1
+  GoToCurrentWaypoint()
+end
+
+function M.GoToLastWaypoint()
+  if state.wpi == nil then return end
+  state.wpi = #state.waypoints
+  GoToCurrentWaypoint()
 end
 
 
@@ -613,7 +642,6 @@ function SetWaypointForCursor()
   if not line_to_waypoint then return end
   -- use getcursorcharpos to avoid issues with unicode
   local cursor_pos = vim.fn.getcursorcharpos()
-  print(cursor_pos[2])
   state.view.lnum = cursor_pos[2]
   state.view.col = cursor_pos[3] - 1
 
@@ -752,8 +780,8 @@ function M.open()
   vim.api.nvim_buf_set_keymap(bufnr, "n", "ri",    ":lua ResetCurrentIndent()<CR>",           keymap_opts)
   vim.api.nvim_buf_set_keymap(bufnr, "n", "rI",    ":lua ResetAllIndent()<CR>",               keymap_opts)
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "zl",    ":<C-u>lua Scroll(1)<CR>",                 keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "zh",    ":<C-u>lua Scroll(-1)<CR>",                keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "zL",    ":<C-u>lua Scroll(1)<CR>",                 keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "zH",    ":<C-u>lua Scroll(-1)<CR>",                keymap_opts)
   vim.api.nvim_buf_set_keymap(bufnr, "n", "0",     ":lua ResetScroll()<CR>",                  keymap_opts)
   vim.api.nvim_buf_set_keymap(bufnr, "n", "rs",    ":lua ResetScroll()<CR>",                  keymap_opts)
 
@@ -762,9 +790,9 @@ function M.open()
 
   vim.api.nvim_buf_set_keymap(bufnr, "n", "K",     ":<C-u>lua MoveWaypointUp()<CR>",          keymap_opts)
   vim.api.nvim_buf_set_keymap(bufnr, "n", "J",     ":<C-u>lua MoveWaypointDown()<CR>",        keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "st",    ":lua MoveWaypointToTop()<CR>",            keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "sb",    ":lua MoveWaypointToBottom()<CR>",         keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<CR>",  ":lua GoToWaypoint()<CR>",                 keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "sg",    ":lua MoveWaypointToTop()<CR>",            keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "sG",    ":lua MoveWaypointToBottom()<CR>",         keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "<CR>",  ":lua GoToCurrentWaypoint()<CR>",                 keymap_opts)
 
   vim.api.nvim_buf_set_keymap(bufnr, "n", "c",     ":<C-u>lua IncreaseContext(1)<CR>",        keymap_opts)
   vim.api.nvim_buf_set_keymap(bufnr, "n", "C",     ":<C-u>lua IncreaseContext(-1)<CR>",       keymap_opts)

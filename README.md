@@ -68,20 +68,13 @@ I frequently use the following abbreviations in this codebase:
 [x] add treesitter highlights
 [x] increase performance of highlighting
 [x] find out how TOhtml works with vanilla syntax and fix my vanilla syntax highlighter
-[ ] think about persisting waypoints on every waypoint state change
-[ ] indicate whether context for a mark is limited by file length (eof/bof)
 [x] fix all the extra spacing I put in the lua lsp type annotations
 [x] scope class declaration type annotations
 [x] figure out why my method of loading other files at startup doesn't work for treesitter highlights but does for vanilla
     [x] figure out why some treesitter highlights aren't caught (e.g. headers in treesitter sometimes)
     [x] figure out why some treesitter highlights seem to flicker
     [x] figure out why some syntax highlights aren't caught (e.g. comments in zsh)
-[ ] add bookmarks.nvim-style config validation
 [x] g? shows an alternate informational buffer when pressed in the floating window
-[ ] g? shows keybinds
-    even telescope couldn't figure out how to make the nested window thing work, so I'll do this instead
-[ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
-[ ] add keybind to swap waypoint and all its subindented waypoints
 [x] allow numbers + motions
     [x] allow number + j/k to move up number waypoints
     [x] allow number + J/K to swap up number waypoints
@@ -90,24 +83,30 @@ I frequently use the following abbreviations in this codebase:
 [x] keybind to swap waypoint to bottom of file
 [ ] increase the performance of highlights and draw calls in general
 [x] get rid of the mark char in the floating window, it's redundant with the number
-[ ] get rid of the optimization to vary the widths of the waypoint context if it hits eof or bof
-    [ ] use the optimization afforded by that to only render waypoints + contexts currently on screen
-[ ] add annotations back in
-[ ] highlight table separators with WinSeparator
 [x] document common abbreviations in a comment somewhere
 [x] remove index hungarian, use comments instead
 [x] fix the bug where opening nvim-tree fucks up the window
 [x] add ability to toggle context
-[ ] take indentation into account when padding rows so they all have the same number of spaces
 [x] debug why buffers have line count 0 if you start a session made with mksession
+[x] fix bug where vanilla highlights at end of line don't get applied
+[x] make indentation saved by number of indents, not number of spaces
+[ ] g? shows keybinds
+[ ] add bookmarks.nvim-style config validation
+[ ] think about persisting waypoints on every waypoint state change
+[ ] indicate whether context for a mark is limited by file length (eof/bof)
+[ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
+[ ] get rid of the optimization to vary the widths of the waypoint context if it hits eof or bof
+    [ ] use the optimization afforded by that to only render waypoints + contexts currently on screen
+[ ] add annotations back in
+[ ] highlight table separators with WinSeparator
+[ ] take indentation into account when padding rows so they all have the same number of spaces
+[ ] add keybind to swap waypoint and all its subindented waypoints
 [ ] add ability to move to next waypoint at the same indentation level
 [ ] add ability to move to previous waypoint at one fewer indentation
 [ ] add ability to move to previous waypoint at no indentation
 [ ] fix bugs around closing buffers with waypoints in them
 [ ] handle the case where the file doesn't exist when opening
 [ ] handle the case where the file gets renamed while open
-[x] fix bug where vanilla highlights at end of line don't get applied
-[x] make indentation saved by number of indents, not number of spaces
 [ ] when you expand the context, keep the selected waypoint at the same point in the window rather than centering on it
 
 ### ADVANCED FEATURES:
@@ -115,10 +114,10 @@ I frequently use the following abbreviations in this codebase:
 [x] allow cursor to move within a waypoint if you're searching, and for subsequent searches to move between waypoints
 [x] quickfixlist for waypoints
 [x] telescope for waypoints
-[ ] add some features from harpoon
-  [ ] jump to currently selected waypoint while outside the float window
-  [ ] jump to first waypoint while outside the float window
-  [ ] jump to last waypoint while outside the float window
-  [ ] jump to and select next waypoint while outside the float window
-  [ ] jump to and select prev waypoint while outside the float window
+[x] add some features from harpoon
+  [x] jump to currently selected waypoint while outside the float window
+  [x] jump to first waypoint while outside the float window
+  [x] jump to last waypoint while outside the float window
+  [x] jump to and select next waypoint while outside the float window
+  [x] jump to and select prev waypoint while outside the float window
 [ ] add visual mode

@@ -29,6 +29,12 @@ function M.setup(opts)
     callback = file.save,
     once = true,
   })
+
+  vim.keymap.set({ 'n', 'v' }, 'mc', floating_window.GoToCurrentWaypoint, { noremap = true })
+  vim.keymap.set({ 'n', 'v' }, 'mn', floating_window.GoToNextWaypoint, { noremap = true })
+  vim.keymap.set({ 'n', 'v' }, 'mp', floating_window.GoToPrevWaypoint, { noremap = true })
+  vim.keymap.set({ 'n', 'v' }, 'mg', floating_window.GoToFirstWaypoint, { noremap = true })
+  vim.keymap.set({ 'n', 'v' }, 'mG', floating_window.GoToLastWaypoint, { noremap = true })
   vim.keymap.set({ 'n', 'v' }, 'mf', floating_window.open, { noremap = true })
   vim.keymap.set({ 'n', 'v' }, 'mt', crud.toggle_waypoint, { noremap = true })
   vim.keymap.set({ 'n', 'v' }, '<leader><leader>s', file.save, { noremap = true })
