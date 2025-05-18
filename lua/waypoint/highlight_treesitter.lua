@@ -130,12 +130,12 @@ function M.get_treesitter_syntax_highlights(bufnr, lines, start_line, end_line)
         -- previous line
         range_end_line = range_end_line - 1
         -- need to use vislen because this is a column length, not a byte length
-        -- p(range_end_line, range_start_line, range_end_line - start_line + 1)
         range_end_col = u.vislen(lines[range_end_line - start_line + 1])
       end
       -- these are both one-indexed inclusive
       local start_i = range_start_line - start_line + 1
-      local end_i = range_end_line - start_line + 1
+      local end_i = range_end_line - start_line
+
       for i = start_i, end_i do
         local col_start
         if i == start_i then

@@ -477,9 +477,6 @@ local function draw_help()
     table.insert(highlights, row_highlights)
   end
 
-  p(lines)
-  p(highlights)
-
   vim.api.nvim_buf_set_lines(help_bufnr, 0, -1, true, lines)
   -- hlranges is the set of highlight ranges for this line of the help
   for i,hlranges in pairs(highlights) do
