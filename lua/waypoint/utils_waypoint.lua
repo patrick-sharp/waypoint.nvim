@@ -17,11 +17,11 @@ function M.extmark_for_waypoint(waypoint)
 end
 
 --- @class waypoint.WaypointFileText
---- @field extmark { [1]: integer, [2]: integer } the zero-indexed row,col coordinates of the extmark corresponding to this waypoint
---- @field lines string[] the lines of text from the file the waypoint is in. Includes the line the waypoint is on and the lines in the context around the waypoint.
---- @field waypoint_linenr integer the zero-indexed line number the waypoint is on within the file.
+--- @field extmark              { [1]: integer, [2]: integer } the zero-indexed row,col coordinates of the extmark corresponding to this waypoint
+--- @field lines                string[] the lines of text from the file the waypoint is in. Includes the line the waypoint is on and the lines in the context around the waypoint.
+--- @field waypoint_linenr      integer the zero-indexed line number the waypoint is on within the file.
 --- @field context_start_linenr integer the zero-indexed line number within the file of the first line of the context
---- @field highlight_ranges waypoint.HighlightRange[][] the syntax highlights for each line in lines. This table will have the same number of elements as lines.
+--- @field highlight_ranges     waypoint.HighlightRange[][] the syntax highlights for each line in lines. This table will have the same number of elements as lines.
 
 --- @param waypoint waypoint.Waypoint
 --- @param num_lines_before integer

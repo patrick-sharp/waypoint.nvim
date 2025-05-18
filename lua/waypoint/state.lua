@@ -8,9 +8,9 @@
 ---@field annotation    string | nil
 
 ---@class waypoint.View
----@field lnum       integer | nil   the line number the cursor is on. if nil, default to the line the waypoint is on.
----@field col        integer         the column the cursor is on. zero indexed. keep in mind due to unicode shenanigans I never use this to restore the view. I manipulate the cursor in a unicode save way using getcursorcharpos and setcursorcharpos. never with with winsaveview or winrestview.
----@field leftcol    integer         the left column visible on the screen
+---@field lnum    integer | nil the line number the cursor is on. if nil, default to the line the waypoint is on.
+---@field col     integer       the column the cursor is on. zero indexed. keep in mind due to unicode shenanigans I never use this to restore the view. I manipulate the cursor in a unicode save way using getcursorcharpos and setcursorcharpos. never with with winsaveview or winrestview.
+---@field leftcol integer       the left column visible on the screen
 
 ---@class waypoint.State
 ---@field wpi             integer | nil   the index of the currently selected waypoint.

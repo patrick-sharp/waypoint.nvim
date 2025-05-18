@@ -425,6 +425,32 @@ end
 
 
 
+function MoveWaypointToTop()
+  if #state.waypoints <= 2 or state.wpi == 1 then return end
+  local temp = state.waypoints[state.wpi]
+  for i=state.wpi, 2, -1 do
+    state.waypoints[i] = state.waypoints[i-1]
+  end
+  state.waypoints[1] = temp
+  state.wpi = 1
+  draw("swap")
+end
+
+
+
+function MoveWaypointToBottom()
+  if #state.waypoints <= 2 or state.wpi == #state.waypoints then return end
+  local temp = state.waypoints[state.wpi]
+  for i=state.wpi, #state.waypoints - 1 do
+    state.waypoints[i] = state.waypoints[i+1]
+  end
+  state.waypoints[#state.waypoints] = temp
+  state.wpi = #state.waypoints
+  draw("swap")
+end
+
+
+
 function NextWaypoint()
   if state.wpi == nil or state.wpi == #state.waypoints then return end
   for _=1, vim.v.count1 do
@@ -736,6 +762,8 @@ function M.open()
 
   vim.api.nvim_buf_set_keymap(bufnr, "n", "K",     ":<C-u>lua MoveWaypointUp()<CR>",          keymap_opts)
   vim.api.nvim_buf_set_keymap(bufnr, "n", "J",     ":<C-u>lua MoveWaypointDown()<CR>",        keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "st",    ":lua MoveWaypointToTop()<CR>",            keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "sb",    ":lua MoveWaypointToBottom()<CR>",         keymap_opts)
   vim.api.nvim_buf_set_keymap(bufnr, "n", "<CR>",  ":lua GoToWaypoint()<CR>",                 keymap_opts)
 
   vim.api.nvim_buf_set_keymap(bufnr, "n", "c",     ":<C-u>lua IncreaseContext(1)<CR>",        keymap_opts)
