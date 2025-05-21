@@ -103,14 +103,13 @@ config
 [ ] take indentation into account when padding rows so they all have the same number of spaces
 [ ] find out how nvim tree seems to dynamically adjust the brightness of the cursorline (NvimTreeCursorLine)
 keybinds
-[ ] add keybind to swap waypoint and all its subindented waypoints
-[ ] add ability to move to next waypoint at the same indentation level
-[ ] add ability to move to previous waypoint at one fewer indentation
-[ ] add ability to move to previous waypoint at no indentation
+[x] add ability to move to next waypoint at the same indentation level
+[x] add ability to move to previous waypoint at one fewer indentation
+[x] add ability to move to previous waypoint at no indentation
 bugs
-[ ] fix bugs around closing buffers with waypoints in them
-[ ] handle the case where the file doesn't exist when opening
+[x] handle the case where the file doesn't exist when opening
     if the file doesn't exist, just show a message next to the waypoint that it doesn't exist, and don't allow the user to go to it.
+[ ] fix bugs around closing buffers with waypoints in them
 [ ] handle the case where the file gets renamed while open
     do this by associating waypoints with a buffer number when loaded into state, and a file name when persisted to json
 [ ] handle the case where the extmark gets deleted
@@ -119,14 +118,13 @@ bugs
 [ ] when you expand the context, keep the selected waypoint at the same point in the window rather than centering on it
 [ ] handle the case where there is a swap file (or any error opening the file)
 features
+[x] validate schema of file on load
+[x] in get_waypoint_context, if the file is out of bounds, show an out of bounds message
 [ ] add annotations back in
 [ ] indicate whether context for a mark is limited by file length (eof/bof)
 [ ] limit context size to the size of the window
 [ ] do something about extmarks moving to top of file when you filter the whole file through some external tool (e.g. \b for biome for me)
-[ ] if errors happen when making a waypoint, add the waypoint to the list of erroneous waypoints that you can see later in the g? menu or similar. still make the rest
-[x] validate schema of file on load
 [ ] repair state when draw_waypoint_window is called
-[ ] in get_waypoint_context, if the file is out of bounds, show an out of bounds message
 [ ] add perf logging for each function
 [ ] treesitter highlight bugs in readme for skhd somehow
 [ ] think about maybe adding scrolloff so the next waypoint is always visible?

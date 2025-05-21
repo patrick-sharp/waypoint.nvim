@@ -449,28 +449,35 @@ local function set_waypoint_keybinds()
   -- the actual function you're binding has to access vim.v.count or 
   -- vim.v.count1 to access the count.
 
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", ">",     ":<C-u>lua IndentLine(1)<CR>",              keymap_opts)
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "<",     ":<C-u>lua IndentLine(-1)<CR>",             keymap_opts)
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "ri",    ":lua ResetCurrentIndent()<CR>",            keymap_opts)
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "rI",    ":lua ResetAllIndent()<CR>",                keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", ">",     ":<C-u>lua IndentLine(1)<CR>",                    keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "<",     ":<C-u>lua IndentLine(-1)<CR>",                   keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "ri",    ":lua ResetCurrentIndent()<CR>",                  keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "rI",    ":lua ResetAllIndent()<CR>",                      keymap_opts)
 
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "zL",    ":<C-u>lua Scroll(1)<CR>",                  keymap_opts)
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "zH",    ":<C-u>lua Scroll(-1)<CR>",                 keymap_opts)
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "0",     ":lua ResetScroll()<CR>",                   keymap_opts)
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "rs",    ":lua ResetScroll()<CR>",                   keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "zL",    ":<C-u>lua Scroll(1)<CR>",                        keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "zH",    ":<C-u>lua Scroll(-1)<CR>",                       keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "0",     ":lua ResetScroll()<CR>",                         keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "rs",    ":lua ResetScroll()<CR>",                         keymap_opts)
 
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "j",     ":lua NextWaypoint()<CR>",                  keymap_opts)
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "k",     ":lua PrevWaypoint()<CR>",                  keymap_opts)
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "gg",    ":lua MoveToFirstWaypoint()<CR>",           keymap_opts)
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "G",     ":lua MoveToLastWaypoint()<CR>",            keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "j",     ":lua NextWaypoint()<CR>",                        keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "k",     ":lua PrevWaypoint()<CR>",                        keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "gg",    ":lua MoveToFirstWaypoint()<CR>",                 keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "G",     ":lua MoveToLastWaypoint()<CR>",                  keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "o",     ":<C-u>lua MoveToOuterWaypoint()<CR>",            keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "[",     ":<C-u>lua MoveToPrevNeighborWaypoint(true)<CR>", keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "]",     ":<C-u>lua MoveToNextNeighborWaypoint(true)<CR>", keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "{",     ":<C-u>lua MoveToPrevTopLevelWaypoint(true)<CR>", keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "}",     ":<C-u>lua MoveToNextTopLevelWaypoint(true)<CR>", keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "o",     ":<C-u>lua MoveToOuterWaypoint(true)<CR>",        keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "i",     ":<C-u>lua MoveToInnerWaypoint(true)<CR>",        keymap_opts)
 
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "K",     ":<C-u>lua MoveWaypointUp()<CR>",           keymap_opts)
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "J",     ":<C-u>lua MoveWaypointDown()<CR>",         keymap_opts)
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "sg",    ":lua MoveWaypointToTop()<CR>",             keymap_opts)
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "sG",    ":lua MoveWaypointToBottom()<CR>",          keymap_opts)
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "<CR>",  ":lua GoToCurrentWaypoint()<CR>",           keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "K",     ":<C-u>lua MoveWaypointUp()<CR>",                 keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "J",     ":<C-u>lua MoveWaypointDown()<CR>",               keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "sg",    ":lua MoveWaypointToTop()<CR>",                   keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "sG",    ":lua MoveWaypointToBottom()<CR>",                keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "<CR>",  ":lua GoToCurrentWaypoint()<CR>",                 keymap_opts)
 
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "dd",    ":<C-u>lua RemoveCurrentWaypoint()<CR>",    keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "dd",    ":<C-u>lua RemoveCurrentWaypoint()<CR>",          keymap_opts)
 end
 
 local function draw_help()
@@ -824,14 +831,12 @@ function ResetAllIndent()
   draw_waypoint_window()
 end
 
-
 function MoveToFirstWaypoint()
   if state.wpi then
     state.wpi = 1
   end
   draw_waypoint_window("move_to_waypoint")
 end
-
 
 function MoveToLastWaypoint()
   if state.wpi then
@@ -840,9 +845,137 @@ function MoveToLastWaypoint()
   draw_waypoint_window("move_to_waypoint")
 end
 
+function MoveToOuterWaypoint(draw)
+  if state.wpi == nil then return end
+  for _=1, vim.v.count1 do
+    local current_indent = state.waypoints[state.wpi].indent
+    while state.wpi > 1 and state.waypoints[state.wpi].indent >= current_indent do
+      state.wpi = state.wpi - 1
+    end
+  end
+  if draw then
+    draw_waypoint_window("move_to_waypoint")
+  end
+end
+
+function MoveToInnerWaypoint(draw)
+  if state.wpi == nil then return end
+  for _=1, vim.v.count1 do
+    local current_indent = state.waypoints[state.wpi].indent
+    local i = state.wpi
+    while i < #state.waypoints and state.waypoints[i].indent == current_indent do
+      i = i + 1
+    end
+    if state.waypoints[i].indent > current_indent then
+      state.wpi = i
+    end
+  end
+  if draw then
+    draw_waypoint_window("move_to_waypoint")
+  end
+end
 
 
-function SetWaypointForCursor()
+function M.GoToOuterWaypoint()
+  MoveToOuterWaypoint(false)
+  GoToCurrentWaypoint()
+end
+
+function M.GoToInnerWaypoint()
+  MoveToInnerWaypoint(false)
+  GoToCurrentWaypoint()
+end
+
+function MoveToPrevNeighborWaypoint(draw)
+  if state.wpi == nil or state.wpi == 1 then return end
+  for _=1, vim.v.count1 do
+    local current_indent = state.waypoints[state.wpi].indent
+    local i = state.wpi - 1
+    while i > 1 and state.waypoints[i].indent > current_indent do
+      i = i - 1
+    end
+    p(i, state.wpi, state.waypoints[i].indent, state.waypoints[state.wpi].indent)
+    if state.waypoints[i].indent == state.waypoints[state.wpi].indent then
+      state.wpi = i
+    end
+  end
+  if draw then
+    draw_waypoint_window("move_to_waypoint")
+  end
+end
+
+function MoveToNextNeighborWaypoint(draw)
+  if state.wpi == nil or state.wpi == #state.waypoints then return end
+  for _=1, vim.v.count1 do
+    local current_indent = state.waypoints[state.wpi].indent
+    local i = state.wpi + 1
+    while i < #state.waypoints and state.waypoints[i].indent > current_indent do
+      i = i + 1
+    end
+    if state.waypoints[i].indent == state.waypoints[state.wpi].indent then
+      state.wpi = i
+    end
+  end
+  if draw then
+    draw_waypoint_window("move_to_waypoint")
+  end
+end
+
+function M.GoToPrevNeighborWaypoint()
+  MoveToPrevNeighborWaypoint(false)
+  GoToCurrentWaypoint()
+end
+
+function M.GoToNextNeighborWaypoint()
+  MoveToNextNeighborWaypoint(false)
+  GoToCurrentWaypoint()
+end
+
+function MoveToPrevTopLevelWaypoint(draw)
+  if state.wpi == nil or state.wpi == 1 then return end
+  for _=1, vim.v.count1 do
+    local i = state.wpi - 1
+    while i > 1 and state.waypoints[i].indent > 0 do
+      i = i - 1
+    end
+    if state.waypoints[i].indent == 0 then
+      state.wpi = i
+    end
+  end
+  if draw then
+    draw_waypoint_window("move_to_waypoint")
+  end
+end
+
+
+function MoveToNextTopLevelWaypoint(draw)
+  if state.wpi == nil or state.wpi == #state.waypoints then return end
+  for _=1, vim.v.count1 do
+    local i = state.wpi + 1
+    while i < #state.waypoints and state.waypoints[i].indent > 0 do
+      i = i + 1
+    end
+    if state.waypoints[i].indent == 0 then
+      state.wpi = i
+    end
+  end
+  if draw then
+    draw_waypoint_window("move_to_waypoint")
+  end
+end
+
+function M.GoToPrevTopLevelWaypoint()
+  MoveToPrevTopLevelWaypoint(false)
+  GoToCurrentWaypoint()
+end
+
+function M.GoToNextTopLevelWaypoint()
+  MoveToNextTopLevelWaypoint(false)
+  GoToCurrentWaypoint()
+end
+
+
+local function set_waypoint_for_cursor()
   if ignore_next_cursormoved then
     ignore_next_cursormoved = false
     return
@@ -941,7 +1074,7 @@ function M.open()
   vim.api.nvim_create_autocmd("CursorMoved", {
     group = constants.window_augroup,
     buffer = wp_bufnr,
-    callback = SetWaypointForCursor,
+    callback = set_waypoint_for_cursor,
   })
 
   vim.api.nvim_create_autocmd("VimResized", {
