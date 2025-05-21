@@ -143,3 +143,8 @@ features
   [x] jump to and select next waypoint while outside the float window
   [x] jump to and select prev waypoint while outside the float window
 [ ] add visual mode
+
+
+still got some weird treesitter behavior
+it seems like in the skhd repo I'm using, it will only properly highlight some highlights if the highlight is onscreen or close to it
+some, like header 2, appear to never work

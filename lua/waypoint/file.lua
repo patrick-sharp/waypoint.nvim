@@ -36,10 +36,13 @@ local function encode()
   local state_copy = u.deep_copy(state)
   for _, waypoint in pairs(state_copy.waypoints) do
     local extmark = uw.extmark_for_waypoint(waypoint)
-    -- extmarks don't persist between sessions, so clear this information
-    waypoint.extmark_id = nil
-    waypoint.extmark_bufnr = nil
-    waypoint.line_number = extmark[1]
+    if extmark then
+      -- extmarks don't persist between sessions, so clear this information
+      waypoint.extmark_id = nil
+      waypoint.extmark_bufnr = nil
+      waypoint.bufnr = nil
+      waypoint.linenr = extmark[1]
+    end
   end
 
   local data = pretty(state_copy)
@@ -115,32 +118,28 @@ function M.load()
   end
   for _,waypoint in pairs(decoded.waypoints) do
     local bufnr = vim.fn.bufnr(waypoint.filepath)
-    if bufnr == -1 then
-      -- TODO: check if file even exists
+    if bufnr == -1 and vim.fn.filereadable(waypoint.filepath) ~= 0 then
       bufnr = vim.fn.bufadd(waypoint.filepath)
     end
-    buffer_init(bufnr)
-    -- zero-indexed line number
-    local line_nr = waypoint.line_number
-    local virt_text = nil
+    waypoint.bufnr = bufnr
+    if bufnr ~= -1 then
+      buffer_init(bufnr)
+      -- zero-indexed line number
+      local line_nr = waypoint.linenr
+      local virt_text = nil
 
-    local line_count = vim.api.nvim_buf_line_count(bufnr)
-    if line_nr < line_count then
-      local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, line_nr, -1, {
-        id = line_nr + 1,
-        sign_text = config.mark_char,
-        priority = 1,
-        sign_hl_group = constants.hl_sign,
-        virt_text = virt_text,
-        virt_text_pos = "eol",  -- Position at end of line
-      })
-      waypoint.line_number = nil
-      waypoint.extmark_id = extmark_id
-    else
-      -- TODO: handle errors in such a way that the user can go check them out later
-      -- keep in mind that if we get here, then waypoint won't start correctly.
-      -- this is more a message for me to debug than anything else
-      print("line " .. line_nr + 1 .. " out of bounds for " .. waypoint.filepath .. " bufnr " .. bufnr .. " with line count " .. line_count)
+      local line_count = vim.api.nvim_buf_line_count(bufnr)
+      if line_nr < line_count then
+        local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, line_nr, -1, {
+          id = line_nr + 1,
+          sign_text = config.mark_char,
+          priority = 1,
+          sign_hl_group = constants.hl_sign,
+          virt_text = virt_text,
+          virt_text_pos = "eol",
+        })
+        waypoint.extmark_id = extmark_id
+      end
     end
   end
 

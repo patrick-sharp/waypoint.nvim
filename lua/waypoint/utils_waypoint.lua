@@ -8,12 +8,15 @@ local u = require("waypoint.utils")
 local p = require ("waypoint.print")
 
 --- @param waypoint waypoint.Waypoint
---- @return { [1]: integer, [2]: integer }
+--- @return { [1]: integer, [2]: integer } | nil
 function M.extmark_for_waypoint(waypoint)
-  local bufnr = vim.fn.bufnr(waypoint.filepath)
-  --- @type { [1]: integer, [2]: integer }
-  local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {})
-  return extmark
+  if waypoint.extmark_id then
+    local bufnr = vim.fn.bufnr(waypoint.filepath)
+    --- @type { [1]: integer, [2]: integer }
+    local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {})
+    return extmark
+  end
+  return nil
 end
 
 --- @class waypoint.WaypointFileText
@@ -31,6 +34,42 @@ end
 --- @return waypoint.WaypointFileText
 function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
   local bufnr = vim.fn.bufnr(waypoint.filepath)
+
+  if waypoint.extmark_id == nil then
+    --- @type table<string>
+    local lines = {}
+    --- @type table<table<waypoint.HighlightRange>>
+    local hlranges = {}
+    for _=1, num_lines_before do
+      table.insert(lines, "")
+      table.insert(hlranges, {})
+    end
+    if waypoint.bufnr == -1 then
+      table.insert(lines, "Error: file does not exist")
+    else
+      table.insert(lines, "Error: line number is out of bounds")
+    end
+    table.insert(hlranges, {{
+      nsid = constants.ns,
+      hl_group = "WarningMsg",
+      col_start = 1,
+      col_end = #lines[#lines],
+    }})
+    for _=1, num_lines_after do
+      table.insert(lines, "")
+      table.insert(hlranges, {})
+    end
+    return {
+      extmark = nil,
+      lines = lines,
+      waypoint_linenr = num_lines_before,
+      context_start_linenr = waypoint.linenr,
+      file_start_idx = num_lines_before + 1,
+      file_end_idx = num_lines_before + 2,
+      highlight_ranges = hlranges,
+    }
+  end
+
   --- @type { [1]: integer, [2]: integer }
   local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {})
 

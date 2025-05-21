@@ -652,12 +652,16 @@ end
 function M.GoToCurrentWaypoint()
   if state.wpi == nil then return end
 
-  if wp_bufnr then Leave() end
-
   --- @type waypoint.Waypoint | nil 
   local waypoint = state.waypoints[state.wpi]
   if waypoint == nil then vim.api.nvim_err_writeln("waypoint should not be nil") return end
   local extmark = uw.extmark_for_waypoint(waypoint)
+
+  if extmark == nil then
+    return
+  end
+
+  if wp_bufnr then Leave() end
 
   local waypoint_bufnr = vim.fn.bufnr(waypoint.filepath)
   vim.api.nvim_win_set_buf(0, waypoint_bufnr)

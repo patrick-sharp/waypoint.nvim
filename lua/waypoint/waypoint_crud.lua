@@ -56,12 +56,14 @@ function M.remove_waypoint(existing_waypoint_i, filepath)
 
   ---@type waypoint.Waypoint
   local existing_waypoint = state.waypoints[existing_waypoint_i]
-  vim.api.nvim_buf_del_extmark(bufnr, constants.ns, existing_waypoint.extmark_id)
+  if existing_waypoint.extmark_id then
+    vim.api.nvim_buf_del_extmark(bufnr, constants.ns, existing_waypoint.extmark_id)
+  end
 
   --- @type table<waypoint.Waypoint>
   local waypoints_new = {}
-  for _, waypoint in pairs(state.waypoints) do
-    if not (waypoint.extmark_id == existing_waypoint.extmark_id) then
+  for i, waypoint in pairs(state.waypoints) do
+    if not (i == existing_waypoint_i) then
       table.insert(waypoints_new, waypoint)
     end
   end
