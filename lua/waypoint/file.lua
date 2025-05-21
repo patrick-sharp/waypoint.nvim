@@ -75,7 +75,7 @@ end
 
 local file_schema = {
   waypoints = "table",
-  --wpi = "integer",
+  wpi = "integer",
   show_annotation = "boolean",
   show_path = "boolean",
   show_full_path = "boolean",

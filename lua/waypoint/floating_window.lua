@@ -116,6 +116,9 @@ local function get_bg_win_opts(win_opts)
   return bg_win_opts
 end
 
+local function repair_state()
+
+end
 
 local function draw_waypoint_window(action)
   set_modifiable(wp_bufnr, true)
@@ -128,6 +131,14 @@ local function draw_waypoint_window(action)
     set_modifiable(wp_bufnr, false)
     return
   end
+
+  -- this is the only thing we do in this function that mutates state.
+  -- In general, I want draw_waypoint_window to be a pure function of state that draws the contents of the window.
+  -- However, sometimes data in state can get stale.
+  -- Examples: 
+  --   a file gets renamed, so the waypoint filepath is no longer correct.
+  --   a file gets closed, so the waypoint buffer number and extmark id are no longer correct.
+  repair_state()
 
   vim.api.nvim_buf_clear_namespace(wp_bufnr, constants.ns, 0, -1)
   local rows = {}
@@ -169,6 +180,8 @@ local function draw_waypoint_window(action)
     local extmark_line = waypoint_file_text.waypoint_linenr -- zero-indexed
     local context_start_linenr = waypoint_file_text.context_start_linenr -- zero-indexed
     local extmark_hlranges = waypoint_file_text.highlight_ranges
+    local file_start_idx = waypoint_file_text.file_start_idx
+    local file_end_idx = waypoint_file_text.file_end_idx
     assert(extmark_lines)
 
     if i == state.wpi then
@@ -220,7 +233,11 @@ local function draw_waypoint_window(action)
 
       -- line number
       if state.show_line_num then
-        table.insert(row, tostring(context_start_linenr + j))
+        if j >= file_start_idx and j < file_end_idx then
+          table.insert(row, tostring(context_start_linenr + j - file_start_idx + 1))
+        else
+          table.insert(row, "")
+        end
         table.insert(line_hlranges, constants.hl_linenr)
       end
 
@@ -421,6 +438,17 @@ local function set_waypoint_keybinds()
     return
   end
 
+  -- the <C-u> before the colon some keymaps allows them to be used with counts.
+  -- normally, typing a count and then colon will put you in command mode with 
+  -- .,.+count in front, which applies the command to the next <count> lines. 
+  -- for example, type 6 and then : will put you into command mode with :.,.+5
+  -- preset. If you run :.,.+5yank you will copy the current line and the 5 
+  -- lines after it.
+  -- The <C-u> is the bind to delete everything from the current cursor position
+  -- to the colon in command mode.
+  -- the actual function you're binding has to access vim.v.count or 
+  -- vim.v.count1 to access the count.
+
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", ">",     ":<C-u>lua IndentLine(1)<CR>",              keymap_opts)
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "<",     ":<C-u>lua IndentLine(-1)<CR>",             keymap_opts)
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "ri",    ":lua ResetCurrentIndent()<CR>",            keymap_opts)
@@ -433,6 +461,8 @@ local function set_waypoint_keybinds()
 
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "j",     ":lua NextWaypoint()<CR>",                  keymap_opts)
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "k",     ":lua PrevWaypoint()<CR>",                  keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "gg",    ":lua MoveToFirstWaypoint()<CR>",           keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "G",     ":lua MoveToLastWaypoint()<CR>",            keymap_opts)
 
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "K",     ":<C-u>lua MoveWaypointUp()<CR>",           keymap_opts)
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "J",     ":<C-u>lua MoveWaypointDown()<CR>",         keymap_opts)
@@ -791,6 +821,22 @@ function ResetAllIndent()
 end
 
 
+function MoveToFirstWaypoint()
+  if state.wpi then
+    state.wpi = 1
+  end
+  draw_waypoint_window("move_to_waypoint")
+end
+
+
+function MoveToLastWaypoint()
+  if state.wpi then
+    state.wpi = #state.waypoints
+  end
+  draw_waypoint_window("move_to_waypoint")
+end
+
+
 
 function SetWaypointForCursor()
   if ignore_next_cursormoved then
@@ -918,18 +964,6 @@ function M.open()
   -- I added this because if you open waypoint from telescope, it has wrap disabled
   -- I'm sure there are a bunch of other edge cases like this lurking around
   vim.api.nvim_win_set_option(winnr, "wrap", false)
-
-  -- keymaps
-  -- the <C-u> before the colon some keymaps allows them to be used with counts.
-  -- normally, typing a count and then colon will put you in command mode with 
-  -- .,.+count in front, which applies the command to the next <count> lines. 
-  -- for example, type 6 and then : will put you into command mode with :.,.+5
-  -- preset. If you run :.,.+5yank you will copy the current line and the 5 
-  -- lines after it.
-  -- The <C-u> is the bind to delete everything from the current cursor position
-  -- to the colon in command mode.
-  -- the actual function you're binding has to access vim.v.count or 
-  -- vim.v.count1 to access the count.
 
   set_waypoint_keybinds()
 

@@ -97,7 +97,7 @@ config
 [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
     https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua
     maybe use vim.schedule to do it async if worried about perf?
-[ ] get rid of the optimization to vary the widths of the waypoint context if it hits eof or bof
+[x] get rid of the optimization to vary the widths of the waypoint context if it hits eof or bof
     [ ] use the optimization afforded by that to only render waypoints + contexts currently on screen
 [ ] highlight table separators with WinSeparator
 [ ] take indentation into account when padding rows so they all have the same number of spaces
@@ -124,8 +124,12 @@ features
 [ ] limit context size to the size of the window
 [ ] do something about extmarks moving to top of file when you filter the whole file through some external tool (e.g. \b for biome for me)
 [ ] if errors happen when making a waypoint, add the waypoint to the list of erroneous waypoints that you can see later in the g? menu or similar. still make the rest
-[ ] validate schema of file on load
+[x] validate schema of file on load
+[ ] repair state when draw_waypoint_window is called
+[ ] in get_waypoint_context, if the file is out of bounds, show an out of bounds message
 [ ] add perf logging for each function
+[ ] treesitter highlight bugs in readme for skhd somehow
+[ ] think about maybe adding scrolloff so the next waypoint is always visible?
 
 ### ADVANCED FEATURES:
 [x] delete waypoint from floating window with dd

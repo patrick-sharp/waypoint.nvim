@@ -22,6 +22,8 @@ end
 --- @field waypoint_linenr      integer the zero-indexed line number the waypoint is on within the file.
 --- @field context_start_linenr integer the zero-indexed line number within the file of the first line of the context
 --- @field highlight_ranges     waypoint.HighlightRange[][] the syntax highlights for each line in lines. This table will have the same number of elements as lines.
+--- @field file_start_idx       integer index within lines where the start of the file is, or 1 if the file starts before the context
+--- @field file_end_idx         integer index within lines where the end of the file is, or #lines + 1 if the file ends after the context
 
 --- @param waypoint waypoint.Waypoint
 --- @param num_lines_before integer
@@ -66,12 +68,37 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
 
   assert(#lines == #hlranges or no_active_highlights, "#lines == " .. #lines ..", #hlranges == " .. #hlranges .. ", but they should be the same" )
 
+  -- if the waypoint context extends to before the start of the file or after
+  -- the end, pad to the length of the context with empty lines
+  local lines_before_start = start_line_nr - (extmark[1] - num_lines_before)
+  local lines_after_end = (extmark[1] + 1 + num_lines_after) - end_line_nr
+
+  local lines_ = {}
+  local hlranges_ = {}
+
+  for _=1, lines_before_start do
+    table.insert(lines_, "")
+    table.insert(hlranges_, {})
+  end
+
+  for i=1,#lines do
+    table.insert(lines_, lines[i])
+    table.insert(hlranges_, hlranges[i])
+  end
+
+  for _=1, lines_after_end do
+    table.insert(lines_, "")
+    table.insert(hlranges_, {})
+  end
+
   return {
     extmark = extmark,
-    lines = lines,
-    waypoint_linenr = marked_line_idx,
+    lines = lines_,
+    waypoint_linenr = marked_line_idx + lines_before_start,
     context_start_linenr = start_line_nr,
-    highlight_ranges = hlranges,
+    file_start_idx = lines_before_start + 1,
+    file_end_idx = #lines_ - lines_after_end + 1,
+    highlight_ranges = hlranges_,
   }
 end
 
