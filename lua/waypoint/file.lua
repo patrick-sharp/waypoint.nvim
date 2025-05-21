@@ -73,10 +73,41 @@ local function buffer_init(bufnr)
   end
 end
 
+local file_schema = {
+  waypoints = "table",
+  wpi = "integer",
+  show_annotation = "boolean",
+  show_path = "boolean",
+  show_full_path = "boolean",
+  show_line_num = "boolean",
+  show_file_text = "boolean",
+  show_context = "boolean",
+  after_context = "integer",
+  before_context = "integer",
+  context = "integer",
+  view = {
+    lnum = "integer",
+    col = "integer",
+    leftcol = "integer",
+  },
+}
+
 function M.load()
   local data = read_file(config.file)
   if data == nil then return end
   local decoded = vim.json.decode(data)
+  local is_valid, k, v = u.validate(decoded, file_schema)
+  if not is_valid then
+    state.load_error = table.concat({
+      "Error loading waypoints from file: expected value of type ",
+      tostring(file_schema[k]),
+      " for key ", tostring(k),
+      ", but received ", tostring(v), "."
+    })
+    print(state.load_error)
+    return
+  end
+
   -- before we load in the waypoints in from a file, delete the current ones.
   for _,waypoint in pairs(state.waypoints) do
     local bufnr = vim.fn.bufnr(waypoint.filepath)

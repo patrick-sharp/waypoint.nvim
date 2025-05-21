@@ -147,4 +147,31 @@ function M.hl_background_distance(a, b)
   return distance
 end
 
+-- NOTE: this does not handle unions (values that can have multiple types) or variable-length tables
+---@return boolean, any, any whether it matches, the first non-matching key, and the first non-matching value
+function M.validate(t, schema)
+  -- check that no extra properties are in t
+  for k,v in pairs(t) do
+    if schema[k] == nil then
+      return false, k, v
+    end
+  end
+  -- check that each property in t matches the schema
+  for k,v in pairs(schema) do
+    if type(v) == "string" then
+      if (type(t[k]) ~= v) then
+        return k, type(t[k])
+      end
+    elseif type(v) == "table" then
+      local success, k_, v_ = M.validate(t[k], v)
+      if not success then
+        return false, k_, v_
+      end
+    else
+      return false, nil, nil
+    end
+  end
+  return true, nil, nil
+end
+
 return M

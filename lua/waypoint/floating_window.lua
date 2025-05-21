@@ -117,8 +117,18 @@ local function get_bg_win_opts(win_opts)
 end
 
 
-local function draw(action)
+local function draw_waypoint_window(action)
   set_modifiable(wp_bufnr, true)
+
+  if state.load_error then
+    vim.api.nvim_buf_set_lines(wp_bufnr, 0, -1, true, {
+      state.load_error,
+      "Press <TBD> to delete the file and clear all waypoint state"
+    })
+    set_modifiable(wp_bufnr, false)
+    return
+  end
+
   vim.api.nvim_buf_clear_namespace(wp_bufnr, constants.ns, 0, -1)
   local rows = {}
   local indents = {}
@@ -310,7 +320,14 @@ local function draw(action)
     end
   end
   if state.wpi and highlight_start and highlight_end and cursor_line then
-    if action == "move_to_waypoint" or action == "context" or action == "swap" then
+    -- for certain actions, we need to move the cursor to where the state view says it is
+    local should_move_cursor = (
+      action == "move_to_waypoint"
+      or action == "context"
+      or action == "swap"
+    )
+
+    if should_move_cursor then
       vim.fn.setcursorcharpos(cursor_line + 1, state.view.col + 1)
     end
 
@@ -395,9 +412,14 @@ end
 local function set_waypoint_keybinds()
   set_shared_keybinds(wp_bufnr)
 
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "g?",    ":<C-u>lua ToggleHelp()<CR>",               keymap_opts)
   vim.api.nvim_buf_set_keymap(wp_bufnr, 'n', 'q',     ":lua Leave()<CR>",                         keymap_opts)
   vim.api.nvim_buf_set_keymap(wp_bufnr, 'n', '<esc>', ":lua Leave()<CR>",                         keymap_opts)
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "g?",    ":<C-u>lua ToggleHelp()<CR>",               keymap_opts)
+
+  if state.load_error then
+    vim.api.nvim_buf_set_keymap(wp_bufnr, 'n', '<CR>',":lua ResetState()<CR>", keymap_opts)
+    return
+  end
 
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", ">",     ":<C-u>lua IndentLine(1)<CR>",              keymap_opts)
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "<",     ":<C-u>lua IndentLine(-1)<CR>",             keymap_opts)
@@ -520,7 +542,7 @@ function IndentLine(increment)
       indent, 0, constants.max_indent
     )
   end
-  draw()
+  draw_waypoint_window()
 end
 
 function MoveWaypointUp()
@@ -531,7 +553,7 @@ function MoveWaypointUp()
     state.waypoints[state.wpi] = temp
     state.wpi = state.wpi - 1
   end
-  draw("swap")
+  draw_waypoint_window("swap")
 end
 
 function MoveWaypointDown()
@@ -542,7 +564,7 @@ function MoveWaypointDown()
     state.waypoints[state.wpi] = temp
     state.wpi = state.wpi + 1
   end
-  draw("swap")
+  draw_waypoint_window("swap")
 end
 
 function MoveWaypointToTop()
@@ -553,7 +575,7 @@ function MoveWaypointToTop()
   end
   state.waypoints[1] = temp
   state.wpi = 1
-  draw("swap")
+  draw_waypoint_window("swap")
 end
 
 function MoveWaypointToBottom()
@@ -564,7 +586,7 @@ function MoveWaypointToBottom()
   end
   state.waypoints[#state.waypoints] = temp
   state.wpi = #state.waypoints
-  draw("swap")
+  draw_waypoint_window("swap")
 end
 
 function NextWaypoint()
@@ -579,7 +601,7 @@ function NextWaypoint()
     state.view.lnum = nil
   end
   if wp_bufnr then
-    draw("move_to_waypoint")
+    draw_waypoint_window("move_to_waypoint")
   end
 end
 
@@ -593,7 +615,7 @@ function PrevWaypoint()
     )
   end
   if wp_bufnr then
-    draw("move_to_waypoint")
+    draw_waypoint_window("move_to_waypoint")
   end
 end
 
@@ -652,7 +674,7 @@ function IncreaseContext(increment)
   end
 
   clamp_view()
-  draw("context")
+  draw_waypoint_window("context")
 end
 
 function IncreaseBeforeContext(increment)
@@ -662,7 +684,7 @@ function IncreaseBeforeContext(increment)
   end
 
   clamp_view()
-  draw("context")
+  draw_waypoint_window("context")
 end
 
 function IncreaseAfterContext(increment)
@@ -672,14 +694,14 @@ function IncreaseAfterContext(increment)
   end
 
   clamp_view()
-  draw("context")
+  draw_waypoint_window("context")
 end
 
 function ResetContext()
   state.context = 0
   state.before_context = 0
   state.after_context = 0
-  draw()
+  draw_waypoint_window("context")
 end
 
 function Scroll(increment)
@@ -690,13 +712,13 @@ function Scroll(increment)
     state.view.leftcol = u.clamp(state.view.leftcol + increment, 0, leftcol_max)
     state.view.col = u.clamp(state.view.col, state.view.leftcol, state.view.leftcol + win_width - 1)
   end
-  draw("scroll")
+  draw_waypoint_window("scroll")
 end
 
 function ResetScroll()
   state.view.col = 0
   state.view.leftcol = 0
-  draw("scroll")
+  draw_waypoint_window("scroll")
 end
 
 
@@ -705,7 +727,7 @@ function ToggleAnnotation()
   if help_bufnr then
     draw_help()
   else
-    draw()
+    draw_waypoint_window()
   end
 end
 
@@ -714,7 +736,7 @@ function TogglePath()
   if help_bufnr then
     draw_help()
   else
-    draw()
+    draw_waypoint_window()
   end
 end
 
@@ -723,7 +745,7 @@ function ToggleFullPath()
   if help_bufnr then
     draw_help()
   else
-    draw()
+    draw_waypoint_window()
   end
 end
 
@@ -732,7 +754,7 @@ function ToggleLineNum()
   if help_bufnr then
     draw_help()
   else
-    draw()
+    draw_waypoint_window()
   end
 end
 
@@ -741,7 +763,7 @@ function ToggleFileText()
   if help_bufnr then
     draw_help()
   else
-    draw()
+    draw_waypoint_window()
   end
 end
 
@@ -750,7 +772,7 @@ function ToggleContext()
   if help_bufnr then
     draw_help()
   else
-    draw()
+    draw_waypoint_window()
   end
 end
 
@@ -758,14 +780,14 @@ function ResetCurrentIndent()
   if state.wpi then
     state.waypoints[state.wpi].indent = 0
   end
-  draw()
+  draw_waypoint_window()
 end
 
 function ResetAllIndent()
   for _,waypoint in pairs(state.waypoints) do
     waypoint.indent = 0
   end
-  draw()
+  draw_waypoint_window()
 end
 
 
@@ -785,7 +807,7 @@ function SetWaypointForCursor()
   local view = vim.fn.winsaveview()
   state.view.leftcol = view.leftcol
   state.wpi = line_to_waypoint[state.view.lnum]
-  draw("set_waypoint_for_cursor")
+  draw_waypoint_window("set_waypoint_for_cursor")
 end
 
 function Resize()
@@ -803,7 +825,7 @@ function RemoveCurrentWaypoint()
   else
     state.wpi = u.clamp(state.wpi, 1, #state.waypoints)
   end
-  draw()
+  draw_waypoint_window()
 end
 
 function SetQFList()
@@ -828,7 +850,7 @@ function ToggleHelp()
   if help_bufnr then
     vim.api.nvim_win_set_buf(winnr, wp_bufnr)
     help_bufnr = nil
-    draw()
+    draw_waypoint_window()
   else
     open_help()
   end
@@ -912,7 +934,7 @@ function M.open()
   set_waypoint_keybinds()
 
   state.view.leftcol = 0
-  draw("move_to_waypoint")
+  draw_waypoint_window("move_to_waypoint")
   highlight.highlight_custom_groups()
 end
 
@@ -929,6 +951,29 @@ function Close()
   winnr = nil
   bg_winnr = nil
   help_bufnr = nil
+end
+
+
+function ClearState()
+  state.load_error      = nil
+  state.wpi             = nil
+  state.waypoints       = {}
+
+  state.after_context   = 0
+  state.before_context  = 0
+  state.context         = 0
+
+  state.show_annotation = true
+  state.show_path       = true
+  state.show_full_path  = false
+  state.show_line_num   = true
+  state.show_file_text  = true
+  state.show_context    = true
+  state.view = {
+    lnum     = nil,
+    col      = 0,
+    leftcol  = 0,
+  }
 end
 
 function Leave()

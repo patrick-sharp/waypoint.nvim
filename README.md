@@ -110,12 +110,22 @@ keybinds
 bugs
 [ ] fix bugs around closing buffers with waypoints in them
 [ ] handle the case where the file doesn't exist when opening
+    if the file doesn't exist, just show a message next to the waypoint that it doesn't exist, and don't allow the user to go to it.
 [ ] handle the case where the file gets renamed while open
+    do this by associating waypoints with a buffer number when loaded into state, and a file name when persisted to json
+[ ] handle the case where the extmark gets deleted
+    do this by keeping track of waypoint line number and extmark number. on every state edit, synchronize them
+    also do something about extmarks getting set to the same location when all of a file is deleted for whatever reason 
 [ ] when you expand the context, keep the selected waypoint at the same point in the window rather than centering on it
+[ ] handle the case where there is a swap file (or any error opening the file)
 features
 [ ] add annotations back in
 [ ] indicate whether context for a mark is limited by file length (eof/bof)
 [ ] limit context size to the size of the window
+[ ] do something about extmarks moving to top of file when you filter the whole file through some external tool (e.g. \b for biome for me)
+[ ] if errors happen when making a waypoint, add the waypoint to the list of erroneous waypoints that you can see later in the g? menu or similar. still make the rest
+[ ] validate schema of file on load
+[ ] add perf logging for each function
 
 ### ADVANCED FEATURES:
 [x] delete waypoint from floating window with dd

@@ -29,6 +29,7 @@ function M.add_waypoint(filepath, line_nr, annotation)
   }
 
   table.insert(state.waypoints, waypoint)
+  state.wpi = #state.waypoints
 end
 
 
