@@ -417,7 +417,7 @@ local function set_waypoint_keybinds()
   vim.api.nvim_buf_set_keymap(wp_bufnr, 'n', '<esc>', ":lua Leave()<CR>",                         keymap_opts)
 
   if state.load_error then
-    vim.api.nvim_buf_set_keymap(wp_bufnr, 'n', '<CR>',":lua ResetState()<CR>", keymap_opts)
+    vim.api.nvim_buf_set_keymap(wp_bufnr, 'n', '<CR>',":lua ClearState()<CR>", keymap_opts)
     return
   end
 
@@ -974,6 +974,9 @@ function ClearState()
     col      = 0,
     leftcol  = 0,
   }
+  assert(os.remove(config.file))
+  set_waypoint_keybinds()
+  draw_waypoint_window()
 end
 
 function Leave()

@@ -75,7 +75,7 @@ end
 
 local file_schema = {
   waypoints = "table",
-  wpi = "integer",
+  --wpi = "integer",
   show_annotation = "boolean",
   show_path = "boolean",
   show_full_path = "boolean",
@@ -118,12 +118,8 @@ function M.load()
     if bufnr == -1 then
       -- TODO: check if file even exists
       bufnr = vim.fn.bufadd(waypoint.filepath)
-      buffer_init(bufnr)
-    else
-      --elseif not vim.fn.bufloaded(bufnr) then
-      -- if the buffer is added, but not loaded. can happen when loading session file created by the mksession command
-      buffer_init(bufnr)
     end
+    buffer_init(bufnr)
     -- zero-indexed line number
     local line_nr = waypoint.line_number
     local virt_text = nil
