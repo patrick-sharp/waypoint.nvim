@@ -1,13 +1,14 @@
 -- This file keeps track of where all the waypoints are and the state of the floating window
 
 ---@class waypoint.Waypoint
----@field extmark_bufnr integer
 ---@field extmark_id    integer the id of the extmark within the buffer. Note that these are not unique globally. Can become stale if extmark is deleted for any reason (e.g. the buffer is closed)
 ---@field linenr        integer the zero-indexed line number the waypoint is on. Can become stale if a buffer edit causes the extmark to move.
 ---@field bufnr         string the buffer number the waypoint is in. can become stale if the file is deleted and reopened.
 ---@field filepath      string used as a backup if the bufnr becomes stale.
 ---@field indent        integer
+---@field has_separator boolean whether we should render a blank line directly after this waypoint
 ---@field annotation    string | nil
+---@field error         string | nil
 
 ---@class waypoint.View
 ---@field lnum    integer | nil the line number the cursor is on. if nil, default to the line the waypoint is on.

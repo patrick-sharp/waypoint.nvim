@@ -35,7 +35,8 @@ end
 function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
   local bufnr = vim.fn.bufnr(waypoint.filepath)
 
-  if waypoint.extmark_id == nil then
+  p("WP", waypoint)
+  if waypoint.extmark_id == -1 then
     --- @type table<string>
     local lines = {}
     --- @type table<table<waypoint.HighlightRange>>
@@ -44,7 +45,9 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
       table.insert(lines, "")
       table.insert(hlranges, {})
     end
-    if waypoint.bufnr == -1 then
+    if waypoint.error then
+      table.insert(lines, "Error: " .. waypoint.error)
+    elseif waypoint.bufnr == -1 then
       table.insert(lines, "Error: file does not exist")
     else
       table.insert(lines, "Error: line number is out of bounds")

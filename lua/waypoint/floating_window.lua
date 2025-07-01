@@ -143,6 +143,7 @@ local function draw_waypoint_window(action)
   vim.api.nvim_buf_clear_namespace(wp_bufnr, constants.ns, 0, -1)
   local rows = {}
   local indents = {}
+  ---@type table<integer>
   line_to_waypoint = {}
 
   local cursor_line
@@ -270,6 +271,23 @@ local function draw_waypoint_window(action)
       table.insert(line_to_waypoint, i)
       table.insert(hlranges, {})
     end
+    -- render a blank line after the waypoint if it has a separator
+    -- if it has a separator and context, render two (which will be three total
+    -- when combined with the one already drawn in the previous if statement)
+    if waypoint.has_separator then
+      local num_blank_lines = 1
+      if has_context then
+        num_blank_lines = num_blank_lines + 1
+      end
+      for _=1,num_blank_lines do
+        table.insert(rows, "")
+        table.insert(indents, 0)
+        -- if the user somehow moves to a blank space, just treat that as 
+        -- selecting the waypoint above the space
+        table.insert(line_to_waypoint, i)
+        table.insert(hlranges, {})
+      end
+    end
   end
 
   assert(#rows == #indents, "#rows == " .. #rows ..", #indents == " .. #indents .. ", but they should be the same" )
@@ -395,43 +413,43 @@ end
 
 -- shared between the help buffer and the waypoint buffer
 local function set_shared_keybinds(bufnr)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'mf',    ":lua Leave()<CR>",                            keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'mf',    ":lua Leave()<CR>",                        keymap_opts)
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "c",     ":<C-u>lua IncreaseContext(1)<CR>",            keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "C",     ":<C-u>lua IncreaseContext(-1)<CR>",           keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "b",     ":<C-u>lua IncreaseBeforeContext(1)<CR>",      keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "B",     ":<C-u>lua IncreaseBeforeContext(-1)<CR>",     keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "a",     ":<C-u>lua IncreaseAfterContext(1)<CR>",       keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "A",     ":<C-u>lua IncreaseAfterContext(-1)<CR>",      keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "R",     ":<C-u>lua ResetContext()<CR>",                keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "rc",    ":<C-u>lua ResetContext()<CR>",                keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "c",     ":<C-u>lua IncreaseContext(1)<CR>",        keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "C",     ":<C-u>lua IncreaseContext(-1)<CR>",       keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "b",     ":<C-u>lua IncreaseBeforeContext(1)<CR>",  keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "B",     ":<C-u>lua IncreaseBeforeContext(-1)<CR>", keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "a",     ":<C-u>lua IncreaseAfterContext(1)<CR>",   keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "A",     ":<C-u>lua IncreaseAfterContext(-1)<CR>",  keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "R",     ":<C-u>lua ResetContext()<CR>",            keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "rc",    ":<C-u>lua ResetContext()<CR>",            keymap_opts)
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "ta",    ":lua ToggleAnnotation()<CR>",                 keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tp",    ":lua TogglePath()<CR>",                       keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tf",    ":lua ToggleFullPath()<CR>",                   keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tl",    ":lua ToggleLineNum()<CR>",                    keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tn",    ":lua ToggleLineNum()<CR>",                    keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tt",    ":lua ToggleFileText()<CR>",                   keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tc",    ":lua ToggleContext()<CR>",                    keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "ta",    ":lua ToggleAnnotation()<CR>",             keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tp",    ":lua TogglePath()<CR>",                   keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tf",    ":lua ToggleFullPath()<CR>",               keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tl",    ":lua ToggleLineNum()<CR>",                keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tn",    ":lua ToggleLineNum()<CR>",                keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tt",    ":lua ToggleFileText()<CR>",               keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "tc",    ":lua ToggleContext()<CR>",                keymap_opts)
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "Q",     ":<C-u>lua SetQFList()<CR>",                   keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "Q",     ":<C-u>lua SetQFList()<CR>",               keymap_opts)
 end
 
 local function set_help_keybinds()
   set_shared_keybinds(help_bufnr)
 
-  vim.api.nvim_buf_set_keymap(help_bufnr, 'n', 'q',     ":lua ToggleHelp()<CR>",                  keymap_opts)
-  vim.api.nvim_buf_set_keymap(help_bufnr, 'n', '<esc>', ":lua ToggleHelp()<CR>",                  keymap_opts)
-  vim.api.nvim_buf_set_keymap(help_bufnr, "n", "g?", ":lua ToggleHelp(" .. help_bufnr .. ")<CR>", keymap_opts)
+  vim.api.nvim_buf_set_keymap(help_bufnr, 'n', 'q',     ":lua ToggleHelp()<CR>",              keymap_opts)
+  vim.api.nvim_buf_set_keymap(help_bufnr, 'n', '<esc>', ":lua ToggleHelp()<CR>",              keymap_opts)
+  vim.api.nvim_buf_set_keymap(help_bufnr, "n", "g?", ":lua ToggleHelp()<CR>",                 keymap_opts)
 end
 
 
 local function set_waypoint_keybinds()
   set_shared_keybinds(wp_bufnr)
 
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "g?",    ":<C-u>lua ToggleHelp()<CR>",               keymap_opts)
-  vim.api.nvim_buf_set_keymap(wp_bufnr, 'n', 'q',     ":lua Leave()<CR>",                         keymap_opts)
-  vim.api.nvim_buf_set_keymap(wp_bufnr, 'n', '<esc>', ":lua Leave()<CR>",                         keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "g?",    ":<C-u>lua ToggleHelp()<CR>",           keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, 'n', 'q',     ":lua Leave()<CR>",                     keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, 'n', '<esc>', ":lua Leave()<CR>",                     keymap_opts)
 
   if state.load_error then
     vim.api.nvim_buf_set_keymap(wp_bufnr, 'n', '<CR>',":lua ClearState()<CR>", keymap_opts)
@@ -468,8 +486,11 @@ local function set_waypoint_keybinds()
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "]",     ":<C-u>lua MoveToNextNeighborWaypoint(true)<CR>", keymap_opts)
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "{",     ":<C-u>lua MoveToPrevTopLevelWaypoint(true)<CR>", keymap_opts)
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "}",     ":<C-u>lua MoveToNextTopLevelWaypoint(true)<CR>", keymap_opts)
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "o",     ":<C-u>lua MoveToOuterWaypoint(true)<CR>",        keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "I",     ":<C-u>lua MoveToOuterWaypoint(true)<CR>",        keymap_opts)
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "i",     ":<C-u>lua MoveToInnerWaypoint(true)<CR>",        keymap_opts)
+
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "o",     ":<C-u>lua AddSeparator(true)<CR>",        keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "O",     ":<C-u>lua AddSeparator(false)<CR>",        keymap_opts)
 
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "K",     ":<C-u>lua MoveWaypointUp()<CR>",                 keymap_opts)
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "J",     ":<C-u>lua MoveWaypointDown()<CR>",               keymap_opts)
@@ -856,6 +877,22 @@ function MoveToOuterWaypoint(draw)
   if draw then
     draw_waypoint_window("move_to_waypoint")
   end
+end
+
+-- todo: make the separator its own waypoint that can be deleted
+function AddSeparator(is_below)
+  if state.wpi == nil then return end
+  for _=1, vim.v.count1 do
+    --if is_below then
+    --  state.waypoints[state.wpi].has_separator = 
+    --else
+    --end
+    --local current_indent = state.waypoints[state.wpi].indent
+    --while state.wpi > 1 and state.waypoints[state.wpi].indent >= current_indent do
+    --  state.wpi = state.wpi - 1
+    --end
+  end
+  draw_waypoint_window()
 end
 
 function MoveToInnerWaypoint(draw)

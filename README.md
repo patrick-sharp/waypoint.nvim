@@ -128,6 +128,9 @@ features
 [ ] add perf logging for each function
 [ ] treesitter highlight bugs in readme for skhd somehow
 [ ] think about maybe adding scrolloff so the next waypoint is always visible?
+[ ] switch to making new state for saving / loading instead of mutating existing state to get there
+[ ] figure out some way to deal with extmarks moving around when you autoformat
+[ ] try to find out if that periodic hanging issue I get is due to waypoint or something else
 
 ### ADVANCED FEATURES:
 [x] delete waypoint from floating window with dd
@@ -141,8 +144,17 @@ features
   [x] jump to and select next waypoint while outside the float window
   [x] jump to and select prev waypoint while outside the float window
 [ ] add visual mode
+[ ] add option for relative waypoint numbers
+[ ] fix missing files, allowing user to switch all marks to a different file
+[ ] allow adding group separators between waypoints
 
 
 still got some weird treesitter behavior
 it seems like in the skhd repo I'm using, it will only properly highlight some highlights if the highlight is onscreen or close to it
 some, like header 2, appear to never work
+
+look into TextChanged, TextChangedI, and FileChangedShell autocmds for watching
+when a file changed in order to keep the extmarks in the right place as the
+file changes
+
+how does Neoformat replace buffer contents but without scrubbing marks and extmarks?

@@ -39,9 +39,9 @@ local function encode()
     if extmark then
       -- extmarks don't persist between sessions, so clear this information
       waypoint.extmark_id = nil
-      waypoint.extmark_bufnr = nil
       waypoint.bufnr = nil
       waypoint.linenr = extmark[1]
+      waypoint.error = nil
     end
   end
 
@@ -78,34 +78,39 @@ end
 
 local file_schema = {
   waypoints = "table",
-  wpi = "integer",
+  -- wpi = "number",  -- commenting this out because wpi can be nil
   show_annotation = "boolean",
   show_path = "boolean",
   show_full_path = "boolean",
   show_line_num = "boolean",
   show_file_text = "boolean",
   show_context = "boolean",
-  after_context = "integer",
-  before_context = "integer",
-  context = "integer",
+  after_context = "number",
+  before_context = "number",
+  context = "number",
   view = {
-    lnum = "integer",
-    col = "integer",
-    leftcol = "integer",
+    -- lnum = "number", -- commenting this out because lnum can be nil
+    col = "number",
+    leftcol = "number",
   },
+}
+
+local waypoint_schema = {
+  linenr = "number",
+  filepath = "string",
+  indent = "number",
 }
 
 function M.load()
   local data = read_file(config.file)
   if data == nil then return end
   local decoded = vim.json.decode(data)
-  local is_valid, k, v = u.validate(decoded, file_schema)
+  local is_valid, k, v, expected = u.validate(decoded, file_schema, false)
   if not is_valid then
     state.load_error = table.concat({
       "Error loading waypoints from file: expected value of type ",
-      tostring(file_schema[k]),
-      " for key ", tostring(k),
-      ", but received ", tostring(v), "."
+      expected, " for key ", tostring(k),
+      ", but received ", tostring(v), " (of type ", type(v), ")."
     })
     print(state.load_error)
     return
@@ -117,28 +122,48 @@ function M.load()
     vim.api.nvim_buf_del_extmark(bufnr, constants.ns, waypoint.extmark_id)
   end
   for _,waypoint in pairs(decoded.waypoints) do
-    local bufnr = vim.fn.bufnr(waypoint.filepath)
-    if bufnr == -1 and vim.fn.filereadable(waypoint.filepath) ~= 0 then
-      bufnr = vim.fn.bufadd(waypoint.filepath)
-    end
-    waypoint.bufnr = bufnr
-    if bufnr ~= -1 then
-      buffer_init(bufnr)
-      -- zero-indexed line number
-      local line_nr = waypoint.linenr
-      local virt_text = nil
+    local ok, wpk, wpv, wp_expected = u.validate(waypoint, waypoint_schema, false)
+    if not ok then
+      waypoint.error = table.concat({
+        "expected value of type ",
+        wp_expected, " for key ", tostring(wpk),
+        ", but received ", tostring(wpv), "."
+      })
+      waypoint.extmark_id = -1
+      waypoint.linenr = waypoint.linenr or -1
+      waypoint.bufnr = -1
+      waypoint.filepath = waypoint.filepath or ""
+      waypoint.indent = waypoint.indent or 0
+      waypoint.annotation = waypoint.annotation or ""
+    else
+      local bufnr = vim.fn.bufnr(waypoint.filepath)
+      if bufnr == -1 and vim.fn.filereadable(waypoint.filepath) ~= 0 then
+        bufnr = vim.fn.bufadd(waypoint.filepath)
+      end
+      waypoint.bufnr = bufnr
+      if bufnr ~= -1 then
+        buffer_init(bufnr)
+        -- zero-indexed line number
+        local linenr = waypoint.linenr
+        local virt_text = nil
 
-      local line_count = vim.api.nvim_buf_line_count(bufnr)
-      if line_nr < line_count then
-        local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, line_nr, -1, {
-          id = line_nr + 1,
-          sign_text = config.mark_char,
-          priority = 1,
-          sign_hl_group = constants.hl_sign,
-          virt_text = virt_text,
-          virt_text_pos = "eol",
-        })
-        waypoint.extmark_id = extmark_id
+        local line_count = vim.api.nvim_buf_line_count(bufnr)
+
+        if linenr < line_count then
+          local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, linenr, -1, {
+            id = linenr + 1,
+            sign_text = config.mark_char,
+            priority = 1,
+            sign_hl_group = constants.hl_sign,
+            virt_text = virt_text,
+            virt_text_pos = "eol",
+          })
+          waypoint.extmark_id = extmark_id
+        else
+          waypoint.extmark_id = -1
+        end
+      else
+        waypoint.extmark_id = -1
       end
     end
   end

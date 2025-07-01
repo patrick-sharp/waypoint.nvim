@@ -21,11 +21,13 @@ function M.add_waypoint(filepath, line_nr, annotation)
 
   ---@type waypoint.Waypoint
   local waypoint = {
-    extmark_bufnr = bufnr,
     extmark_id = extmark_id,
     filepath = filepath,
     indent = 0,
     annotation = annotation,
+    linenr = line_nr,
+    bufnr = bufnr,
+    error = nil,
   }
 
   table.insert(state.waypoints, waypoint)
@@ -56,7 +58,7 @@ function M.remove_waypoint(existing_waypoint_i, filepath)
 
   ---@type waypoint.Waypoint
   local existing_waypoint = state.waypoints[existing_waypoint_i]
-  if existing_waypoint.extmark_id then
+  if existing_waypoint.extmark_id ~= -1 then
     vim.api.nvim_buf_del_extmark(bufnr, constants.ns, existing_waypoint.extmark_id)
   end
 
