@@ -72,7 +72,7 @@ local function buffer_init(bufnr)
     local line_count = vim.api.nvim_buf_line_count(bufnr)
     -- seems to work with marks even at end of files, so topline must be an
     -- inclusive zero-indexed bound
-    buf_highlighter._on_win(nil, nil, bufnr, 0, line_count - 1)
+    -- buf_highlighter._on_win(nil, nil, bufnr, 0, line_count - 1)
   end
 end
 

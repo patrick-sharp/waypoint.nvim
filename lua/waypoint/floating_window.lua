@@ -342,6 +342,7 @@ local function draw_waypoint_window(action)
             priority=i,
           })
 
+          -- commenting this out to use extmarks instead of highlight ranges
           -- vim.api.nvim_buf_add_highlight(
           --   bufnr,
           --   hlrange.nsid,
@@ -367,6 +368,7 @@ local function draw_waypoint_window(action)
     end
 
     if action == "scroll" or action == "context" then
+      --- @type integer
       local lnum
       if state.view.lnum == nil then
         lnum = vim.fn.getcursorcharpos()[2]
@@ -440,7 +442,7 @@ local function set_help_keybinds()
 
   vim.api.nvim_buf_set_keymap(help_bufnr, 'n', 'q',     ":lua ToggleHelp()<CR>",              keymap_opts)
   vim.api.nvim_buf_set_keymap(help_bufnr, 'n', '<esc>', ":lua ToggleHelp()<CR>",              keymap_opts)
-  vim.api.nvim_buf_set_keymap(help_bufnr, "n", "g?", ":lua ToggleHelp()<CR>",                 keymap_opts)
+  vim.api.nvim_buf_set_keymap(help_bufnr, "n", "g?",    ":lua ToggleHelp()<CR>",              keymap_opts)
 end
 
 

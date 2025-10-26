@@ -196,6 +196,18 @@ function M.align_waypoint_table(t, table_cell_types, highlights, include_separat
         end
       end
       if include_separator then
+        -- if applicable, highlight the table separator to the right of this column
+        if j < #row_highlights then
+          local separator_highlight_start = offset + padded_byte_length + 1
+          local separator_highlight_end = offset + padded_byte_length + 1 + #constants.table_separator
+          table.insert(row_highlights[j], {
+            nsid = constants.ns,
+            hl_group = 'WinSeparator',
+            col_start = separator_highlight_start,
+            col_end = separator_highlight_end
+          })
+        end
+
         -- the extra 2 for the spaces on either side of the table separator
         offset = offset + padded_byte_length + #constants.table_separator + 2
       else

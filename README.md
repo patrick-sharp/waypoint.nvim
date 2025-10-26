@@ -99,7 +99,7 @@ config
     maybe use vim.schedule to do it async if worried about perf?
 [x] get rid of the optimization to vary the widths of the waypoint context if it hits eof or bof
     [ ] use the optimization afforded by that to only render waypoints + contexts currently on screen
-[ ] highlight table separators with WinSeparator
+[x] highlight table separators with WinSeparator
 [ ] take indentation into account when padding rows so they all have the same number of spaces
 [ ] find out how nvim tree seems to dynamically adjust the brightness of the cursorline (NvimTreeCursorLine)
 keybinds
@@ -120,10 +120,11 @@ bugs
 features
 [x] validate schema of file on load
 [x] in get_waypoint_context, if the file is out of bounds, show an out of bounds message
-[ ] add annotations back in
 [ ] indicate whether context for a mark is limited by file length (eof/bof)
 [ ] limit context size to the size of the window
 [ ] do something about extmarks moving to top of file when you filter the whole file through some external tool (e.g. \b for biome for me)
+  [ ] enrich data model
+  [ ] listen on autocmd for state change
 [ ] repair state when draw_waypoint_window is called
 [ ] add perf logging for each function
 [ ] treesitter highlight bugs in readme for skhd somehow
@@ -144,9 +145,13 @@ features
   [x] jump to and select next waypoint while outside the float window
   [x] jump to and select prev waypoint while outside the float window
 [ ] add visual mode
+    [ ] move selection of waypoints around
+    [ ] sort selection by file by line
 [ ] add option for relative waypoint numbers
 [ ] fix missing files, allowing user to switch all marks to a different file
-[ ] allow adding group separators between waypoints
+[ ] view where everything is sorted by file by line
+    [ ] keybind: ts to toggle sort 
+[ ] add ability to save and load waypoints to different files
 
 
 still got some weird treesitter behavior
@@ -158,3 +163,19 @@ when a file changed in order to keep the extmarks in the right place as the
 file changes
 
 how does Neoformat replace buffer contents but without scrubbing marks and extmarks?
+    it uses an internal api to replace the buffer. this doesn't remove marks. the api for replacing buffer with shell output doesn't use the one neoformat uses.
+
+
+redundancy?
+store extmark id, text, line number
+when extmark updates, update text and line number too
+when buffer updates, try to find the right location and move the extmark
+what to do if buffer update causes two extmarks to be on the same line?
+what to do if buffer updates and location can't be found?
+
+
+waypoint order
+    by file and by line
+    by manual order
+    sort visual selection?
+    waypoint groups?
