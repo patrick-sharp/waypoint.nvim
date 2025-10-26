@@ -433,6 +433,7 @@ local function set_shared_keybinds(bufnr)
   vim.api.nvim_buf_set_keymap(bufnr, "n", "tn",    ":lua ToggleLineNum()<CR>",                keymap_opts)
   vim.api.nvim_buf_set_keymap(bufnr, "n", "tt",    ":lua ToggleFileText()<CR>",               keymap_opts)
   vim.api.nvim_buf_set_keymap(bufnr, "n", "tc",    ":lua ToggleContext()<CR>",                keymap_opts)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "ts",    ":lua ToggleSort()<CR>",                   keymap_opts)
 
   vim.api.nvim_buf_set_keymap(bufnr, "n", "Q",     ":<C-u>lua SetQFList()<CR>",               keymap_opts)
 end
@@ -515,6 +516,7 @@ local function draw_help()
     {"show_full_path", "Show full file path:"},
     {"show_file_text", "Show file text:"},
     {"show_context", "Show context:"},
+    {"sort_by_file_and_line", "Sort by file and line number:"},
   }
 
   ---@type table<table<string>>
@@ -833,6 +835,15 @@ end
 
 function ToggleContext()
   state.show_context = not state.show_context
+  if help_bufnr then
+    draw_help()
+  else
+    draw_waypoint_window()
+  end
+end
+
+function ToggleSort()
+  state.sort_by_file_and_line = not state.sort_by_file_and_line
   if help_bufnr then
     draw_help()
   else

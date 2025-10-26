@@ -132,6 +132,9 @@ features
 [ ] switch to making new state for saving / loading instead of mutating existing state to get there
 [ ] figure out some way to deal with extmarks moving around when you autoformat
 [ ] try to find out if that periodic hanging issue I get is due to waypoint or something else
+[ ] debug why treesitter broke
+[ ] create better error handling and reporting
+    [ ] if highlighting fails for some reason, just show an error message and turn off highlighting
 
 ### ADVANCED FEATURES:
 [x] delete waypoint from floating window with dd
