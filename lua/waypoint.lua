@@ -29,13 +29,38 @@ local function bind_key(keybinding, fn)
   end
 end
 
+--- @param opts waypoint.ConfigOverride
 function M.setup(opts)
   -- set up config
+
   for k, v in pairs(opts) do
     local default_val = config[k]
     assert(default_val, "property \"" .. k .. "\" does not exist in waypoint config")
     assert(type(v) == type(default_val), "expected the value for property \"" ..  k .. "\" to be of type " .. type(default_val) .. ", but was of type " .. type(v))
-    config[k] = v
+    if k == 'keybindings' then
+      local keybindings_keys = {
+        global_keybindings = true,
+        waypoint_window_keybindings = true,
+        help_keybindings = true,
+      }
+      for keybinding_group, keybindings_in_group in pairs(opts.keybindings) do
+        assert(keybindings_keys[keybinding_group], "property \"" .. keybinding_group .. "\" does not exist in waypoint config.keybindings")
+        for action, keybinding in pairs(keybindings_in_group) do
+          local is_string = type(keybinding) == 'string'
+          local is_table = type(keybinding) == 'table'
+          local is_table_of_strings = is_table
+          if is_table then
+            for _, keybinding_ in pairs(keybinding) do
+              assert(type(keybinding_) == 'string', "keybinding \"" .. keybinding .. "\" for config.keybindings." .. keybinding_group .. "." .. action .. " should be a string, but was of type " .. type(keybinding_) .. ".")
+            end
+          end
+          assert(is_string or is_table_of_strings, "expected the value for config.keybindings." .. keybinding_group .. "." .. action .. " to be a string or table of strings, but was of type " .. type(keybinding) .. ".")
+          config.keybindings[keybinding_group][action] = keybinding
+        end
+      end
+    else
+      config[k] = v
+    end
   end
   vim.api.nvim_create_augroup(constants.augroup, { clear = true })
   vim.api.nvim_create_autocmd("VimEnter", {
