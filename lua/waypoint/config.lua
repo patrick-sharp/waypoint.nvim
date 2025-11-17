@@ -1,23 +1,23 @@
 ---@class waypoint.Config
----@field color_sign string
----@field color_footer_after_context string
+---@field color_sign                  string
+---@field color_footer_after_context  string
 ---@field color_footer_before_context string
----@field color_footer_context string
----@field window_width number
----@field window_height number
----@field file string
----@field mark_char string
----@field telescope_filename_width integer
----@field telescope_linenr_width integer
----@field indent_width integer
----@field scroll_increment integer
----@field enable_highlight boolean
----@field keybindings waypoint.Keybindings
+---@field color_footer_context        string
+---@field window_width                number
+---@field window_height               number
+---@field file                        string
+---@field mark_char                   string
+---@field telescope_filename_width    integer
+---@field telescope_linenr_width      integer
+---@field indent_width                integer
+---@field scroll_increment            integer
+---@field enable_highlight            boolean
+---@field keybindings                 waypoint.Keybindings
 
 ---@class waypoint.Keybindings
----@field global_keybindings waypoint.GlobalKeybindings
+---@field global_keybindings          waypoint.GlobalKeybindings
 ---@field waypoint_window_keybindings waypoint.WaypointWindowKeybindings
----@field help_keybindings waypoint.HelpKeybindings
+---@field help_keybindings            waypoint.HelpKeybindings
 ---
 ---@class waypoint.GlobalKeybindings
 ---@field current_waypoint        string | table<string>
@@ -77,6 +77,90 @@
 ---@class waypoint.HelpKeybindings
 ---@field exit_help string | table<string>
 
+
+
+-- Classes for the user's config provided on plugin setup
+
+---@class waypoint.ConfigOverride
+---@field color_sign                  nil | string
+---@field color_footer_after_context  nil | string
+---@field color_footer_before_context nil | string
+---@field color_footer_context        nil | string
+---@field window_width                nil | number
+---@field window_height               nil | number
+---@field file                        nil | string
+---@field mark_char                   nil | string
+---@field telescope_filename_width    nil | integer
+---@field telescope_linenr_width      nil | integer
+---@field indent_width                nil | integer
+---@field scroll_increment            nil | integer
+---@field enable_highlight            nil | boolean
+---@field keybindings                 nil | waypoint.Keybindings
+
+---@class waypoint.KeybindingsOverride
+---@field global_keybindings          nil | waypoint.GlobalKeybindingsOverride
+---@field waypoint_window_keybindings nil | waypoint.WaypointWindowKeybindingsOverride
+---@field help_keybindings            nil | waypoint.HelpKeybindingsOverride
+---
+---@class waypoint.GlobalKeybindingsOverride
+---@field current_waypoint        nil | string | table<string>
+---@field next_waypoint           nil | string | table<string>
+---@field prev_waypoint           nil | string | table<string>
+---@field first_waypoint          nil | string | table<string>
+---@field last_waypoint           nil | string | table<string>
+---@field prev_neighbor_waypoint  nil | string | table<string>
+---@field next_neighbor_waypoint  nil | string | table<string>
+---@field prev_top_level_waypoint nil | string | table<string>
+---@field next_top_level_waypoint nil | string | table<string>
+---@field outer_waypoint          nil | string | table<string>
+---@field inner_waypoint          nil | string | table<string>
+---@field open_waypoint_window    nil | string | table<string>
+---@field toggle_waypoint         nil | string | table<string>
+
+---@class waypoint.WaypointWindowKeybindingsOverride
+---@field exit_waypoint_window     nil | string | table<string>
+---@field increase_context         nil | string | table<string>
+---@field decrease_context         nil | string | table<string>
+---@field increase_before_context  nil | string | table<string>
+---@field decrease_before_context  nil | string | table<string>
+---@field increase_after_context   nil | string | table<string>
+---@field decrease_after_context   nil | string | table<string>
+---@field reset_context            nil | string | table<string>
+---@field toggle_annotation        nil | string | table<string>
+---@field toggle_path              nil | string | table<string>
+---@field toggle_full_path         nil | string | table<string>
+---@field toggle_line_num          nil | string | table<string>
+---@field toggle_file_text         nil | string | table<string>
+---@field toggle_context           nil | string | table<string>
+---@field toggle_sort              nil | string | table<string>
+---@field show_help                nil | string | table<string>
+---@field set_quickfix_list        nil | string | table<string>
+---@field indent                   nil | string | table<string>
+---@field unindent                 nil | string | table<string>
+---@field reset_waypoint_indent    nil | string | table<string>
+---@field reset_all_indent         nil | string | table<string>
+---@field scroll_right             nil | string | table<string>
+---@field scroll_left              nil | string | table<string>
+---@field reset_horizontal_scroll  nil | string | table<string>
+---@field next_waypoint            nil | string | table<string>
+---@field prev_waypoint            nil | string | table<string>
+---@field first_waypoint           nil | string | table<string>
+---@field last_waypoint            nil | string | table<string>
+---@field outer_waypoint           nil | string | table<string>
+---@field inner_waypoint           nil | string | table<string>
+---@field next_neighbor_waypoint   nil | string | table<string>
+---@field prev_neighbor_waypoint   nil | string | table<string>
+---@field next_top_level_waypoint  nil | string | table<string>
+---@field prev_top_level_waypoint  nil | string | table<string>
+---@field delete_waypoint          nil | string | table<string>
+---@field current_waypoint         nil | string | table<string>
+---@field move_waypoint_down       nil | string | table<string>
+---@field move_waypoint_up         nil | string | table<string>
+
+---@class waypoint.HelpKeybindingsOverride
+---@field exit_help nil | string | table<string>
+
+
 ---@type waypoint.Config
 local M = {
   color_sign = "NONE",
@@ -126,27 +210,27 @@ local M = {
       toggle_sort             = "ts",
       show_help               = "g?",
       set_quickfix_list       = "Q",
-      indent                  = "",
-      unindent                = "",
-      reset_waypoint_indent   = "",
-      reset_all_indent        = "",
-      scroll_right            = "",
-      scroll_left             = "",
-      reset_horizontal_scroll = "",
-      next_waypoint           = "",
-      prev_waypoint           = "",
-      first_waypoint          = "",
-      last_waypoint           = "",
-      outer_waypoint          = "",
-      inner_waypoint          = "",
-      next_neighbor_waypoint  = "",
-      prev_neighbor_waypoint  = "",
-      next_top_level_waypoint = "",
-      prev_top_level_waypoint = "",
-      delete_waypoint         = "",
-      current_waypoint        = "",
-      move_waypoint_down      = "",
-      move_waypoint_up        = "",
+      indent                  = ">",
+      unindent                = "<",
+      reset_waypoint_indent   = "ri",
+      reset_all_indent        = "rI",
+      scroll_right            = "zL",
+      scroll_left             = "zH",
+      reset_horizontal_scroll = {"0", "rs"},
+      prev_waypoint           = "k",
+      next_waypoint           = "j",
+      first_waypoint          = "gg",
+      last_waypoint           = "G",
+      outer_waypoint          = {"o", "I"},
+      inner_waypoint          = "i",
+      prev_neighbor_waypoint  = "[",
+      next_neighbor_waypoint  = "]",
+      prev_top_level_waypoint = "{",
+      next_top_level_waypoint = "}",
+      delete_waypoint         = "dd",
+      current_waypoint        = "<CR>",
+      move_waypoint_up        = "K",
+      move_waypoint_down      = "J",
     },
     help_keybindings = {
       exit_help = {"q", "<esc>", "g?"}
