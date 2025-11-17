@@ -4,6 +4,15 @@ local constants = require("waypoint.constants")
 local u = require("waypoint.utils")
 local p = require("waypoint.print")
 
+
+-- resolve hl links
+--- @param hl_group string
+local function resolve_hl(hl_group)
+  local hlid = vim.api.nvim_get_hl_id_by_name(hl_group)
+  local name = vim.fn.synIDattr(vim.fn.synIDtrans(hlid), 'name')
+  return name
+end
+
 --- @class waypoint.TreesitterHighlight
 --- @field hl_id   integer
 --- @field hl_name string 
@@ -18,7 +27,9 @@ local p = require("waypoint.print")
 --- @return table<waypoint.TreesitterHighlight>
 function M.get_nodes_with_highlights(bufnr, start_line, end_line)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
+  -- zero-indexed, inclusive
   start_line = math.max(0, start_line or 0)
+  -- zero-indexed, exclusive
   end_line = math.min(end_line or vim.api.nvim_buf_line_count(bufnr), vim.api.nvim_buf_line_count(bufnr))
 
   local self = highlighter.active[bufnr]
@@ -26,67 +37,37 @@ function M.get_nodes_with_highlights(bufnr, start_line, end_line)
 
   --- @type table<waypoint.TreesitterHighlight>
   local results = {}
-  local wp_start_row = start_line
-  local wp_end_row = end_line - 1
 
-  local count = 0
+  local buf_highlighter = vim.treesitter.highlighter.active[bufnr]
+  buf_highlighter.tree:for_each_tree(function(tstree, tree)
+    local root = tstree:root()
+    local q = buf_highlighter:get_query(tree:lang())
+    local iter = q:query():iter_captures(root, buf_highlighter.bufnr, start_line, end_line)
+    for id, node in iter do
+      local capture = q:query().captures[id] -- name of the capture in the query, e.g. "number"
+      if capture ~= nil then
+        -- 0-indexed, inclusive lower bound, exclusive upper bound
+        local start_row, start_col = node:start()
+        -- 0-indexed, inclusive lower bound, exclusive upper bound
+        local end_row, end_col = node:end_()
 
-  self:for_each_highlight_state(function(state)
-    count = count + 1
-    local hl_query = state.highlighter_query
-    if not hl_query then return end
+        local hl_group = '@' .. capture .. '.' .. tree:lang()
 
-    local root_node = state.tstree:root()
-    local root_start_row, _, root_end_row, _ = root_node:range()
-
-    -- Only consider trees that contain these lines
-    if root_start_row > wp_end_row or root_end_row < wp_start_row then return end
-
-    local line = wp_start_row
-
-    state.iter = state.highlighter_query:query():iter_captures(root_node, self.bufnr, line, root_end_row + 1)
-
-    local capture, node
-    -- the beginning of the next node's range
-    local next_node_range_start = 0
-    while next_node_range_start <= wp_end_row do
-      capture, node = state.iter(line)
-      if node == nil then
-        break
+        table.insert(results,
+          {
+            range = {
+              start_row,
+              start_col,
+              end_row,
+              end_col,
+            },
+            hl_name = hl_group,
+            hl_id = vim.api.nvim_get_hl_id_by_name(hl_group)
+          })
       end
-      local start_row, start_col, end_row, end_col = node:range()
-      if start_row > wp_end_row then
-        break
-      end
-
-      local hl_id = 0
-      local capname = nil
-      local hl_name = nil
-      if capture then
-        -- for some reason, the id returned by this can't be used to get the
-        -- highlight group with vim.api.nvim_get_hl. Yet, it works when you add
-        -- an extmark with this hl group.
-        hl_id = state.highlighter_query:get_hl_from_capture(capture)
-        capname = state.highlighter_query._query.captures[capture]
-        if not vim.startswith(capname, '_') then
-          -- this is the same logic neovim uses to create highlight groups for captures
-          hl_name = '@' .. capname .. '.' .. state.highlighter_query.lang
-        end
-      end
-
-      table.insert(results,
-        {
-          range = {
-            start_row,
-            start_col,
-            end_row,
-            end_col,
-          },
-          hl_id = hl_id,
-          hl_name = hl_name,
-        })
     end
   end)
+
   return results
 end
 

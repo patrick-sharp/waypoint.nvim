@@ -413,46 +413,58 @@ local function draw_waypoint_window(action)
   end
 end
 
+-- binds the keybinding (or keybindings) to the given action 
+--- @param keybinding string | table<string>
+--- @param action string the vim mapping string that this keybind should perform
+local function bind_key(bufnr, keybinding, action)
+  if type(keybinding) == "string" then
+    vim.api.nvim_buf_set_keymap(bufnr, 'n', keybinding, action, keymap_opts)
+  elseif type(keybinding) == "table" then
+    for i, v in ipairs(keybinding) do
+      if type(v) ~= "string" then
+        error("Type of element " .. i .. " of keybinding should be string, but was " .. type(v) .. ".")
+      end
+    vim.api.nvim_buf_set_keymap(bufnr, 'n', v, action, keymap_opts)
+    end
+  else
+    error("Type of param keybinding should be string or table, but was " .. type(keybinding) .. ".")
+  end
+end
+
 -- shared between the help buffer and the waypoint buffer
 local function set_shared_keybinds(bufnr)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'mf',    ":lua Leave()<CR>",                        keymap_opts)
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.exit_waypoint_window, ":lua Leave()<CR>")
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "c",     ":<C-u>lua IncreaseContext(1)<CR>",        keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "C",     ":<C-u>lua IncreaseContext(-1)<CR>",       keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "b",     ":<C-u>lua IncreaseBeforeContext(1)<CR>",  keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "B",     ":<C-u>lua IncreaseBeforeContext(-1)<CR>", keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "a",     ":<C-u>lua IncreaseAfterContext(1)<CR>",   keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "A",     ":<C-u>lua IncreaseAfterContext(-1)<CR>",  keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "R",     ":<C-u>lua ResetContext()<CR>",            keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "rc",    ":<C-u>lua ResetContext()<CR>",            keymap_opts)
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.increase_context,        ":<C-u>lua IncreaseContext(1)<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.decrease_context,        ":<C-u>lua IncreaseContext(-1)<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.increase_before_context, ":<C-u>lua IncreaseBeforeContext(1)<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.decrease_before_context, ":<C-u>lua IncreaseBeforeContext(-1)<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.increase_after_context,  ":<C-u>lua IncreaseAfterContext(1)<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.decrease_after_context,  ":<C-u>lua IncreaseAfterContext(-1)<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.reset_context,           ":<C-u>lua ResetContext()<CR>")
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "ta",    ":lua ToggleAnnotation()<CR>",             keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tp",    ":lua TogglePath()<CR>",                   keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tf",    ":lua ToggleFullPath()<CR>",               keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tl",    ":lua ToggleLineNum()<CR>",                keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tn",    ":lua ToggleLineNum()<CR>",                keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tt",    ":lua ToggleFileText()<CR>",               keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "tc",    ":lua ToggleContext()<CR>",                keymap_opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "ts",    ":lua ToggleSort()<CR>",                   keymap_opts)
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_annotation,       ":lua ToggleAnnotation()<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_path,             ":lua TogglePath()<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_full_path,        ":lua ToggleFullPath()<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_line_num,         ":lua ToggleLineNum()<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_file_text,        ":lua ToggleFileText()<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_context,          ":lua ToggleContext()<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_sort,             ":lua ToggleSort()<CR>")
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "Q",     ":<C-u>lua SetQFList()<CR>",               keymap_opts)
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.set_quickfix_list,       ":<C-u>lua SetQFList()<CR>")
 end
 
 local function set_help_keybinds()
   set_shared_keybinds(help_bufnr)
-
-  vim.api.nvim_buf_set_keymap(help_bufnr, 'n', 'q',     ":lua ToggleHelp()<CR>",              keymap_opts)
-  vim.api.nvim_buf_set_keymap(help_bufnr, 'n', '<esc>', ":lua ToggleHelp()<CR>",              keymap_opts)
-  vim.api.nvim_buf_set_keymap(help_bufnr, "n", "g?",    ":lua ToggleHelp()<CR>",              keymap_opts)
+  bind_key(help_bufnr, config.keybindings.help_keybindings.exit_help, ":lua ToggleHelp()<CR>")
 end
 
 
 local function set_waypoint_keybinds()
   set_shared_keybinds(wp_bufnr)
 
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "g?",    ":<C-u>lua ToggleHelp()<CR>",           keymap_opts)
-  vim.api.nvim_buf_set_keymap(wp_bufnr, 'n', 'q',     ":lua Leave()<CR>",                     keymap_opts)
-  vim.api.nvim_buf_set_keymap(wp_bufnr, 'n', '<esc>', ":lua Leave()<CR>",                     keymap_opts)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.show_help,            ":<C-u>lua ToggleHelp()<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.exit_waypoint_window, ":lua Leave()<CR>")
 
   if state.load_error then
     vim.api.nvim_buf_set_keymap(wp_bufnr, 'n', '<CR>',":lua ClearState()<CR>", keymap_opts)
@@ -484,21 +496,21 @@ local function set_waypoint_keybinds()
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "k",     ":lua PrevWaypoint()<CR>",                        keymap_opts)
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "gg",    ":lua MoveToFirstWaypoint()<CR>",                 keymap_opts)
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "G",     ":lua MoveToLastWaypoint()<CR>",                  keymap_opts)
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "o",     ":<C-u>lua MoveToOuterWaypoint()<CR>",            keymap_opts)
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "[",     ":<C-u>lua MoveToPrevNeighborWaypoint(true)<CR>", keymap_opts)
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "]",     ":<C-u>lua MoveToNextNeighborWaypoint(true)<CR>", keymap_opts)
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "{",     ":<C-u>lua MoveToPrevTopLevelWaypoint(true)<CR>", keymap_opts)
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "}",     ":<C-u>lua MoveToNextTopLevelWaypoint(true)<CR>", keymap_opts)
+  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "o",     ":<C-u>lua MoveToOuterWaypoint(true)<CR>",        keymap_opts)
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "I",     ":<C-u>lua MoveToOuterWaypoint(true)<CR>",        keymap_opts)
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "i",     ":<C-u>lua MoveToInnerWaypoint(true)<CR>",        keymap_opts)
 
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "o",     ":<C-u>lua AddSeparator(true)<CR>",        keymap_opts)
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "O",     ":<C-u>lua AddSeparator(false)<CR>",        keymap_opts)
+  -- vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "o",     ":<C-u>lua AddSeparator(true)<CR>",        keymap_opts)
+  -- vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "O",     ":<C-u>lua AddSeparator(false)<CR>",        keymap_opts)
 
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "K",     ":<C-u>lua MoveWaypointUp()<CR>",                 keymap_opts)
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "J",     ":<C-u>lua MoveWaypointDown()<CR>",               keymap_opts)
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "sg",    ":lua MoveWaypointToTop()<CR>",                   keymap_opts)
-  vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "sG",    ":lua MoveWaypointToBottom()<CR>",                keymap_opts)
+  -- vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "sg",    ":lua MoveWaypointToTop()<CR>",                   keymap_opts)
+  -- vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "sG",    ":lua MoveWaypointToBottom()<CR>",                keymap_opts)
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "<CR>",  ":lua GoToCurrentWaypoint()<CR>",                 keymap_opts)
 
   vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "dd",    ":<C-u>lua RemoveCurrentWaypoint()<CR>",          keymap_opts)

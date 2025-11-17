@@ -10,6 +10,25 @@ local constants = require("waypoint.constants")
 local config = require("waypoint.config")
 local p = require("waypoint.print")
 
+
+-- binds the keybinding (or keybindings) to the given function 
+--- @param keybinding string | table<string>
+--- @param fn function
+local function bind_key(keybinding, fn)
+  if type(keybinding) == "string" then
+    vim.keymap.set({ 'n', 'v' }, keybinding, fn, { noremap = true })
+  elseif type(keybinding) == "table" then
+    for i, v in ipairs(keybinding) do
+      if type(v) ~= "string" then
+        error("Type of element " .. i .. " of keybinding should be string, but was " .. type(v) .. ".")
+      end
+      vim.keymap.set({ 'n', 'v' }, v, fn, { noremap = true })
+    end
+  else
+    error("Type of param keybinding should be string or table, but was " .. type(keybinding) .. ".")
+  end
+end
+
 function M.setup(opts)
   -- set up config
   for k, v in pairs(opts) do
@@ -30,21 +49,21 @@ function M.setup(opts)
     once = true,
   })
 
-  vim.keymap.set({ 'n', 'v' }, 'mc', floating_window.GoToCurrentWaypoint, { noremap = true })
-  vim.keymap.set({ 'n', 'v' }, 'mn', floating_window.GoToNextWaypoint, { noremap = true })
-  vim.keymap.set({ 'n', 'v' }, 'mp', floating_window.GoToPrevWaypoint, { noremap = true })
-  vim.keymap.set({ 'n', 'v' }, 'mg', floating_window.GoToFirstWaypoint, { noremap = true })
-  vim.keymap.set({ 'n', 'v' }, 'mG', floating_window.GoToLastWaypoint, { noremap = true })
-  vim.keymap.set({ 'n', 'v' }, 'm[', floating_window.GoToPrevNeighborWaypoint, { noremap = true })
-  vim.keymap.set({ 'n', 'v' }, 'm]', floating_window.GoToNextNeighborWaypoint, { noremap = true })
-  vim.keymap.set({ 'n', 'v' }, 'm{', floating_window.GoToPrevTopLevelWaypoint, { noremap = true })
-  vim.keymap.set({ 'n', 'v' }, 'm}', floating_window.GoToNextTopLevelWaypoint, { noremap = true })
-  vim.keymap.set({ "n", "v" }, 'mo', floating_window.GoToOuterWaypoint, { noremap = true })
-  vim.keymap.set({ "n", "v" }, 'mi', floating_window.GoToInnerWaypoint, { noremap = true })
-  vim.keymap.set({ 'n', 'v' }, 'mf', floating_window.open, { noremap = true })
-  vim.keymap.set({ 'n', 'v' }, 'mt', crud.toggle_waypoint, { noremap = true })
-  vim.keymap.set({ 'n', 'v' }, '<leader><leader>s', file.save, { noremap = true })
-  vim.keymap.set({ 'n', 'v' }, '<leader><leader>l', file.load, { noremap = true })
+  bind_key(config.keybindings.global_keybindings.current_waypoint,        floating_window.GoToCurrentWaypoint)
+  bind_key(config.keybindings.global_keybindings.prev_waypoint,           floating_window.GoToPrevWaypoint)
+  bind_key(config.keybindings.global_keybindings.next_waypoint,           floating_window.GoToNextWaypoint)
+  bind_key(config.keybindings.global_keybindings.first_waypoint,          floating_window.GoToFirstWaypoint)
+  bind_key(config.keybindings.global_keybindings.last_waypoint,           floating_window.GoToLastWaypoint)
+  bind_key(config.keybindings.global_keybindings.prev_neighbor_waypoint,  floating_window.GoToPrevNeighborWaypoint)
+  bind_key(config.keybindings.global_keybindings.next_neighbor_waypoint,  floating_window.GoToNextNeighborWaypoint)
+  bind_key(config.keybindings.global_keybindings.prev_top_level_waypoint, floating_window.GoToPrevTopLevelWaypoint)
+  bind_key(config.keybindings.global_keybindings.next_top_level_waypoint, floating_window.GoToNextTopLevelWaypoint)
+  bind_key(config.keybindings.global_keybindings.outer_waypoint,          floating_window.GoToOuterWaypoint)
+  bind_key(config.keybindings.global_keybindings.inner_waypoint,          floating_window.GoToInnerWaypoint)
+  bind_key(config.keybindings.global_keybindings.open_waypoint_window,    floating_window.open)
+  bind_key(config.keybindings.global_keybindings.toggle_waypoint,         crud.toggle_waypoint)
+  bind_key('<leader><leader>s', file.save)
+  bind_key('<leader><leader>l', file.load)
 end
 
 return M

@@ -132,7 +132,7 @@ features
 [ ] switch to making new state for saving / loading instead of mutating existing state to get there
 [ ] figure out some way to deal with extmarks moving around when you autoformat
 [ ] try to find out if that periodic hanging issue I get is due to waypoint or something else
-[ ] debug why treesitter broke
+[x] debug why treesitter highlights broke (confirmed that og syntax works)
 [ ] create better error handling and reporting
     [ ] if highlighting fails for some reason, just show an error message and turn off highlighting
 
@@ -151,7 +151,7 @@ features
     [ ] move selection of waypoints around
     [ ] sort selection by file by line
 [ ] add option for relative waypoint numbers
-[ ] fix missing files, allowing user to switch all marks to a different file
+[ ] allow for fixing of waypoints for missing files, allowing user to switch all marks to a different file
 [ ] view where everything is sorted by file by line
     [ ] keybind: ts to toggle sort 
 [ ] add ability to save and load waypoints to different files
@@ -175,6 +175,7 @@ when extmark updates, update text and line number too
 when buffer updates, try to find the right location and move the extmark
 what to do if buffer update causes two extmarks to be on the same line?
 what to do if buffer updates and location can't be found?
+what to do if file changes name or is deleted?
 
 
 waypoint order

@@ -35,7 +35,6 @@ end
 function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
   local bufnr = vim.fn.bufnr(waypoint.filepath)
 
-  p("WP", waypoint)
   if waypoint.extmark_id == -1 then
     --- @type table<string>
     local lines = {}
