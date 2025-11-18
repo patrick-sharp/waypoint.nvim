@@ -271,23 +271,6 @@ local function draw_waypoint_window(action)
       table.insert(line_to_waypoint, i)
       table.insert(hlranges, {})
     end
-    -- render a blank line after the waypoint if it has a separator
-    -- if it has a separator and context, render two (which will be three total
-    -- when combined with the one already drawn in the previous if statement)
-    if waypoint.has_separator then
-      local num_blank_lines = 1
-      if has_context then
-        num_blank_lines = num_blank_lines + 1
-      end
-      for _=1,num_blank_lines do
-        table.insert(rows, "")
-        table.insert(indents, 0)
-        -- if the user somehow moves to a blank space, just treat that as 
-        -- selecting the waypoint above the space
-        table.insert(line_to_waypoint, i)
-        table.insert(hlranges, {})
-      end
-    end
   end
 
   assert(#rows == #indents, "#rows == " .. #rows ..", #indents == " .. #indents .. ", but they should be the same" )
@@ -510,8 +493,6 @@ local function set_waypoint_keybinds()
 
   -- vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "sg",    ":lua MoveWaypointToTop()<CR>",                   keymap_opts)
   -- vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "sG",    ":lua MoveWaypointToBottom()<CR>",                keymap_opts)
-  -- vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "o",     ":<C-u>lua AddSeparator(true)<CR>",        keymap_opts)
-  -- vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "O",     ":<C-u>lua AddSeparator(false)<CR>",        keymap_opts)
 end
 
 local function draw_help()
@@ -900,22 +881,6 @@ function MoveToOuterWaypoint(draw)
   if draw then
     draw_waypoint_window("move_to_waypoint")
   end
-end
-
--- todo: make the separator its own waypoint that can be deleted
-function AddSeparator(is_below)
-  if state.wpi == nil then return end
-  for _=1, vim.v.count1 do
-    --if is_below then
-    --  state.waypoints[state.wpi].has_separator = 
-    --else
-    --end
-    --local current_indent = state.waypoints[state.wpi].indent
-    --while state.wpi > 1 and state.waypoints[state.wpi].indent >= current_indent do
-    --  state.wpi = state.wpi - 1
-    --end
-  end
-  draw_waypoint_window()
 end
 
 function MoveToInnerWaypoint(draw)

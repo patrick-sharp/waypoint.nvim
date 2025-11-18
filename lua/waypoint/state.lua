@@ -6,7 +6,6 @@
 ---@field bufnr         string the buffer number the waypoint is in. can become stale if the file is deleted and reopened.
 ---@field filepath      string used as a backup if the bufnr becomes stale.
 ---@field indent        integer
----@field has_separator boolean whether we should render a blank line directly after this waypoint
 ---@field annotation    string | nil
 ---@field error         string | nil
 
