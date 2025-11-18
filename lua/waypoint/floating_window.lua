@@ -289,7 +289,7 @@ local function draw_waypoint_window(action)
   end
 
   local win_width = get_floating_window_width()
-  local aligned = uw.align_waypoint_table(rows, table_cell_types, hlranges, true, win_width, indents)
+  local aligned = uw.align_waypoint_table(rows, table_cell_types, hlranges, constants.table_separator, win_width, indents)
 
   longest_line_len = 0
   for i, line in pairs(aligned) do
@@ -495,6 +495,22 @@ local function set_waypoint_keybinds()
   -- vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "sG",    ":lua MoveWaypointToBottom()<CR>",                keymap_opts)
 end
 
+local global_keybindings_description = {
+  {"toggle_waypoint", "Toggle a waypoint on the cursor's current line"},
+  {"open_waypoint_window", "Open the waypoint window"},
+  {"current_waypoint", "Jump to current waypoint"},
+  {"prev_waypoint", "Jump to previous waypoint"},
+  {"next_waypoint", "Jump to next waypoint"},
+  {"first_waypoint", "Jump to first waypoint"},
+  {"last_waypoint", "Jump to last waypoint"},
+  {"prev_neighbor_waypoint", "Jump to the previous waypoint at the same level"},
+  {"next_neighbor_waypoint", "Jump to the next waypoint at the same level"},
+  {"prev_top_level_waypoint", "Jump to the previous unindented waypoint"},
+  {"next_top_level_waypoint", "Jump to the next unindented waypoint"},
+  {"outer_waypoint", "Jump to the previous waypoint indented one level less"},
+  {"inner_waypoint", "Jump to the next waypoint indented one level more"},
+}
+
 local function draw_help()
   set_modifiable(help_bufnr, true)
   local lines = {}
@@ -536,7 +552,7 @@ local function draw_help()
       }}}
     )
   end
-  local aligned_toggles = uw.align_waypoint_table(toggles, {"string", "string"}, toggle_highlights, false)
+  local aligned_toggles = uw.align_waypoint_table(toggles, {"string", "string"}, toggle_highlights)
   table.insert(lines, "Toggles")
   table.insert(lines, "")
   table.insert(highlights, {})
@@ -551,6 +567,76 @@ local function draw_help()
     end
     table.insert(highlights, row_highlights)
   end
+
+  -- show keybindings
+
+  table.insert(lines, "")
+  table.insert(lines, "")
+  table.insert(lines, "Global keybindings")
+  table.insert(lines, "")
+  table.insert(highlights, {})
+  table.insert(highlights, {})
+  table.insert(highlights, {})
+  table.insert(highlights, {})
+
+  local keybindings = {}
+  local keybindings_highlights = {}
+  for _, action_and_description in pairs(global_keybindings_description) do
+    local action = action_and_description[1]
+    local description = action_and_description[2]
+    assert(config.keybindings.global_keybindings[action], "No global keybinding found for " .. action)
+    local kb
+    local kb_hl
+    if type(config.keybindings.global_keybindings[action] == 'string') then
+      kb = { description, config.keybindings.global_keybindings[action], }
+      kb_hl = {
+        {},
+        {{
+          nsid = constants.ns,
+          hl_group = constants.hl_keybinding,
+          col_start = 1,
+          col_end = #config.keybindings.global_keybindings[action],
+        }},
+      }
+    elseif type(config.keybindings.global_keybindings[action] == 'table') then
+      kb = {"", description}
+      kb_hl = {{}, {}}
+    else
+      error("Type of global keybinding for" .. action .. " should be string or table")
+    end
+    table.insert(keybindings, kb)
+    table.insert(keybindings_highlights, kb_hl)
+  end
+  local aligned_keybindings = uw.align_waypoint_table(keybindings, {"string", "string"}, keybindings_highlights, "")
+  for i=1,#keybindings do
+    table.insert(lines, aligned_keybindings[i])
+    local row_highlights = {}
+    for j=1,#keybindings_highlights[i] do
+      for k=1,#keybindings_highlights[i][j] do
+        table.insert(row_highlights, keybindings_highlights[i][j][k])
+      end
+    end
+    table.insert(highlights, row_highlights)
+  end
+
+  table.insert(lines, "")
+  table.insert(lines, "")
+  table.insert(lines, "Waypoint window keybindings")
+  table.insert(lines, "")
+  table.insert(highlights, {})
+  table.insert(highlights, {})
+  table.insert(highlights, {})
+  table.insert(highlights, {})
+
+  table.insert(lines, "")
+  table.insert(lines, "")
+  table.insert(lines, "Help window keybindings")
+  table.insert(lines, "")
+  table.insert(highlights, {})
+  table.insert(highlights, {})
+  table.insert(highlights, {})
+  table.insert(highlights, {})
+
 
   vim.api.nvim_buf_set_lines(help_bufnr, 0, -1, true, lines)
   -- hlranges is the set of highlight ranges for this line of the help

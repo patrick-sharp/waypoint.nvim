@@ -58,8 +58,9 @@ function M.highlight_custom_groups()
   vim.cmd("highlight " .. constants.hl_footer_before_context .. " guifg=" .. config.color_footer_before_context .. " guibg=" .. float_border_bg)
   vim.cmd("highlight " .. constants.hl_footer_context .. " guifg=" .. config.color_footer_context .. " guibg=" .. float_border_bg)
   vim.cmd("highlight " .. constants.hl_footer_waypoint_nr ..  " guibg=" .. float_border_bg)
-  vim.cmd("highlight " .. constants.hl_toggle_on ..  " guifg=" .. constants.color_toggle_on)
-  vim.cmd("highlight " .. constants.hl_toggle_off ..  " guifg=" .. constants.color_toggle_off)
+  vim.cmd("highlight " .. constants.hl_toggle_on .. " guifg=" .. constants.color_toggle_on)
+  vim.cmd("highlight " .. constants.hl_toggle_off .. " guifg=" .. constants.color_toggle_off)
+  vim.cmd("highlight " .. constants.hl_keybinding .. " guifg=" .. constants.color_keybinding)
 end
 
 return M

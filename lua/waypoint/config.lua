@@ -106,8 +106,8 @@
 ---
 ---@class waypoint.GlobalKeybindingsOverride
 ---@field current_waypoint        nil | string | table<string>
----@field next_waypoint           nil | string | table<string>
 ---@field prev_waypoint           nil | string | table<string>
+---@field next_waypoint           nil | string | table<string>
 ---@field first_waypoint          nil | string | table<string>
 ---@field last_waypoint           nil | string | table<string>
 ---@field prev_neighbor_waypoint  nil | string | table<string>
