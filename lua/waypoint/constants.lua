@@ -31,7 +31,6 @@ local M = {
   hl_keybinding = "waypoint_hl_keybinding",
   color_toggle_on = "#00ff00",
   color_toggle_off = "#ff0000",
-  color_keybinding = "#d7ba7d",
   ns = vim.api.nvim_create_namespace(augroup),
   max_indent = 16,
   table_separator = '│',
@@ -49,48 +48,7 @@ local M = {
   debug_file = "./debug.log"
 }
 
-
 -- candidate indentation styles
 -- https://en.wikipedia.org/wiki/Box-drawing_characters
---
--- 7 │ README.md      │   6 │
--- 7 │ README.md      │   6 │
--- 7 ╵ README.md      ╵   6 ╵
---     7 ╷ README.md      ╷   6 ╷
---     7 │ README.md      │   6 │
---     7 │ README.md      │   6 │
---
--- 7 │ README.md      │   6 │
--- 7 │ README.md      │   6 │
--- 7 ┼ README.md      ┼   6 ┼
---     7 ┼ README.md      ┼   6 ┼
---     7 │ README.md      │   6 │
---     7 │ README.md      │   6 │
---
--- 7 │ README.md      │   6 │
--- 7 │ README.md      │   6 │
--- 7 ┴ README.md      ┴   6 ┴
---     7 ┬ README.md      ┬   6 ┬
---     7 │ README.md      │   6 │
---     7 │ README.md      │   6 │
---
--- 7 │ README.md      │   6 │
--- 7 │ README.md      │   6 │
--- 7 │ README.md      │   6 │
---   ┴   ┬            ┴   ┬ ┴   ┬
---     7 │   README.md    │   6 │
---     7 │ README.md      │   6 │
---     7 │ README.md      │   6 │
---
--- 7 │ README.md      │   6 │
--- 7 │ README.md      │   6 │
--- 7 │ README.md      │   6 │
---   ╵   ╷            ╵   ╷ ╵   ╷
---     7 │ README.md      │   6 │
---     7 │ README.md      │   6 │
---     7 │ README.md      │   6 │
---       ╵   ╷            ╵   ╷ ╵   ╷
---         7 │ readme.md      │   6 │
---         7 │ readme.md      │   6 │
 
 return M

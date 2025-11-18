@@ -50,6 +50,9 @@ function M.highlight_custom_groups()
     float_border_bg = string.format('#%06x', float_border_hl_def.background)
   end
 
+  local color_keybinding_dec = vim.api.nvim_get_hl(0, {name = "Special"}).fg
+  local color_keybinding_hex = '#' .. string.format("%x", color_keybinding_dec)
+
   vim.cmd("highlight " .. constants.hl_selected .. " guibg=" .. color_cursor_line_hex)
   vim.cmd("highlight " .. constants.hl_sign .. " guifg=" .. config.color_sign .. " guibg=NONE")
   vim.cmd("highlight " .. constants.hl_directory .. " guifg=" .. color_dir_hex)
@@ -60,7 +63,7 @@ function M.highlight_custom_groups()
   vim.cmd("highlight " .. constants.hl_footer_waypoint_nr ..  " guibg=" .. float_border_bg)
   vim.cmd("highlight " .. constants.hl_toggle_on .. " guifg=" .. constants.color_toggle_on)
   vim.cmd("highlight " .. constants.hl_toggle_off .. " guifg=" .. constants.color_toggle_off)
-  vim.cmd("highlight " .. constants.hl_keybinding .. " guifg=" .. constants.color_keybinding)
+  vim.cmd("highlight " .. constants.hl_keybinding .. " guifg=" .. color_keybinding_hex)
 end
 
 return M

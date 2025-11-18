@@ -81,7 +81,6 @@ I frequently use the following abbreviations in this codebase:
     [x] allow number + <> to indent number of times
 [x] keybind to swap waypoint to top of file
 [x] keybind to swap waypoint to bottom of file
-[ ] increase the performance of highlights and draw calls in general
 [x] get rid of the mark char in the floating window, it's redundant with the number
 [x] document common abbreviations in a comment somewhere
 [x] remove index hungarian, use comments instead
@@ -91,24 +90,30 @@ I frequently use the following abbreviations in this codebase:
 [x] fix bug where vanilla highlights at end of line don't get applied
 [x] make indentation saved by number of indents, not number of spaces
 config
-[ ] g? shows keybinds
+[x] g? shows keybinds
 [x] add bookmarks.nvim-style config validation
-[ ] think about persisting waypoints on every waypoint state change
-[ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
-    https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua
-    maybe use vim.schedule to do it async if worried about perf?
-[x] get rid of the optimization to vary the widths of the waypoint context if it hits eof or bof
-    [ ] use the optimization afforded by that to only render waypoints + contexts currently on screen
 [x] highlight table separators with WinSeparator
 [x] take indentation into account when padding rows so they all have the same number of spaces
-[ ] find out how nvim tree seems to dynamically adjust the brightness of the cursorline (NvimTreeCursorLine)
-keybinds
 [x] add ability to move to next waypoint at the same indentation level
 [x] add ability to move to previous waypoint at one fewer indentation
 [x] add ability to move to previous waypoint at no indentation
 bugs
 [x] handle the case where the file doesn't exist when opening
     if the file doesn't exist, just show a message next to the waypoint that it doesn't exist, and don't allow the user to go to it.
+[x] think about maybe adding scrolloff so the next waypoint is always visible?
+[x] validate schema of file on load
+[x] in get_waypoint_context, if the file is out of bounds, show an out of bounds message
+[x] set max context in config
+[x] debug why treesitter highlights broke (confirmed that og syntax works)
+[x] get rid of the optimization to vary the widths of the waypoint context if it hits eof or bof
+    [ ] use the optimization afforded by that to only render waypoints + contexts currently on screen
+[ ] increase the performance of highlights and draw calls in general
+[ ] find out how nvim tree seems to dynamically adjust the brightness of the cursorline (NvimTreeCursorLine)
+keybinds
+[ ] think about persisting waypoints on every waypoint state change. maybe every time the waypoint window closes
+[ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
+    https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua
+    maybe use vim.schedule to do it async if worried about perf?
 [ ] fix bugs around closing buffers with waypoints in them
 [ ] handle the case where the file gets renamed while open
     do this by associating waypoints with a buffer number when loaded into state, and a file name when persisted to json
@@ -118,10 +123,6 @@ bugs
 [ ] when you expand the context, keep the selected waypoint at the same point in the window rather than centering on it
 [ ] handle the case where there is a swap file (or any error opening the file)
 features
-[x] validate schema of file on load
-[x] in get_waypoint_context, if the file is out of bounds, show an out of bounds message
-[x] set max context in config
-[x] debug why treesitter highlights broke (confirmed that og syntax works)
 [ ] indicate whether context for a mark is limited by file length (eof/bof)
 [ ] limit context size to the size of the window
 [ ] do something about extmarks moving to top of file when you filter the whole file through some external tool (e.g. \b for biome for me)
@@ -130,7 +131,6 @@ features
 [ ] repair state when draw_waypoint_window is called
 [ ] add perf logging for each function
 [ ] treesitter highlight bugs in readme for skhd somehow
-[x] think about maybe adding scrolloff so the next waypoint is always visible?
 [ ] switch to making new state for saving / loading instead of mutating existing state to get there
 [ ] figure out some way to deal with extmarks moving around when you autoformat
 [ ] try to find out if that periodic hanging issue I get is due to waypoint or something else
@@ -173,7 +173,6 @@ file changes
 how does Neoformat replace buffer contents but without scrubbing marks and extmarks?
     it uses an internal api to replace the buffer. this doesn't remove marks. the api for replacing buffer with shell output doesn't use the one neoformat uses.
 
-
 redundancy?
 store extmark id, text, line number
 when extmark updates, update text and line number too
@@ -182,9 +181,6 @@ what to do if buffer update causes two extmarks to be on the same line?
 what to do if buffer updates and location can't be found?
 what to do if file changes name or is deleted?
 
-
 waypoint order
     by file and by line
     by manual order
-    sort visual selection?
-    waypoint groups?
