@@ -289,7 +289,13 @@ local function draw_waypoint_window(action)
   end
 
   local win_width = get_floating_window_width()
-  local aligned = uw.align_waypoint_table(rows, table_cell_types, hlranges, constants.table_separator, win_width, indents)
+  local aligned = uw.align_waypoint_table(
+    rows, table_cell_types, hlranges,
+    {
+      column_separator = constants.table_separator,
+      win_width = win_width,
+      indents = indents,
+    })
 
   longest_line_len = 0
   for i, line in pairs(aligned) do
@@ -496,20 +502,142 @@ local function set_waypoint_keybinds()
 end
 
 local global_keybindings_description = {
-  {"toggle_waypoint", "Toggle a waypoint on the cursor's current line"},
-  {"open_waypoint_window", "Open the waypoint window"},
-  {"current_waypoint", "Jump to current waypoint"},
-  {"prev_waypoint", "Jump to previous waypoint"},
-  {"next_waypoint", "Jump to next waypoint"},
-  {"first_waypoint", "Jump to first waypoint"},
-  {"last_waypoint", "Jump to last waypoint"},
-  {"prev_neighbor_waypoint", "Jump to the previous waypoint at the same level"},
-  {"next_neighbor_waypoint", "Jump to the next waypoint at the same level"},
-  {"prev_top_level_waypoint", "Jump to the previous unindented waypoint"},
-  {"next_top_level_waypoint", "Jump to the next unindented waypoint"},
-  {"outer_waypoint", "Jump to the previous waypoint indented one level less"},
-  {"inner_waypoint", "Jump to the next waypoint indented one level more"},
+  {"toggle_waypoint"         ,  "Toggle a waypoint on the cursor's current line"}       ,
+  {"open_waypoint_window"    ,  "Show the waypoint window"}                             ,
+  {"current_waypoint"        ,  "Jump to current waypoint"}                             ,
+  {"prev_waypoint"           ,  "Jump to previous waypoint"}                            ,
+  {"next_waypoint"           ,  "Jump to next waypoint"}                                ,
+  {"first_waypoint"          ,  "Jump to first waypoint"}                               ,
+  {"last_waypoint"           ,  "Jump to last waypoint"}                                ,
+  {"prev_neighbor_waypoint"  ,  "Jump to the previous waypoint at the same indentation"},
+  {"next_neighbor_waypoint"  ,  "Jump to the next waypoint at the same indentation"}    ,
+  {"prev_top_level_waypoint" ,  "Jump to the previous unindented waypoint"}             ,
+  {"next_top_level_waypoint" ,  "Jump to the next unindented waypoint"}                 ,
+  {"outer_waypoint"          ,  "Jump to the previous waypoint indented one level less"},
+  {"inner_waypoint"          ,  "Jump to the next waypoint indented one level more"}    ,
 }
+
+local waypoint_window_keybindings_description = {
+  {"current_waypoint"        , "Jump to the current waypoint's location"}                   ,
+  {"delete_waypoint"         , "Delete the current waypoint from the waypoint list"}        ,
+  {"move_waypoint_down"      , "Move the current waypoint before the previous waypoint"}    ,
+  {"move_waypoint_up"        , "Move the current waypoint after the next waypoint"}         ,
+  {"exit_waypoint_window"    , "Exit the waypoint window"}                                  ,
+  {"increase_context"        , "Increase the number of lines shown around each waypoint"}   ,
+  {"decrease_context"        , "Decrease the number of lines shown around each waypoint"}   ,
+  {"increase_before_context" , "Increase the number of lines shown before each waypoint"}   ,
+  {"decrease_before_context" , "Decrease the number of lines shown before each waypoint"}   ,
+  {"increase_after_context"  , "Increase the number of lines shown after each waypoint"}    ,
+  {"decrease_after_context"  , "Decrease the number of lines shown after each waypoint"}    ,
+  {"reset_context"           , "Show no lines around each waypoint"}                        ,
+  {"toggle_annotation"       , "I'm probably gonna remove this anyway"}                     ,
+  {"toggle_path"             , "Toggle whether the file path appears"}                      ,
+  {"toggle_full_path"        , "Toggle whether the full file path appears"}                 ,
+  {"toggle_line_num"         , "Toggle whether the line number appears"}                    ,
+  {"toggle_file_text"        , "Toggle whether the file text appears"}                      ,
+  {"toggle_context"          , "Toggle whether any lines are shown around each waypoint"}   ,
+  {"toggle_sort"             , "Toggle whether waypoints are sorted by file and line"}      ,
+  {"show_help"               , "Show this help window"}                                     ,
+  {"set_quickfix_list"       , "Set the quickfix list to locations of all waypoints"},
+  {"indent"                  , "Increase the indentation of the current waypoint"}          ,
+  {"unindent"                , "Decrease the indentation of the current waypoint"}          ,
+  {"reset_waypoint_indent"   , "Set the current waypoint's indentation to zero"}            ,
+  {"reset_all_indent"        , "Set the indentation of all waypoints to zero"}              ,
+  {"scroll_right"            , "Scroll the waypoint window right"}                          ,
+  {"scroll_left"             , "Scroll the waypoint window left"}                           ,
+  {"reset_horizontal_scroll" , "Scroll the waypoint window all the way left"}               ,
+  {"next_waypoint"           , "Move to the next waypoint in the waypoint window"}          ,
+  {"prev_waypoint"           , "Move to the previous waypoint in the waypoint window"}      ,
+  {"first_waypoint"          , "Move to the first waypoint in the waypoint window"}         ,
+  {"last_waypoint"           , "Move to the last waypoint in the waypoint window"}          ,
+  {"outer_waypoint"          , "Move to the previous waypoint indented one level less"}     ,
+  {"inner_waypoint"          , "Move to the next waypoint indented one level more"}         ,
+  {"prev_neighbor_waypoint"  , "Move to the previous waypoint at the same indentation"}     ,
+  {"next_neighbor_waypoint"  , "Move to the next waypoint at the same indentation"}         ,
+  {"prev_top_level_waypoint" , "Move to the previous unindented waypoint"}                  ,
+  {"next_top_level_waypoint" , "Move to the next unindented waypoint"}                      ,
+}
+
+local help_keybindings_description = {
+  {"exit_help", "Exit help and return to the waypoint window"},
+}
+
+local function insert_lines_for_keybindings(lines, highlights, keybindings_group, keybindings_description, keybindings_group_title, keybindings_group_name)
+  table.insert(lines, "")
+  table.insert(lines, "")
+  table.insert(lines, keybindings_group_title .. " keybindings")
+  table.insert(lines, "")
+  table.insert(highlights, {})
+  table.insert(highlights, {})
+  table.insert(highlights, {})
+  table.insert(highlights, {})
+
+  local keybindings = {}
+  local keybindings_highlights = {}
+
+  for _, action_and_description in pairs(keybindings_description) do
+    local action = action_and_description[1]
+    local description = action_and_description[2]
+    assert(keybindings_group[action], "No " .. keybindings_group_name.. " keybinding found for " .. action)
+    local kb
+    local kb_hl
+    if type(keybindings_group[action]) == 'string' then
+      kb = { description, keybindings_group[action], }
+      kb_hl = {
+        {},
+        {{
+          nsid = constants.ns,
+          hl_group = constants.hl_keybinding,
+          col_start = 1,
+          col_end = #keybindings_group[action],
+        }},
+      }
+    elseif type(keybindings_group[action]) == 'table' then
+      local kb_col = {}
+      local kb_hl_col = {}
+      local separator = " or "
+      local offset = 1
+      for i, kb_ in pairs(keybindings_group[action]) do
+        table.insert(kb_col, kb_)
+        table.insert(kb_hl_col, {
+          nsid = constants.ns,
+          hl_group = constants.hl_keybinding,
+          col_start = offset,
+          col_end = offset + #kb_ - 1,
+        })
+        offset = offset + #kb_ + #separator
+        if i < #keybindings_group[action] then
+          table.insert(kb_col, separator)
+        end
+      end
+      kb = {description, table.concat(kb_col)}
+      kb_hl = {{}, kb_hl_col}
+    else
+      error("Type of " .. keybindings_group_name.. " keybinding for" .. action .. " should be string or table")
+    end
+    table.insert(keybindings, kb)
+    table.insert(keybindings_highlights, kb_hl)
+  end
+  local aligned_keybindings = uw.align_waypoint_table(
+    keybindings,
+    {"string", "string"},
+    keybindings_highlights,
+    {
+      column_separator = "",
+      width_override = {55},
+    }
+  )
+  for i=1,#keybindings do
+    table.insert(lines, aligned_keybindings[i])
+    local row_highlights = {}
+    for j=1,#keybindings_highlights[i] do
+      for k=1,#keybindings_highlights[i][j] do
+        table.insert(row_highlights, keybindings_highlights[i][j][k])
+      end
+    end
+    table.insert(highlights, row_highlights)
+  end
+end
 
 local function draw_help()
   set_modifiable(help_bufnr, true)
@@ -570,73 +698,9 @@ local function draw_help()
 
   -- show keybindings
 
-  table.insert(lines, "")
-  table.insert(lines, "")
-  table.insert(lines, "Global keybindings")
-  table.insert(lines, "")
-  table.insert(highlights, {})
-  table.insert(highlights, {})
-  table.insert(highlights, {})
-  table.insert(highlights, {})
-
-  local keybindings = {}
-  local keybindings_highlights = {}
-  for _, action_and_description in pairs(global_keybindings_description) do
-    local action = action_and_description[1]
-    local description = action_and_description[2]
-    assert(config.keybindings.global_keybindings[action], "No global keybinding found for " .. action)
-    local kb
-    local kb_hl
-    if type(config.keybindings.global_keybindings[action] == 'string') then
-      kb = { description, config.keybindings.global_keybindings[action], }
-      kb_hl = {
-        {},
-        {{
-          nsid = constants.ns,
-          hl_group = constants.hl_keybinding,
-          col_start = 1,
-          col_end = #config.keybindings.global_keybindings[action],
-        }},
-      }
-    elseif type(config.keybindings.global_keybindings[action] == 'table') then
-      kb = {"", description}
-      kb_hl = {{}, {}}
-    else
-      error("Type of global keybinding for" .. action .. " should be string or table")
-    end
-    table.insert(keybindings, kb)
-    table.insert(keybindings_highlights, kb_hl)
-  end
-  local aligned_keybindings = uw.align_waypoint_table(keybindings, {"string", "string"}, keybindings_highlights, "")
-  for i=1,#keybindings do
-    table.insert(lines, aligned_keybindings[i])
-    local row_highlights = {}
-    for j=1,#keybindings_highlights[i] do
-      for k=1,#keybindings_highlights[i][j] do
-        table.insert(row_highlights, keybindings_highlights[i][j][k])
-      end
-    end
-    table.insert(highlights, row_highlights)
-  end
-
-  table.insert(lines, "")
-  table.insert(lines, "")
-  table.insert(lines, "Waypoint window keybindings")
-  table.insert(lines, "")
-  table.insert(highlights, {})
-  table.insert(highlights, {})
-  table.insert(highlights, {})
-  table.insert(highlights, {})
-
-  table.insert(lines, "")
-  table.insert(lines, "")
-  table.insert(lines, "Help window keybindings")
-  table.insert(lines, "")
-  table.insert(highlights, {})
-  table.insert(highlights, {})
-  table.insert(highlights, {})
-  table.insert(highlights, {})
-
+  insert_lines_for_keybindings(lines, highlights, config.keybindings.global_keybindings, global_keybindings_description, "Global", "global")
+  insert_lines_for_keybindings(lines, highlights, config.keybindings.waypoint_window_keybindings, waypoint_window_keybindings_description, "Waypoint window", "waypoint window")
+  insert_lines_for_keybindings(lines, highlights, config.keybindings.help_keybindings, help_keybindings_description, "Help", "help")
 
   vim.api.nvim_buf_set_lines(help_bufnr, 0, -1, true, lines)
   -- hlranges is the set of highlight ranges for this line of the help

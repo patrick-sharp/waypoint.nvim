@@ -17,11 +17,11 @@ function M.log(...)
 end
 
 function M.get_in(t, keys)
+  if not t then return nil end
+
   local cur = t
   for _, k in ipairs(keys) do
-    if not cur[k] then
-      return nil
-    end
+    if not cur[k] then return nil end
     cur = cur[k]
   end
   return cur

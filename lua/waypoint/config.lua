@@ -128,7 +128,6 @@
 ---@field increase_after_context   nil | string | table<string>
 ---@field decrease_after_context   nil | string | table<string>
 ---@field reset_context            nil | string | table<string>
----@field toggle_annotation        nil | string | table<string>
 ---@field toggle_path              nil | string | table<string>
 ---@field toggle_full_path         nil | string | table<string>
 ---@field toggle_line_num          nil | string | table<string>
@@ -181,6 +180,7 @@ local M = {
   max_context = 20,
   keybindings = {
     global_keybindings = {
+      open_waypoint_window    = "ms",
       current_waypoint        = "mc",
       prev_waypoint           = "mp",
       next_waypoint           = "mn",
@@ -192,11 +192,10 @@ local M = {
       next_top_level_waypoint = "m}",
       outer_waypoint          = "mo",
       inner_waypoint          = "mi",
-      open_waypoint_window    = "mf",
       toggle_waypoint         = "mt",
     },
     waypoint_window_keybindings = {
-      exit_waypoint_window    = {"mf", "q", "<esc>"},
+      exit_waypoint_window    = {"ms", "q", "<esc>"},
       increase_context        = "c",
       decrease_context        = "C",
       increase_before_context = "b",

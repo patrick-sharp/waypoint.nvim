@@ -144,22 +144,26 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
 end
 
 
+--- @class waypoint.AlignTableOpts
+--- @field column_separator string | nil if present, add as a separator between each column
+--- @field win_width integer | nil if this is non-nil, add spaces to the right of each row to pad to this width
+--- @field indents table<integer> | nil if this is non-nil, add indent[i] levels of indentation waypoint[i]
+--- @field width_override table<integer | nil> | nil if this is non-nil, override column i's width with width_override[i] if non-nil
+
 --- @param t table<table<string>> rows x columns x content
 --- @param table_cell_types table<string> type of each column
 --- @param highlights table<table<string | table<waypoint.HighlightRange>>>   rows x columns x (optionally) multiple highlights for a given column. This parameter is mutated to adjust the highlights of each line so they will work after the alignment.
---- @param column_separator string | nil if present, add as a separator between each column
---- @param win_width integer | nil if this is non-nil, add spaces to the right of each row to pad to this width
---- @param indents table<integer> | nil 
+--- @param opts waypoint.AlignTableOpts | nil
 --- @return table<string>
-function M.align_waypoint_table(t, table_cell_types, highlights, column_separator, win_width, indents)
+function M.align_waypoint_table(t, table_cell_types, highlights, opts)
   if #t == 0 then
     return {}
   end
 
   assert(#t[1] == #table_cell_types, "#t[1] == " .. #t[1] ..", #table_cell_types == " .. #table_cell_types .. ", but they should be the same")
   assert(#t == #highlights, "#t == " .. #t ..", #highlights == " .. #highlights .. ", but they should be the same")
-  if indents then
-    assert(#t == #indents, "#t == " .. #t ..", #indents == " .. #indents .. ", but they should be the same")
+  if opts and opts.indents then
+    assert(#t == #opts.indents, "#t == " .. #t ..", #indents == " .. #opts.indents .. ", but they should be the same")
   end
 
   local nrows = #t
@@ -169,16 +173,24 @@ function M.align_waypoint_table(t, table_cell_types, highlights, column_separato
   local widths = {}
   for i=1,ncols do
     local max_width = 0
+    local widest_column = nil
     for j=1,nrows do
       if t[j] ~= "" then
         local field = t[j][i]
-        max_width = math.max(u.vislen(field), max_width)
+        local field_len = u.vislen(field)
+        if (field_len > max_width) then
+          max_width = field_len
+          widest_column = i
+        end
+
       end
     end
-    table.insert(widths, max_width)
+    local width = u.get_in(opts, {"width_override", i}) or max_width
+    assert(max_width <= width, "Max width of column " .. widest_column .. "(" .. tostring(max_width) ..  ") is greater than column width of " .. tostring(width))
+    table.insert(widths, width)
   end
 
-  -- now that we know how wide each table is, we can figure out how the 
+  -- now that we know how wide each column is, we can figure out how the 
   -- highlight groups of each line will be adjusted
   for i,row_highlights in pairs(highlights) do
     -- how much to add to col_start and col_end
@@ -202,11 +214,11 @@ function M.align_waypoint_table(t, table_cell_types, highlights, column_separato
           hlrange.col_end = hlrange.col_end + offset
         end
       end
-      if column_separator then
+      if opts and opts.column_separator then
         -- if applicable, highlight the table separator to the right of this column
         if j < #row_highlights then
           local separator_highlight_start = offset + padded_byte_length + 1
-          local separator_highlight_end = offset + padded_byte_length + 1 + #column_separator
+          local separator_highlight_end = offset + padded_byte_length + 1 + #opts.column_separator
           table.insert(row_highlights[j], {
             nsid = constants.ns,
             hl_group = 'WinSeparator',
@@ -216,7 +228,7 @@ function M.align_waypoint_table(t, table_cell_types, highlights, column_separato
         end
 
         -- the extra 2 for the spaces on either side of the table separator
-        offset = offset + padded_byte_length + #column_separator + 2
+        offset = offset + padded_byte_length + #opts.column_separator + 2
       else
         -- the extra 1 is the space between columns
         offset = offset + padded_byte_length + 1
@@ -242,16 +254,16 @@ function M.align_waypoint_table(t, table_cell_types, highlights, column_separato
         end
         table.insert(fields, padded)
       end
-      if column_separator then
-        table.insert(result, table.concat(fields, " " .. column_separator .. " "))
+      if opts and opts.column_separator then
+        table.insert(result, table.concat(fields, " " .. opts.column_separator .. " "))
       else
         table.insert(result, table.concat(fields, " "))
       end
 
-      if win_width then
-        local row_len = u.vislen(result[#result]) + ((indents and indents[i]) or 0)
-        if row_len < win_width then
-          local num_padding_spaces = win_width - row_len
+      if opts and opts.win_width then
+        local row_len = u.vislen(result[#result]) + ((opts and opts.indents and opts.indents[i]) or 0)
+        if row_len < opts.win_width then
+          local num_padding_spaces = opts.win_width - row_len
           result[#result] = result[#result] .. string.rep(" ", num_padding_spaces)
         end
       end
