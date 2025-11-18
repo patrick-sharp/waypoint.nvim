@@ -7,7 +7,7 @@ I frequently use the following abbreviations in this codebase:
 * wpi: waypoint index, the index of the currently selected waypoint
 * bufnr: buffer number
 * linenr: line number
-* winnr: window numbe
+* winnr: window number
 * ts: treesitter, the language parser library
 
 
@@ -19,7 +19,7 @@ I frequently use the following abbreviations in this codebase:
 [x] syntax highlighting for file text with vanilla vim syntax
 [x] syntax highlighting for file text with treesitter
 [x] user configuration
-  [ ] keybinds with an on_attach(bufnr) function
+  [x] keybinds with an on_attach(bufnr) function
   [x] height / width
   [x] file path
   [x] color for mark
@@ -92,7 +92,7 @@ I frequently use the following abbreviations in this codebase:
 [x] make indentation saved by number of indents, not number of spaces
 config
 [ ] g? shows keybinds
-[ ] add bookmarks.nvim-style config validation
+[x] add bookmarks.nvim-style config validation
 [ ] think about persisting waypoints on every waypoint state change
 [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
     https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua
@@ -100,7 +100,7 @@ config
 [x] get rid of the optimization to vary the widths of the waypoint context if it hits eof or bof
     [ ] use the optimization afforded by that to only render waypoints + contexts currently on screen
 [x] highlight table separators with WinSeparator
-[ ] take indentation into account when padding rows so they all have the same number of spaces
+[x] take indentation into account when padding rows so they all have the same number of spaces
 [ ] find out how nvim tree seems to dynamically adjust the brightness of the cursorline (NvimTreeCursorLine)
 keybinds
 [x] add ability to move to next waypoint at the same indentation level
@@ -120,6 +120,8 @@ bugs
 features
 [x] validate schema of file on load
 [x] in get_waypoint_context, if the file is out of bounds, show an out of bounds message
+[x] set max context in config
+[x] debug why treesitter highlights broke (confirmed that og syntax works)
 [ ] indicate whether context for a mark is limited by file length (eof/bof)
 [ ] limit context size to the size of the window
 [ ] do something about extmarks moving to top of file when you filter the whole file through some external tool (e.g. \b for biome for me)
@@ -128,13 +130,16 @@ features
 [ ] repair state when draw_waypoint_window is called
 [ ] add perf logging for each function
 [ ] treesitter highlight bugs in readme for skhd somehow
-[ ] think about maybe adding scrolloff so the next waypoint is always visible?
+[x] think about maybe adding scrolloff so the next waypoint is always visible?
 [ ] switch to making new state for saving / loading instead of mutating existing state to get there
 [ ] figure out some way to deal with extmarks moving around when you autoformat
 [ ] try to find out if that periodic hanging issue I get is due to waypoint or something else
-[x] debug why treesitter highlights broke (confirmed that og syntax works)
 [ ] create better error handling and reporting
     [ ] if highlighting fails for some reason, just show an error message and turn off highlighting
+[ ] tests
+[ ] add ability to move all waypoints in a file to another file (fixes renaming file)
+[ ] add ability to undo deleting waypoints with u
+[ ] fix bug where buffers loaded by file.load don't have treesitter highlights (maybe regular ones too?)
 
 ### ADVANCED FEATURES:
 [x] delete waypoint from floating window with dd

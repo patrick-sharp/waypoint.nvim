@@ -12,6 +12,7 @@
 ---@field indent_width                integer
 ---@field scroll_increment            integer
 ---@field enable_highlight            boolean
+---@field max_context                 integer
 ---@field keybindings                 waypoint.Keybindings
 
 ---@class waypoint.Keybindings
@@ -95,6 +96,7 @@
 ---@field indent_width                nil | integer
 ---@field scroll_increment            nil | integer
 ---@field enable_highlight            nil | boolean
+---@field max_context                 nil | integer
 ---@field keybindings                 nil | waypoint.Keybindings
 
 ---@class waypoint.KeybindingsOverride
@@ -176,6 +178,7 @@ local M = {
   indent_width = 4,
   scroll_increment = 6,
   enable_highlight = true,
+  max_context = 20,
   keybindings = {
     global_keybindings = {
       current_waypoint        = "mc",

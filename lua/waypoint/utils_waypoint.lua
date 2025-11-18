@@ -144,17 +144,22 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
 end
 
 
---- @param t table<table<string>>
---- @param table_cell_types table<string>
+--- @param t table<table<string>> rows x columns x content
+--- @param table_cell_types table<string> type of each column
 --- @param highlights table<table<string | table<waypoint.HighlightRange>>>   rows x columns x (optionally) multiple highlights for a given column. This parameter is mutated to adjust the highlights of each line so they will work after the alignment.
 --- @param include_separator boolean if true, add constants.table_separator between each column
 --- @param win_width integer | nil if this is non-nil, add spaces to the right of each row to pad to this width
+--- @param indents table<integer> | nil 
 --- @return table<string>
-function M.align_waypoint_table(t, table_cell_types, highlights, include_separator, win_width)
+function M.align_waypoint_table(t, table_cell_types, highlights, include_separator, win_width, indents)
   if #t == 0 then
     return {}
   end
-  assert(#t == #highlights, "#t == " .. #t ..", #highlights == " .. #highlights .. ", but they should be the same" )
+
+  assert(#t[1] == #table_cell_types, "#t[1] == " .. #t[1] ..", #table_cell_types == " .. #table_cell_types .. ", but they should be the same")
+  assert(#t == #highlights, "#t == " .. #t ..", #highlights == " .. #highlights .. ", but they should be the same")
+  assert(#t == #indents, "#t == " .. #t ..", #indents == " .. #indents .. ", but they should be the same")
+
   local nrows = #t
   local ncols = #t[1]
 
@@ -241,7 +246,7 @@ function M.align_waypoint_table(t, table_cell_types, highlights, include_separat
       end
 
       if win_width then
-        local row_len = u.vislen(result[#result])
+        local row_len = u.vislen(result[#result]) + ((indents and indents[i]) or 0)
         if row_len < win_width then
           local num_padding_spaces = win_width - row_len
           result[#result] = result[#result] .. string.rep(" ", num_padding_spaces)

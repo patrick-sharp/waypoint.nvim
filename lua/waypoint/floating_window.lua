@@ -306,7 +306,7 @@ local function draw_waypoint_window(action)
   end
 
   local win_width = get_floating_window_width()
-  local aligned = uw.align_waypoint_table(rows, table_cell_types, hlranges, true, win_width)
+  local aligned = uw.align_waypoint_table(rows, table_cell_types, hlranges, true, win_width, indents)
 
   longest_line_len = 0
   for i, line in pairs(aligned) do
@@ -555,7 +555,7 @@ local function draw_help()
       }}}
     )
   end
-  local aligned_toggles = uw.align_waypoint_table(toggles, {"string", "string"}, toggle_highlights, false, nil)
+  local aligned_toggles = uw.align_waypoint_table(toggles, {"string", "string"}, toggle_highlights, false)
   table.insert(lines, "Toggles")
   table.insert(lines, "")
   table.insert(highlights, {})
@@ -745,7 +745,7 @@ end
 
 function IncreaseContext(increment)
   for _=1, vim.v.count1 do
-    state.context = u.clamp(state.context + increment, 0)
+    state.context = u.clamp(state.context + increment, 0, config.max_context)
     state.view.lnum = nil
   end
 
@@ -755,7 +755,7 @@ end
 
 function IncreaseBeforeContext(increment)
   for _=1, vim.v.count1 do
-    state.before_context = u.clamp(state.before_context + increment, 0)
+    state.before_context = u.clamp(state.before_context + increment, 0, config.max_context)
     state.view.lnum = nil
   end
 
@@ -765,7 +765,7 @@ end
 
 function IncreaseAfterContext(increment)
   for _=1, vim.v.count1 do
-    state.after_context = u.clamp(state.after_context + increment, 0)
+    state.after_context = u.clamp(state.after_context + increment, 0, config.max_context)
     state.view.lnum = nil
   end
 
