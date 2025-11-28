@@ -2,11 +2,12 @@
 
 ---@class waypoint.Waypoint
 ---@field extmark_id    integer the id of the extmark within the buffer. Note that these are not unique globally. Can become stale if extmark is deleted for any reason (e.g. the buffer is closed)
----@field linenr        integer the zero-indexed line number the waypoint is on. Can become stale if a buffer edit causes the extmark to move.
----@field bufnr         string the buffer number the waypoint is in. can become stale if the file is deleted and reopened.
----@field filepath      string used as a backup if the bufnr becomes stale.
+---@field bufnr         integer the buffer number the waypoint is in. can become stale if the file is deleted and reopened.
 ---@field indent        integer
 ---@field annotation    string | nil
+---@field filepath      string used as a backup if the bufnr becomes stale.
+---@field text          string | nil
+---@field linenr        integer the one-indexed line number the waypoint is on. Can become stale if a buffer edit causes the extmark to move.
 ---@field error         string | nil
 
 ---@class waypoint.View

@@ -654,9 +654,9 @@ local function draw_help()
     {"sort_by_file_and_line", "Sort by file and line number:"},
   }
 
-  ---@type table<table<string>>
+  ---@type string[][]
   local toggles = {}
-  ---@type table<table<table<waypoint.HighlightRange>>>
+  ---@type waypoint.HighlightRange[][][]
   local toggle_highlights = {}
   for _,key_name in pairs(prop_names) do
     local key = key_name[1]
@@ -928,7 +928,6 @@ function ResetScroll()
   draw_waypoint_window("scroll")
 end
 
-
 function ToggleAnnotation()
   state.show_annotation = not state.show_annotation
   if help_bufnr then
@@ -1069,7 +1068,6 @@ function MoveToPrevNeighborWaypoint(draw)
     while i > 1 and state.waypoints[i].indent > current_indent do
       i = i - 1
     end
-    p(i, state.wpi, state.waypoints[i].indent, state.waypoints[state.wpi].indent)
     if state.waypoints[i].indent == state.waypoints[state.wpi].indent then
       state.wpi = i
     end

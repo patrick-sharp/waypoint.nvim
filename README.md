@@ -160,6 +160,7 @@ features
 [ ] view where everything is sorted by file by line
     [ ] keybind: ts to toggle sort 
 [ ] add ability to save and load waypoints to different files
+[ ] save waypoints parallel directory structure like swap files so they don't clutter the repo
 
 
 still got some weird treesitter behavior
@@ -169,6 +170,14 @@ some, like header 2, appear to never work
 look into TextChanged, TextChangedI, and FileChangedShell autocmds for watching
 when a file changed in order to keep the extmarks in the right place as the
 file changes
+
+There isn't an autommand for all file changes. here's a list of ones you should cover:
+TextChanged      change made in normal mode
+TextChangedI     change made in insert mode
+TextChangedP     change made in insert mode with popup menu visible
+TextChangedT     change made in terminal mode (idk if this applies)
+FileChangedShell file changed by something besides vim
+FileChangedShell file changed by something besides vim
 
 how does Neoformat replace buffer contents but without scrubbing marks and extmarks?
     it uses an internal api to replace the buffer. this doesn't remove marks. the api for replacing buffer with shell output doesn't use the one neoformat uses.

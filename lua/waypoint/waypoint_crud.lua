@@ -7,7 +7,7 @@ local u = require("waypoint.utils")
 
 
 ---@param filepath   string
----@param line_nr    integer
+---@param line_nr    integer one-indexed line number
 ---@param annotation string | nil
 function M.add_waypoint(filepath, line_nr, annotation)
   if not u.is_file_buffer() then return end
@@ -27,6 +27,7 @@ function M.add_waypoint(filepath, line_nr, annotation)
     annotation = annotation,
     linenr = line_nr,
     bufnr = bufnr,
+    text = vim.api.nvim_buf_get_lines(bufnr, line_nr, line_nr + 1, true)[1],
     error = nil,
   }
 

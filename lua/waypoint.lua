@@ -8,11 +8,12 @@ local crud = require("waypoint.waypoint_crud")
 local file = require("waypoint.file")
 local constants = require("waypoint.constants")
 local config = require("waypoint.config")
+local filter = require("waypoint.filter")
 local p = require("waypoint.print")
 
 
 -- binds the keybinding (or keybindings) to the given function 
---- @param keybinding string | table<string>
+--- @param keybinding string | string[]
 --- @param fn function
 local function bind_key(keybinding, fn)
   if type(keybinding) == "string" then
@@ -63,6 +64,7 @@ function M.setup(opts)
     end
   end
   vim.api.nvim_create_augroup(constants.augroup, { clear = true })
+
   vim.api.nvim_create_autocmd("VimEnter", {
     group = constants.augroup,
     callback = file.load,
@@ -72,6 +74,15 @@ function M.setup(opts)
     group = constants.augroup,
     callback = file.save,
     once = true,
+  })
+
+  vim.api.nvim_create_autocmd("FilterWritePre", {
+    group = constants.augroup,
+    callback = filter.save_file_contents,
+  })
+  vim.api.nvim_create_autocmd("FilterWritePost", {
+    group = constants.augroup,
+    callback = filter.fix_waypoint_positions,
   })
 
   bind_key(config.keybindings.global_keybindings.current_waypoint,        floating_window.GoToCurrentWaypoint)

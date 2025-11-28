@@ -20,9 +20,9 @@ local function get_highlight_id_at_pos(bufnr, line, col)
 end
 
 --- @param bufnr      integer
---- @param lines      table<string>
+--- @param lines      string[]
 --- @param start_line integer zero-indexed
---- @return table<table<waypoint.HighlightRange>> length of returned table is equal to number of lines.
+--- @return waypoint.HighlightRange[][] length of returned table is equal to number of lines.
 function M.get_vanilla_syntax_highlights(bufnr, lines, start_line)
   local hlranges = {}
   for i,line in pairs(lines) do
