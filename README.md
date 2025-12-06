@@ -105,11 +105,15 @@ bugs
 [x] in get_waypoint_context, if the file is out of bounds, show an out of bounds message
 [x] set max context in config
 [x] debug why treesitter highlights broke (confirmed that og syntax works)
+[x] indicate whether context for a mark is limited by file length (eof/bof)
+[x] do something about extmarks moving to top of file when you filter the whole file through some external tool (e.g. \b for biome for me)
+  [x] enrich data model
+  [x] listen on autocmd for state change
+[x] fix bug where buffers loaded by file.load don't have treesitter highlights (maybe regular ones too?)
 [x] get rid of the optimization to vary the widths of the waypoint context if it hits eof or bof
     [ ] use the optimization afforded by that to only render waypoints + contexts currently on screen
 [ ] increase the performance of highlights and draw calls in general
 [ ] find out how nvim tree seems to dynamically adjust the brightness of the cursorline (NvimTreeCursorLine)
-keybinds
 [ ] think about persisting waypoints on every waypoint state change. maybe every time the waypoint window closes
 [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
     https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua
@@ -123,11 +127,7 @@ keybinds
 [ ] when you expand the context, keep the selected waypoint at the same point in the window rather than centering on it
 [ ] handle the case where there is a swap file (or any error opening the file)
 features
-[ ] indicate whether context for a mark is limited by file length (eof/bof)
 [ ] limit context size to the size of the window
-[ ] do something about extmarks moving to top of file when you filter the whole file through some external tool (e.g. \b for biome for me)
-  [ ] enrich data model
-  [ ] listen on autocmd for state change
 [ ] repair state when draw_waypoint_window is called
 [ ] add perf logging for each function
 [ ] treesitter highlight bugs in readme for skhd somehow
@@ -139,7 +139,6 @@ features
 [ ] tests
 [ ] add ability to move all waypoints in a file to another file (fixes renaming file)
 [ ] add ability to undo deleting waypoints with u
-[ ] fix bug where buffers loaded by file.load don't have treesitter highlights (maybe regular ones too?)
 
 ### ADVANCED FEATURES:
 [x] delete waypoint from floating window with dd
@@ -176,7 +175,6 @@ TextChanged      change made in normal mode
 TextChangedI     change made in insert mode
 TextChangedP     change made in insert mode with popup menu visible
 TextChangedT     change made in terminal mode (idk if this applies)
-FileChangedShell file changed by something besides vim
 FileChangedShell file changed by something besides vim
 
 how does Neoformat replace buffer contents but without scrubbing marks and extmarks?
