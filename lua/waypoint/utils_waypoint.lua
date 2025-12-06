@@ -36,9 +36,9 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
   local bufnr = vim.fn.bufnr(waypoint.filepath)
 
   if waypoint.extmark_id == -1 then
-    --- @type table<string>
+    --- @type string[]
     local lines = {}
-    --- @type table<table<waypoint.HighlightRange>>
+    --- @type waypoint.HighlightRange[][]
     local hlranges = {}
     for _=1, num_lines_before do
       table.insert(lines, "")
@@ -88,7 +88,7 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
   local lines = vim.api.nvim_buf_get_lines(bufnr, start_line_nr, end_line_nr, false)
 
   -- figure out how each line is highlighted
-  --- @type table<table<waypoint.HighlightRange>>
+  --- @type waypoint.HighlightRange[][]
   local hlranges = {}
   local no_active_highlights = false
 

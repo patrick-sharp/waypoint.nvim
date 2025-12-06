@@ -127,7 +127,6 @@ bugs
 [ ] when you expand the context, keep the selected waypoint at the same point in the window rather than centering on it
 [ ] handle the case where there is a swap file (or any error opening the file)
 features
-[ ] limit context size to the size of the window
 [ ] repair state when draw_waypoint_window is called
 [ ] add perf logging for each function
 [ ] treesitter highlight bugs in readme for skhd somehow
@@ -139,6 +138,7 @@ features
 [ ] tests
 [ ] add ability to move all waypoints in a file to another file (fixes renaming file)
 [ ] add ability to undo deleting waypoints with u
+[ ] fix my type annotations from table<T> to T[]
 
 ### ADVANCED FEATURES:
 [x] delete waypoint from floating window with dd

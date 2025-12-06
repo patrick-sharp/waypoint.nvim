@@ -24,7 +24,7 @@ end
 
 --- @param start_line integer zero-indexed, inclusive
 --- @param end_line   integer zero-indexed, exclusive
---- @return table<waypoint.TreesitterHighlight>
+--- @return waypoint.TreesitterHighlight[]
 function M.get_nodes_with_highlights(bufnr, start_line, end_line)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   -- zero-indexed, inclusive
@@ -35,7 +35,7 @@ function M.get_nodes_with_highlights(bufnr, start_line, end_line)
   local self = highlighter.active[bufnr]
   if not self then return {} end
 
-  --- @type table<waypoint.TreesitterHighlight>
+  --- @type waypoint.TreesitterHighlight[]
   local results = {}
 
   local buf_highlighter = vim.treesitter.highlighter.active[bufnr]
@@ -73,14 +73,14 @@ end
 
 
 --- @param bufnr      integer
---- @param lines      table<string> the lines of text in the file that we're getting the highlights for
+--- @param lines      string[] the lines of text in the file that we're getting the highlights for
 --- @param start_line integer zero-indexed, inclusive
 --- @param end_line   integer zero-indexed, exclusive
---- @return table<table<waypoint.HighlightRange>>
+--- @return waypoint.HighlightRange[][]
 function M.get_treesitter_syntax_highlights(bufnr, lines, start_line, end_line)
-  --- @type table<waypoint.TreesitterHighlight>
+  --- @type waypoint.TreesitterHighlight[]
   local treesitter_highlights = M.get_nodes_with_highlights(bufnr, start_line, end_line)
-  --- @type table<waypoint.HighlightRange>
+  --- @type waypoint.HighlightRange[]
   local hlranges = {}
   for _=1, #lines do
     table.insert(hlranges, {})

@@ -120,6 +120,15 @@ local function repair_state()
 
 end
 
+---@param a waypoint.Waypoint
+---@param b waypoint.Waypoint
+local function waypoint_compare(a, b)
+  if a.filepath == b.filepath then
+    return a.linenr < b.linenr
+  end
+  return a.filepath < b.filepath
+end
+
 local function draw_waypoint_window(action)
   set_modifiable(wp_bufnr, true)
 
@@ -170,7 +179,19 @@ local function draw_waypoint_window(action)
     num_lines_after = 0
   end
 
-  for i, waypoint in ipairs(state.waypoints) do
+
+  local waypoints = state.waypoints
+
+  if state.sort_by_file_and_line then
+    waypoints = {}
+    for _, wp in pairs(state.waypoints) do
+      table.insert(waypoints, wp)
+    end
+    table.sort(waypoints, waypoint_compare)
+  end
+
+
+  for i, waypoint in ipairs(waypoints) do
     --- @type waypoint.WaypointFileText
     local waypoint_file_text = uw.get_waypoint_context(
       waypoint,
@@ -263,7 +284,7 @@ local function draw_waypoint_window(action)
     local has_context = state.before_context ~= 0
     has_context = has_context or state.context ~= 0
     has_context = has_context or state.after_context ~= 0
-    if state.show_context and has_context and i < #state.waypoints then
+    if state.show_context and has_context and i < #waypoints then
       table.insert(rows, "")
       table.insert(indents, 0)
       -- if the user somehow moves to a blank space, just treat that as 
