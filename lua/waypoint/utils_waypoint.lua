@@ -219,7 +219,9 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
         if j < #row_highlights then
           local separator_highlight_start = offset + padded_byte_length + 1
           local separator_highlight_end = offset + padded_byte_length + 1 + #opts.column_separator
-          table.insert(row_highlights[j], {
+          local col_highlights_ = row_highlights[j]
+          assert(type(col_highlights_) == "table")
+          table.insert(col_highlights_, {
             nsid = constants.ns,
             hl_group = 'WinSeparator',
             col_start = separator_highlight_start,

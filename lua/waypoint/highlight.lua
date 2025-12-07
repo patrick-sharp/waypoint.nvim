@@ -44,10 +44,10 @@ function M.highlight_custom_groups()
   local color_cursor_line_dec = vim.api.nvim_get_hl(0, {name = selected_waypoint_hl_group}).bg
   local color_cursor_line_hex = '#' .. string.format("%x", color_cursor_line_dec)
 
-  local float_border_hl_def = vim.api.nvim_get_hl_by_name('FloatBorder', true)
+  local float_border_hl_def = vim.api.nvim_get_hl(0, {name = 'FloatBorder', link = false})
   local float_border_bg = "NONE"
-  if float_border_hl_def.background then
-    float_border_bg = string.format('#%06x', float_border_hl_def.background)
+  if float_border_hl_def.bg then
+    float_border_bg = string.format('#%06x', float_border_hl_def.bg)
   end
 
   local color_keybinding_dec = vim.api.nvim_get_hl(0, {name = "Special"}).fg

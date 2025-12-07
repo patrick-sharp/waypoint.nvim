@@ -175,8 +175,8 @@ function M.load()
 
   highlight.highlight_custom_groups()
 
-  for k,v in pairs(decoded) do
-    state[k] = v
+  for state_k,state_v in pairs(decoded) do
+    state[state_k] = state_v
   end
   waypoint_crud.make_sorted_waypoints()
 end

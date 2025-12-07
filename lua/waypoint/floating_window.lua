@@ -57,11 +57,11 @@ end
 
 
 local function get_total_width()
-  return vim.api.nvim_get_option("columns")
+  return vim.api.nvim_get_option_value("columns", {})
 end
 
 local function get_total_height()
-  local height = vim.api.nvim_get_option("lines")
+  local height = vim.api.nvim_get_option_value("lines", {})
   height = height - vim.o.cmdheight
   height = height - vim.o.laststatus
   return height
@@ -408,6 +408,7 @@ local function draw_waypoint_window(action)
       else
         lnum = state.view.lnum
       end
+      assert(lnum)
       vim.fn.setcursorcharpos(lnum, state.view.col + 1)
       local view = vim.fn.winsaveview()
       view.leftcol = state.view.leftcol
@@ -428,6 +429,9 @@ local function draw_waypoint_window(action)
 
     for i=highlight_start,highlight_end-1 do
       vim.api.nvim_buf_add_highlight(wp_bufnr, 0, constants.hl_selected, i, 0, -1)
+      -- vim.api.nvim_buf_set_extmark(wp_bufnr, constants.ns, i, -1, {
+      --   hl_group = constants.hl_selected
+      -- })
     end
   end
 
@@ -933,7 +937,7 @@ function M.GoToCurrentWaypoint()
 end
 
 local function clamp_view()
-  local width = vim.api.nvim_get_option("columns")
+  local width = vim.api.nvim_get_option_value("columns", {})
   local win_width = math.ceil(width * config.window_width)
   local leftcol_max = u.clamp(longest_line_len - win_width, 0)
   state.view.leftcol = u.clamp(state.view.leftcol, 0, leftcol_max)
@@ -1002,7 +1006,7 @@ function ResetContext()
 end
 
 function Scroll(increment)
-  local width = vim.api.nvim_get_option("columns")
+  local width = vim.api.nvim_get_option_value("columns", {})
   local win_width = math.ceil(width * config.window_width)
   for _=1, vim.v.count1 do
     local leftcol_max = u.clamp(longest_line_len - win_width, 0)
@@ -1388,9 +1392,9 @@ function M.open()
     vim.api.nvim_set_option_value('winhl', 'NormalFloat:Normal', {win = bg_winnr})
   end
 
-  -- I added this because if you open waypoint from telescope, it has wrap disabled
+  -- I added this because if you open waypoint from telescope, it has wrap enabled
   -- I'm sure there are a bunch of other edge cases like this lurking around
-  vim.api.nvim_win_set_option(winnr, "wrap", false)
+  vim.api.nvim_set_option_value('wrap', false, {win = winnr})
 
   set_waypoint_keybinds()
 

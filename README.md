@@ -112,6 +112,7 @@ bugs
 [x] fix bug where buffers loaded by file.load don't have treesitter highlights (maybe regular ones too?)
 [x] fix my type annotations from table<T> to T[]
 [x] get rid of the optimization to vary the widths of the waypoint context if it hits eof or bof
+[x] add display of what toggles are on in the border of the waypoint window
 [ ] increase the performance of highlights and draw calls in general
 [ ] think about persisting waypoints on every waypoint state change. maybe every time the waypoint window closes
 [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
@@ -140,8 +141,9 @@ features
 [ ] implement some kind of thing to handle errors and rollback state if you encounter them
 [ ] increase ability to recover from erroneous state (grep for <TBD>)
 [ ] decide once and for all what I want to do about annotations
-[x] add display of what toggles are on in the border of the waypoint window
 [ ] change line numbers so they're stored 1-indexed
+[ ] remove all asserts from the code
+[ ] fix all the lua lsp diagnostic warnings that you can
 
 ### ADVANCED FEATURES:
 [x] delete waypoint from floating window with dd
