@@ -18,7 +18,8 @@
 ---@class waypoint.State
 ---@field load_error            string | nil if there was an error loading the file. if so, we show it in the waypoint window
 ---@field wpi                   integer | nil   the index of the currently selected waypoint.
----@field waypoints             table<waypoint.Waypoint> all the waypoints in this session.
+---@field waypoints             waypoint.Waypoint[] all the waypoints in this session.
+---@field sorted_waypoints      waypoint.Waypoint[] all the waypoints in this session, sorted by file and line number.
 ---@field context               integer the number of lines above and below the waypoint that will also appear in the waypoint window. adds with before_context and after_context.
 ---@field before_context        integer the number of lines above the waypoint that will also appear in the waypoint window. adds with context and after_context.
 ---@field after_context         integer the number of lines below the waypoint that will also appear in the waypoint window. adds with context and before_context.
@@ -33,19 +34,20 @@
 
 ---@type waypoint.State
 local M = {
-  load_error      = nil,
-  wpi             = nil,
-  waypoints       = {},
-  context         = 0,
-  before_context  = 0,
-  after_context   = 0,
+  load_error       = nil,
+  wpi              = nil,
+  waypoints        = {},
+  sorted_waypoints = {},
+  context          = 0,
+  before_context   = 0,
+  after_context    = 0,
 
-  show_annotation = true,
-  show_path       = true,
-  show_full_path  = false,
-  show_line_num   = true,
-  show_file_text  = true,
-  show_context    = true,
+  show_annotation  = true,
+  show_path        = true,
+  show_full_path   = false,
+  show_line_num    = true,
+  show_file_text   = true,
+  show_context     = true,
 
   sort_by_file_and_line = false,
 

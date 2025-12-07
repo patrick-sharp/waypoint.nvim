@@ -110,10 +110,9 @@ bugs
   [x] enrich data model
   [x] listen on autocmd for state change
 [x] fix bug where buffers loaded by file.load don't have treesitter highlights (maybe regular ones too?)
+[x] fix my type annotations from table<T> to T[]
 [x] get rid of the optimization to vary the widths of the waypoint context if it hits eof or bof
-    [ ] use the optimization afforded by that to only render waypoints + contexts currently on screen
 [ ] increase the performance of highlights and draw calls in general
-[ ] find out how nvim tree seems to dynamically adjust the brightness of the cursorline (NvimTreeCursorLine)
 [ ] think about persisting waypoints on every waypoint state change. maybe every time the waypoint window closes
 [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
     https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua
@@ -138,7 +137,11 @@ features
 [ ] tests
 [ ] add ability to move all waypoints in a file to another file (fixes renaming file)
 [ ] add ability to undo deleting waypoints with u
-[ ] fix my type annotations from table<T> to T[]
+[ ] implement some kind of thing to handle errors and rollback state if you encounter them
+[ ] increase ability to recover from erroneous state (grep for <TBD>)
+[ ] decide once and for all what I want to do about annotations
+[x] add display of what toggles are on in the border of the waypoint window
+[ ] change line numbers so they're stored 1-indexed
 
 ### ADVANCED FEATURES:
 [x] delete waypoint from floating window with dd
@@ -151,13 +154,13 @@ features
   [x] jump to last waypoint while outside the float window
   [x] jump to and select next waypoint while outside the float window
   [x] jump to and select prev waypoint while outside the float window
+[x] view where everything is sorted by file by line
+    [x] keybind: ts to toggle sort 
 [ ] add visual mode
     [ ] move selection of waypoints around
     [ ] sort selection by file by line
 [ ] add option for relative waypoint numbers
 [ ] allow for fixing of waypoints for missing files, allowing user to switch all marks to a different file
-[ ] view where everything is sorted by file by line
-    [ ] keybind: ts to toggle sort 
 [ ] add ability to save and load waypoints to different files
 [ ] save waypoints parallel directory structure like swap files so they don't clutter the repo
 

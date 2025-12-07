@@ -147,14 +147,14 @@ end
 --- @class waypoint.AlignTableOpts
 --- @field column_separator string | nil if present, add as a separator between each column
 --- @field win_width integer | nil if this is non-nil, add spaces to the right of each row to pad to this width
---- @field indents table<integer> | nil if this is non-nil, add indent[i] levels of indentation waypoint[i]
---- @field width_override table<integer | nil> | nil if this is non-nil, override column i's width with width_override[i] if non-nil
+--- @field indents integer[] | nil if this is non-nil, add indent[i] levels of indentation waypoint[i]
+--- @field width_override (integer | nil)[] | nil if this is non-nil, override column i's width with width_override[i] if non-nil
 
---- @param t table<table<string>> rows x columns x content
---- @param table_cell_types table<string> type of each column
---- @param highlights table<table<string | table<waypoint.HighlightRange>>>   rows x columns x (optionally) multiple highlights for a given column. This parameter is mutated to adjust the highlights of each line so they will work after the alignment.
+--- @param t string[][] rows x columns x content
+--- @param table_cell_types string[] type of each column
+--- @param highlights (string | waypoint.HighlightRange[])[][] rows x columns x (optionally) multiple highlights for a given column. This parameter is mutated to adjust the highlights of each line so they will work after the alignment.
 --- @param opts waypoint.AlignTableOpts | nil
---- @return table<string>
+--- @return string[]
 function M.align_waypoint_table(t, table_cell_types, highlights, opts)
   if #t == 0 then
     return {}

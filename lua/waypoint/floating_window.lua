@@ -28,6 +28,22 @@ local keymap_opts = {
   nowait = true,
 }
 
+local sorted_mode_err_msg_table = {"Cannot move waypoints while sort is enabled. Press "}
+local toggle_sort = config.keybindings.waypoint_window_keybindings.toggle_sort
+if type(toggle_sort) == "string" then
+  table.insert(sorted_mode_err_msg_table, toggle_sort)
+else
+  for i, kb in ipairs(toggle_sort) do
+    if i ~= 1 then
+      table.insert(sorted_mode_err_msg_table, " or ")
+    end
+    table.insert(sorted_mode_err_msg_table, kb)
+  end
+end
+table.insert(sorted_mode_err_msg_table, " to toggle sort")
+
+local sorted_mode_err_msg = table.concat(sorted_mode_err_msg_table)
+
 -- I use this to avoid drawing twice when the cursor moves.
 -- I have no idea how nvim orders events and event handlers so hopefully this 
 -- isn't a catastrophe waiting to happen
@@ -82,6 +98,15 @@ local function get_win_opts()
   return win_opts
 end
 
+---@param option boolean
+---@return string
+local function get_toggle_hl(option)
+  if option then
+    return constants.hl_toggle_on
+  end
+  return constants.hl_toggle_off
+end
+
 local function get_bg_win_opts(win_opts)
   assert(win_opts, "win_opts required arg to get_bg_win_opts")
   local bg_win_opts = u.shallow_copy(win_opts)
@@ -100,6 +125,15 @@ local function get_bg_win_opts(win_opts)
   local a = {"A: " .. state.after_context, constants.hl_footer_after_context }
   local b = {"B: " .. state.before_context, constants.hl_footer_before_context }
   local c = {"C: " .. state.context, constants.hl_footer_context }
+
+  -- toggles
+  local annotation = {"A", get_toggle_hl(state.show_annotation) }
+  local path =       {"P", get_toggle_hl(state.show_path) }
+  local full_path =  {"F", get_toggle_hl(state.show_full_path) }
+  local text =       {"T", get_toggle_hl(state.show_file_text) }
+  local context =    {"C", get_toggle_hl(state.show_context) }
+  local sort =       {"S", get_toggle_hl(state.sort_by_file_and_line) }
+
   local wpi
   if state.wpi == nil then
     wpi = {"No waypoints", constants.hl_footer_waypoint_nr}
@@ -109,7 +143,8 @@ local function get_bg_win_opts(win_opts)
   bg_win_opts.footer = {
     { "─ ", 'FloatBorder'},
     { "Press g? for help", constants.hl_selected },
-    sep, a, sep, b, sep, c, sep, wpi,
+    sep, a, sep, b, sep, c, sep, wpi, sep,
+    annotation, path, full_path, text, context, sort,
     { " ", 'FloatBorder'},
   }
   bg_win_opts.title_pos = "center"
@@ -118,15 +153,6 @@ end
 
 local function repair_state()
 
-end
-
----@param a waypoint.Waypoint
----@param b waypoint.Waypoint
-local function waypoint_compare(a, b)
-  if a.filepath == b.filepath then
-    return a.linenr < b.linenr
-  end
-  return a.filepath < b.filepath
 end
 
 local function draw_waypoint_window(action)
@@ -152,7 +178,7 @@ local function draw_waypoint_window(action)
   vim.api.nvim_buf_clear_namespace(wp_bufnr, constants.ns, 0, -1)
   local rows = {}
   local indents = {}
-  ---@type table<integer>
+  ---@type integer[]
   line_to_waypoint = {}
 
   local cursor_line
@@ -162,7 +188,7 @@ local function draw_waypoint_window(action)
   local highlight_start
   local highlight_end
 
-  --- @type table<table<string | table<waypoint.HighlightRange>>>
+  --- @type (string | waypoint.HighlightRange[])[][]
   --- first index is the line number, second is the column index. each column 
   --- highlight is either a string or a table of highlight ranges. if string, 
   --- highlight the whole column using the group whose name is the string. 
@@ -180,14 +206,11 @@ local function draw_waypoint_window(action)
   end
 
 
-  local waypoints = state.waypoints
-
+  local waypoints
   if state.sort_by_file_and_line then
-    waypoints = {}
-    for _, wp in pairs(state.waypoints) do
-      table.insert(waypoints, wp)
-    end
-    table.sort(waypoints, waypoint_compare)
+    waypoints = state.sorted_waypoints
+  else
+    waypoints = state.waypoints
   end
 
 
@@ -215,7 +238,7 @@ local function draw_waypoint_window(action)
 
     for j, line_text in ipairs(extmark_lines) do
       local line_hlranges = {}
-      --- @type table<waypoint.HighlightRange>
+      --- @type waypoint.HighlightRange[]
       local line_extmark_hlranges = extmark_hlranges[j]
       table.insert(indents, waypoint.indent * config.indent_width)
       table.insert(line_to_waypoint, i)
@@ -424,7 +447,7 @@ local function draw_waypoint_window(action)
 end
 
 -- binds the keybinding (or keybindings) to the given action 
---- @param keybinding string | table<string>
+--- @param keybinding string | string[]
 --- @param action string the vim mapping string that this keybind should perform
 local function bind_key(bufnr, keybinding, action)
   if type(keybinding) == "string" then
@@ -760,9 +783,15 @@ end
 -- if doIndent is true, indent. otherwise unindent
 function IndentLine(increment)
   if state.wpi == nil then return end
+  local waypoints
+  if state.sort_by_file_and_line then
+    waypoints = state.sorted_waypoints
+  else
+    waypoints = state.waypoints
+  end
   for _=1, vim.v.count1 do
-    local indent = state.waypoints[state.wpi].indent + increment
-    state.waypoints[state.wpi].indent = u.clamp(
+    local indent = waypoints[state.wpi].indent + increment
+    waypoints[state.wpi].indent = u.clamp(
       indent, 0, constants.max_indent
     )
   end
@@ -770,7 +799,16 @@ function IndentLine(increment)
 end
 
 function MoveWaypointUp()
-  if #state.waypoints <= 1 or (state.wpi == 1) then return end
+  local should_return = (
+    #state.waypoints <= 1
+    or (state.wpi == 1)
+    or state.sort_by_file_and_line
+  )
+  if state.sort_by_file_and_line then
+    vim.notify(sorted_mode_err_msg, vim.log.levels.ERROR)
+  end
+  if should_return then return end
+
   for _=1, vim.v.count1 do
     local temp = state.waypoints[state.wpi - 1]
     state.waypoints[state.wpi - 1] = state.waypoints[state.wpi]
@@ -781,7 +819,16 @@ function MoveWaypointUp()
 end
 
 function MoveWaypointDown()
-  if #state.waypoints <= 1 or (state.wpi == #state.waypoints) then return end
+  local should_return = (
+    #state.waypoints <= 1
+    or (state.wpi == #state.waypoints)
+    or state.sort_by_file_and_line
+  )
+  if state.sort_by_file_and_line then
+    vim.notify(sorted_mode_err_msg, vim.log.levels.ERROR)
+  end
+  if should_return then return end
+
   for _=1, vim.v.count1 do
     local temp = state.waypoints[state.wpi + 1]
     state.waypoints[state.wpi + 1] = state.waypoints[state.wpi]
@@ -792,7 +839,16 @@ function MoveWaypointDown()
 end
 
 function MoveWaypointToTop()
-  if #state.waypoints <= 2 or state.wpi == 1 then return end
+  local should_return = (
+    #state.waypoints <= 2
+    or state.wpi == 1
+    or state.sort_by_file_and_line
+  )
+  if state.sort_by_file_and_line then
+    vim.notify(sorted_mode_err_msg, vim.log.levels.ERROR)
+  end
+  if should_return then return end
+
   local temp = state.waypoints[state.wpi]
   for i=state.wpi, 2, -1 do
     state.waypoints[i] = state.waypoints[i-1]
@@ -803,7 +859,16 @@ function MoveWaypointToTop()
 end
 
 function MoveWaypointToBottom()
-  if #state.waypoints <= 2 or state.wpi == #state.waypoints then return end
+  local should_return = (
+    #state.waypoints <= 2
+    or state.wpi == #state.waypoints
+    or state.sort_by_file_and_line
+  )
+  if state.sort_by_file_and_line then
+    vim.notify(sorted_mode_err_msg, vim.log.levels.ERROR)
+  end
+  if should_return then return end
+
   local temp = state.waypoints[state.wpi]
   for i=state.wpi, #state.waypoints - 1 do
     state.waypoints[i] = state.waypoints[i+1]
@@ -846,9 +911,13 @@ end
 function M.GoToCurrentWaypoint()
   if state.wpi == nil then return end
 
-  --- @type waypoint.Waypoint | nil 
-  local waypoint = state.waypoints[state.wpi]
-  if waypoint == nil then vim.api.nvim_err_writeln("waypoint should not be nil") return end
+  local waypoint
+  if state.sort_by_file_and_line then
+    waypoint = state.sorted_waypoints[state.wpi]
+  else
+    waypoint = state.waypoints[state.wpi]
+  end
+  assert(waypoint)
   local extmark = uw.extmark_for_waypoint(waypoint)
 
   if extmark == nil then
@@ -1004,6 +1073,27 @@ function ToggleContext()
 end
 
 function ToggleSort()
+  if state.sort_by_file_and_line then
+    local curr_waypoint = state.sorted_waypoints[state.wpi]
+    local new_wpi = nil
+    for i, waypoint in ipairs(state.waypoints) do
+      if curr_waypoint == waypoint then
+        new_wpi = i
+      end
+    end
+    assert(new_wpi)
+    state.wpi = new_wpi
+  else
+    local curr_waypoint = state.waypoints[state.wpi]
+    local new_wpi = nil
+    for i, waypoint in ipairs(state.sorted_waypoints) do
+      if curr_waypoint == waypoint then
+        new_wpi = i
+      end
+    end
+    assert(new_wpi)
+    state.wpi = new_wpi
+  end
   state.sort_by_file_and_line = not state.sort_by_file_and_line
   if help_bufnr then
     draw_help()
@@ -1014,7 +1104,13 @@ end
 
 function ResetCurrentIndent()
   if state.wpi then
-    state.waypoints[state.wpi].indent = 0
+    local waypoints
+    if state.sort_by_file_and_line then
+      waypoints = state.sorted_waypoints
+    else
+      waypoints = state.waypoints
+    end
+    waypoints[state.wpi].indent = 0
   end
   draw_waypoint_window()
 end
@@ -1257,7 +1353,7 @@ function M.open()
 
   -- this extension does not support wrap, all long lines will overflow off the
   -- edge of the screen
-  vim.api.nvim_buf_set_option(wp_bufnr, 'wrap', false)
+  vim.api.nvim_set_option_value('wrap', false, {win = winnr})
 
   vim.api.nvim_create_autocmd("WinLeave", {
     group = constants.window_augroup,
@@ -1288,8 +1384,8 @@ function M.open()
   -- account for some color schemes having ridiculous colors for 
   -- the default floating window background.
   if u.hl_background_distance("Normal", "NormalFloat") > 300 then
-    vim.api.nvim_win_set_option(winnr, 'winhl', 'NormalFloat:Normal')
-    vim.api.nvim_win_set_option(bg_winnr, 'winhl', 'NormalFloat:Normal')
+    vim.api.nvim_set_option_value('winhl', 'NormalFloat:Normal', {win = winnr})
+    vim.api.nvim_set_option_value('winhl', 'NormalFloat:Normal', {win = bg_winnr})
   end
 
   -- I added this because if you open waypoint from telescope, it has wrap disabled

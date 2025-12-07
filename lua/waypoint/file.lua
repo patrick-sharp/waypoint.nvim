@@ -7,6 +7,7 @@ local u = require("waypoint.utils")
 local uw = require("waypoint.utils_waypoint")
 local highlight = require("waypoint.highlight")
 local pretty = require "waypoint.prettyjson"
+local waypoint_crud = require "waypoint.waypoint_crud"
 local p = require "waypoint.print"
 
 local function write_file(path, content)
@@ -34,6 +35,7 @@ end
 
 local function encode()
   local state_copy = u.deep_copy(state)
+  state_copy.sorted_waypoints = nil
   for _, waypoint in pairs(state_copy.waypoints) do
     local extmark = uw.extmark_for_waypoint(waypoint)
     if extmark then
@@ -63,7 +65,7 @@ local function buffer_init(bufnr)
   vim.fn.bufload(bufnr)
   -- without this, vim won't apply syntax highlighting to the new buffer
   vim.api.nvim_exec_autocmds("BufRead", { buffer = bufnr })
-  vim.api.nvim_buf_set_option(bufnr, 'buflisted', true)
+  vim.api.nvim_set_option_value('buflisted', true, {buf = bufnr})
 
   -- these few lines force treesitter to highlight the buffer even though it's not in an open window
   local buf_highlighter = vim.treesitter.highlighter.active[bufnr]
@@ -176,6 +178,7 @@ function M.load()
   for k,v in pairs(decoded) do
     state[k] = v
   end
+  waypoint_crud.make_sorted_waypoints()
 end
 
 return M

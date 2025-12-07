@@ -5,6 +5,22 @@ local constants = require("waypoint.constants")
 local state = require("waypoint.state")
 local u = require("waypoint.utils")
 
+---@param a waypoint.Waypoint
+---@param b waypoint.Waypoint
+local function waypoint_compare(a, b)
+  if a.filepath == b.filepath then
+    return a.linenr < b.linenr
+  end
+  return a.filepath < b.filepath
+end
+
+function M.make_sorted_waypoints()
+  state.sorted_waypoints = {}
+  for _, waypoint in ipairs(state.waypoints) do
+    table.insert(state.sorted_waypoints, waypoint)
+  end
+  table.sort(state.sorted_waypoints, waypoint_compare)
+end
 
 ---@param filepath   string
 ---@param line_nr    integer one-indexed line number
@@ -32,9 +48,10 @@ function M.add_waypoint(filepath, line_nr, annotation)
   }
 
   table.insert(state.waypoints, waypoint)
-  state.wpi = #state.waypoints
-end
+  M.make_sorted_waypoints()
 
+  state.wpi = state.wpi or 1
+end
 
 --- @param filepath string the path of the file to find the waypoint in
 --- @param linenr integer the one-indexed line number to look for the waypoint on
@@ -53,26 +70,31 @@ function M.find_waypoint(filepath, linenr)
   return -1
 end
 
-
 function M.remove_waypoint(existing_waypoint_i, filepath)
   local bufnr = vim.fn.bufnr(filepath)
 
-  ---@type waypoint.Waypoint
-  local existing_waypoint = state.waypoints[existing_waypoint_i]
+  local existing_waypoint
+  if state.sort_by_file_and_line then
+    existing_waypoint = state.sorted_waypoints[existing_waypoint_i]
+  else
+    existing_waypoint = state.waypoints[existing_waypoint_i]
+  end
+
   if existing_waypoint.extmark_id ~= -1 then
     vim.api.nvim_buf_del_extmark(bufnr, constants.ns, existing_waypoint.extmark_id)
   end
 
   --- @type waypoint.Waypoint[]
   local waypoints_new = {}
-  for i, waypoint in pairs(state.waypoints) do
-    if not (i == existing_waypoint_i) then
+  for _, waypoint in pairs(state.waypoints) do
+    if waypoint ~= existing_waypoint then
       table.insert(waypoints_new, waypoint)
     end
   end
   state.waypoints = waypoints_new
-end
 
+  M.make_sorted_waypoints()
+end
 
 function M.toggle_waypoint()
   if not u.is_file_buffer() then return end
@@ -92,6 +114,5 @@ function M.toggle_waypoint()
     M.remove_waypoint(existing_waypoint_i, filepath)
   end
 end
-
 
 return M
