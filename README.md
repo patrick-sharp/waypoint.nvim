@@ -113,6 +113,7 @@ bugs
 [x] fix my type annotations from table<T> to T[]
 [x] get rid of the optimization to vary the widths of the waypoint context if it hits eof or bof
 [x] add display of what toggles are on in the border of the waypoint window
+[x] fix all the lua lsp diagnostic warnings that you can
 [ ] increase the performance of highlights and draw calls in general
 [ ] think about persisting waypoints on every waypoint state change. maybe every time the waypoint window closes
 [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
@@ -143,7 +144,6 @@ features
 [ ] decide once and for all what I want to do about annotations
 [ ] change line numbers so they're stored 1-indexed
 [ ] remove all asserts from the code
-[ ] fix all the lua lsp diagnostic warnings that you can
 
 ### ADVANCED FEATURES:
 [x] delete waypoint from floating window with dd
@@ -158,10 +158,10 @@ features
   [x] jump to and select prev waypoint while outside the float window
 [x] view where everything is sorted by file by line
     [x] keybind: ts to toggle sort 
+[x] add option for relative waypoint numbers
 [ ] add visual mode
     [ ] move selection of waypoints around
     [ ] sort selection by file by line
-[ ] add option for relative waypoint numbers
 [ ] allow for fixing of waypoints for missing files, allowing user to switch all marks to a different file
 [ ] add ability to save and load waypoints to different files
 [ ] save waypoints parallel directory structure like swap files so they don't clutter the repo

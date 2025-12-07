@@ -14,7 +14,7 @@
 ---@field indent_width                     integer
 ---@field scroll_increment                 integer
 ---@field enable_highlight                 boolean
----@field enable_relative_waypoint_numbers boolean -- not implemented yet
+---@field enable_relative_waypoint_numbers boolean
 ---@field max_context                      integer
 ---@field keybindings                      waypoint.Keybindings
 
@@ -101,7 +101,7 @@
 ---@field indent_width                     nil | integer
 ---@field scroll_increment                 nil | integer
 ---@field enable_highlight                 nil | boolean
----@field enable_relative_waypoint_numbers nil | boolean -- not implemented yet
+---@field enable_relative_waypoint_numbers nil | boolean
 ---@field max_context                      nil | integer
 ---@field keybindings                      nil | waypoint.Keybindings
 
@@ -185,7 +185,7 @@ local M = {
   indent_width = 4,
   scroll_increment = 6,
   enable_highlight = true,
-  enable_relative_waypoint_numbers = false, -- not implemented yet
+  enable_relative_waypoint_numbers = false,
   max_context = 20,
   keybindings = {
     global_keybindings = {

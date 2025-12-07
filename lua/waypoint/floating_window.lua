@@ -247,7 +247,15 @@ local function draw_waypoint_window(action)
       -- waypoint number
       if j == extmark_line + 1 then
         -- if this is line the waypoint is on
-        table.insert(row, tostring(i))
+        if config.enable_relative_waypoint_numbers then
+          if i == state.wpi then
+            table.insert(row, tostring(state.wpi))
+          else
+            table.insert(row, tostring((math.abs(i - state.wpi))))
+          end
+        else
+          table.insert(row, tostring(i))
+        end
         table.insert(line_hlranges, {})
       else
         -- if this is a line in the context around the waypoint
@@ -428,10 +436,7 @@ local function draw_waypoint_window(action)
 
 
     for i=highlight_start,highlight_end-1 do
-      vim.api.nvim_buf_add_highlight(wp_bufnr, 0, constants.hl_selected, i, 0, -1)
-      -- vim.api.nvim_buf_set_extmark(wp_bufnr, constants.ns, i, -1, {
-      --   hl_group = constants.hl_selected
-      -- })
+      vim.hl.range(wp_bufnr, constants.ns, constants.hl_selected, {i, 0}, {i, -1})
     end
   end
 
