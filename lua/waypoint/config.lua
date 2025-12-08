@@ -16,6 +16,7 @@
 ---@field enable_highlight                 boolean
 ---@field enable_relative_waypoint_numbers boolean
 ---@field max_context                      integer
+---@field waypoint_dir                     string
 ---@field keybindings                      waypoint.Keybindings
 
 ---@class waypoint.Keybindings
@@ -103,6 +104,7 @@
 ---@field enable_highlight                 nil | boolean
 ---@field enable_relative_waypoint_numbers nil | boolean
 ---@field max_context                      nil | integer
+---@field waypoint_dir                     nil | string
 ---@field keybindings                      nil | waypoint.Keybindings
 
 ---@class waypoint.KeybindingsOverride
@@ -187,6 +189,7 @@ local M = {
   enable_highlight = true,
   enable_relative_waypoint_numbers = false,
   max_context = 20,
+  waypoint_dir = vim.fn.stdpath("state") .. "/waypoint/",
   keybindings = {
     global_keybindings = {
       open_waypoint_window    = {"ms", "mf"},
@@ -214,9 +217,9 @@ local M = {
       reset_context           = {"R", "rc"},
       toggle_annotation       = "ta",
       toggle_path             = "tp",
+      toggle_line_num         = "tn",
       toggle_full_path        = "tf",
-      toggle_line_num         = "tl",
-      toggle_file_text        = "tn",
+      toggle_file_text        = "tt",
       toggle_context          = "tc",
       toggle_sort             = "ts",
       show_help               = "g?",

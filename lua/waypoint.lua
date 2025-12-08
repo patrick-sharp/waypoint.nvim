@@ -9,6 +9,7 @@ local file = require("waypoint.file")
 local constants = require("waypoint.constants")
 local config = require("waypoint.config")
 local filter = require("waypoint.filter")
+local test = require("waypoint.test")
 local p = require("waypoint.print")
 
 
@@ -100,6 +101,8 @@ function M.setup(opts)
   bind_key(config.keybindings.global_keybindings.toggle_waypoint,         crud.toggle_waypoint)
   bind_key('<leader><leader>s', file.save)
   bind_key('<leader><leader>l', file.load)
+
+  vim.api.nvim_create_user_command('WaypointRunTests', test.run_tests, {})
 end
 
 return M

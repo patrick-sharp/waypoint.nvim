@@ -43,7 +43,8 @@ local M = {
   -- table_separator = "···",
   highlights_on = true,
   debug = true,
-  debug_file = "./debug.log"
+  debug_file = "./debug.log",
+  test_output_file = "./test_output.txt"
 }
 
 -- candidate indentation styles

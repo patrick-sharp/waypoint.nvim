@@ -28,6 +28,15 @@ local keymap_opts = {
   nowait = true,
 }
 
+local function _keymap_opts(bufnr)
+  return {
+    noremap = true,
+    silent = true,
+    nowait = true,
+    buffer = bufnr,
+  }
+end
+
 local sorted_mode_err_msg_table = {"Cannot move waypoints while sort is enabled. Press "}
 local toggle_sort = config.keybindings.waypoint_window_keybindings.toggle_sort
 if type(toggle_sort) == "string" then
@@ -128,7 +137,8 @@ local function get_bg_win_opts(win_opts)
 
   -- toggles
   local annotation = {"A", get_toggle_hl(state.show_annotation) }
-  local path =       {"P", get_toggle_hl(state.show_path) }
+  local path =       {"N", get_toggle_hl(state.show_line_num) }
+  local num =        {"P", get_toggle_hl(state.show_path) }
   local full_path =  {"F", get_toggle_hl(state.show_full_path) }
   local text =       {"T", get_toggle_hl(state.show_file_text) }
   local context =    {"C", get_toggle_hl(state.show_context) }
@@ -144,7 +154,7 @@ local function get_bg_win_opts(win_opts)
     { "─ ", 'FloatBorder'},
     { "Press g? for help", constants.hl_selected },
     sep, a, sep, b, sep, c, sep, wpi, sep,
-    annotation, path, full_path, text, context, sort,
+    annotation, num, path, full_path, text, context, sort,
     { " ", 'FloatBorder'},
   }
   bg_win_opts.title_pos = "center"
@@ -457,16 +467,16 @@ end
 
 -- binds the keybinding (or keybindings) to the given action 
 --- @param keybinding string | string[]
---- @param action string the vim mapping string that this keybind should perform
-local function bind_key(bufnr, keybinding, action)
+--- @param fn string | function the vim mapping string that this keybind should perform
+local function bind_key(bufnr, keybinding, fn)
   if type(keybinding) == "string" then
-    vim.api.nvim_buf_set_keymap(bufnr, 'n', keybinding, action, keymap_opts)
+    vim.keymap.set('n', keybinding, fn, _keymap_opts(bufnr))
   elseif type(keybinding) == "table" then
     for i, v in ipairs(keybinding) do
       if type(v) ~= "string" then
         error("Type of element " .. i .. " of keybinding should be string, but was " .. type(v) .. ".")
       end
-    vim.api.nvim_buf_set_keymap(bufnr, 'n', v, action, keymap_opts)
+      vim.keymap.set('n', v, fn, _keymap_opts(bufnr))
     end
   else
     error("Type of param keybinding should be string or table, but was " .. type(keybinding) .. ".")
@@ -475,10 +485,10 @@ end
 
 -- shared between the help buffer and the waypoint buffer
 local function set_shared_keybinds(bufnr)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.exit_waypoint_window, ":lua Leave()<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.exit_waypoint_window,    ":lua Leave()<CR>")
 
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.increase_context,        ":<C-u>lua IncreaseContext(1)<CR>")
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.decrease_context,        ":<C-u>lua IncreaseContext(-1)<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.increase_context,        M.increase_context)
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.decrease_context,        M.decrease_context)
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings.increase_before_context, ":<C-u>lua IncreaseBeforeContext(1)<CR>")
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings.decrease_before_context, ":<C-u>lua IncreaseBeforeContext(-1)<CR>")
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings.increase_after_context,  ":<C-u>lua IncreaseAfterContext(1)<CR>")
@@ -500,7 +510,6 @@ local function set_help_keybinds()
   set_shared_keybinds(help_bufnr)
   bind_key(help_bufnr, config.keybindings.help_keybindings.exit_help, ":lua ToggleHelp()<CR>")
 end
-
 
 local function set_waypoint_keybinds()
   set_shared_keybinds(wp_bufnr)
@@ -973,7 +982,7 @@ function M.GoToLastWaypoint()
   GoToCurrentWaypoint()
 end
 
-function IncreaseContext(increment)
+local function increase_context(increment)
   for _=1, vim.v.count1 do
     state.context = u.clamp(state.context + increment, 0, config.max_context)
     state.view.lnum = nil
@@ -981,6 +990,14 @@ function IncreaseContext(increment)
 
   clamp_view()
   draw_waypoint_window("context")
+end
+
+function M.increase_context()
+  increase_context(1)
+end
+
+function M.decrease_context()
+  increase_context(-1)
 end
 
 function IncreaseBeforeContext(increment)
@@ -1082,32 +1099,31 @@ function ToggleContext()
 end
 
 function ToggleSort()
+  local waypoints
+  local other_waypoints
   if state.sort_by_file_and_line then
-    local curr_waypoint = state.sorted_waypoints[state.wpi]
-    local new_wpi = nil
-    for i, waypoint in ipairs(state.waypoints) do
-      if curr_waypoint == waypoint then
-        new_wpi = i
-      end
-    end
-    assert(new_wpi)
-    state.wpi = new_wpi
+    waypoints = state.sorted_waypoints
+    other_waypoints = state.waypoints
   else
-    local curr_waypoint = state.waypoints[state.wpi]
-    local new_wpi = nil
-    for i, waypoint in ipairs(state.sorted_waypoints) do
-      if curr_waypoint == waypoint then
-        new_wpi = i
-      end
-    end
-    assert(new_wpi)
-    state.wpi = new_wpi
+    waypoints = state.waypoints
+    other_waypoints = state.sorted_waypoints
   end
+
+  local curr_waypoint = waypoints[state.wpi]
+  local new_wpi = nil
+  for i, waypoint in ipairs(other_waypoints) do
+    if curr_waypoint == waypoint then
+      new_wpi = i
+    end
+  end
+  assert(#waypoints == 0 or new_wpi)
+
+  state.wpi = new_wpi
   state.sort_by_file_and_line = not state.sort_by_file_and_line
   if help_bufnr then
     draw_help()
   else
-    draw_waypoint_window()
+    draw_waypoint_window("move_to_waypoint")
   end
 end
 

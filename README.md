@@ -144,6 +144,14 @@ features
 [ ] decide once and for all what I want to do about annotations
 [ ] change line numbers so they're stored 1-indexed
 [ ] remove all asserts from the code
+[ ] add a last updated timestamp to the config file
+[ ] when you change directories, reload waypoints from file
+[ ] find out how telescope does
+    [x] releases (they use git tags)
+    [ ] tests
+[ ] see if you can fix the markdown header treesitter highlight bug
+[ ] add user command wrappers for bindable functions
+[ ] swap out nvim_buf_set_keymap for vim.keymap.set with {buffer = x} so I don't have to declare global lua functions
 
 ### ADVANCED FEATURES:
 [x] delete waypoint from floating window with dd
@@ -161,7 +169,6 @@ features
 [x] add option for relative waypoint numbers
 [ ] add visual mode
     [ ] move selection of waypoints around
-    [ ] sort selection by file by line
 [ ] allow for fixing of waypoints for missing files, allowing user to switch all marks to a different file
 [ ] add ability to save and load waypoints to different files
 [ ] save waypoints parallel directory structure like swap files so they don't clutter the repo

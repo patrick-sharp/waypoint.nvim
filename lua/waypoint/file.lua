@@ -1,3 +1,5 @@
+-- This file contains functions for saving and loading state from files
+
 local M = {}
 
 local config = require("waypoint.config")
@@ -12,7 +14,7 @@ local p = require "waypoint.print"
 
 local function write_file(path, content)
   local uv = vim.uv or vim.loop  -- Compatibility for different Neovim versions
-  local fd = uv.fs_open(path, "w", 438)  -- 438 is octal 0666
+  local fd = uv.fs_open(path, "w", 438)  -- 438 is decimal for 0666 in octal
   assert(fd)
   local stat = uv.fs_fstat(fd)
   assert(stat)
