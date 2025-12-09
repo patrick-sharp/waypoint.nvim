@@ -22,13 +22,7 @@ local bg_winnr
 local line_to_waypoint
 local longest_line_len
 
-local keymap_opts = {
-  noremap = true,
-  silent = true,
-  nowait = true,
-}
-
-local function _keymap_opts(bufnr)
+local function keymap_opts(bufnr)
   return {
     noremap = true,
     silent = true,
@@ -470,13 +464,13 @@ end
 --- @param fn string | function the vim mapping string that this keybind should perform
 local function bind_key(bufnr, keybinding, fn)
   if type(keybinding) == "string" then
-    vim.keymap.set('n', keybinding, fn, _keymap_opts(bufnr))
+    vim.keymap.set('n', keybinding, fn, keymap_opts(bufnr))
   elseif type(keybinding) == "table" then
     for i, v in ipairs(keybinding) do
       if type(v) ~= "string" then
         error("Type of element " .. i .. " of keybinding should be string, but was " .. type(v) .. ".")
       end
-      vim.keymap.set('n', v, fn, _keymap_opts(bufnr))
+      vim.keymap.set('n', v, fn, keymap_opts(bufnr))
     end
   else
     error("Type of param keybinding should be string or table, but was " .. type(keybinding) .. ".")
@@ -489,8 +483,8 @@ local function set_shared_keybinds(bufnr)
 
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings.increase_context,        M.increase_context)
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings.decrease_context,        M.decrease_context)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.increase_before_context, ":<C-u>lua IncreaseBeforeContext(1)<CR>")
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.decrease_before_context, ":<C-u>lua IncreaseBeforeContext(-1)<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.increase_before_context, M.increase_before_context)
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.decrease_before_context, M.decrease_before_context)
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings.increase_after_context,  ":<C-u>lua IncreaseAfterContext(1)<CR>")
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings.decrease_after_context,  ":<C-u>lua IncreaseAfterContext(-1)<CR>")
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings.reset_context,           ":<C-u>lua ResetContext()<CR>")
@@ -518,7 +512,7 @@ local function set_waypoint_keybinds()
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.exit_waypoint_window, ":lua Leave()<CR>")
 
   if state.load_error then
-    vim.api.nvim_buf_set_keymap(wp_bufnr, 'n', '<CR>',":lua ClearState()<CR>", keymap_opts)
+    vim.keymap.set('n', '<CR>', M.clear_state, keymap_opts(wp_bufnr))
     return
   end
 
@@ -787,7 +781,7 @@ local function open_help()
   vim.api.nvim_create_autocmd("WinLeave", {
     group = constants.window_augroup,
     buffer = help_bufnr,
-    callback = Close,
+    callback = M.close,
   })
 
   vim.api.nvim_win_set_buf(winnr, help_bufnr)
@@ -1000,7 +994,7 @@ function M.decrease_context()
   increase_context(-1)
 end
 
-function IncreaseBeforeContext(increment)
+local function increase_before_context(increment)
   for _=1, vim.v.count1 do
     state.before_context = u.clamp(state.before_context + increment, 0, config.max_context)
     state.view.lnum = nil
@@ -1010,7 +1004,15 @@ function IncreaseBeforeContext(increment)
   draw_waypoint_window("context")
 end
 
-function IncreaseAfterContext(increment)
+function M.increase_before_context()
+  increase_before_context(1)
+end
+
+function M.decrease_before_context()
+  increase_before_context(-1)
+end
+
+local function increase_after_context(increment)
   for _=1, vim.v.count1 do
     state.after_context = u.clamp(state.after_context + increment, 0, config.max_context)
     state.view.lnum = nil
@@ -1018,6 +1020,14 @@ function IncreaseAfterContext(increment)
 
   clamp_view()
   draw_waypoint_window("context")
+end
+
+function M.increase_after_context()
+  increase_after_context(1)
+end
+
+function M.decrease_after_context()
+  increase_after_context(-1)
 end
 
 function ResetContext()
@@ -1383,7 +1393,7 @@ function M.open()
   vim.api.nvim_create_autocmd("WinLeave", {
     group = constants.window_augroup,
     buffer = wp_bufnr,
-    callback = Close,
+    callback = M.close,
   })
 
   vim.api.nvim_create_autocmd("CursorMoved", {
@@ -1424,13 +1434,18 @@ function M.open()
   highlight.highlight_custom_groups()
 end
 
-function Close()
+function M.close()
+  if not is_open then return end
+
+  -- put this first so we don't call this function again through autocmds by deleting the window
+  vim.api.nvim_del_augroup_by_name(constants.window_augroup)
+
   vim.api.nvim_buf_clear_namespace(wp_bufnr, constants.ns, 0, -1)
   vim.api.nvim_win_close(bg_winnr, true)
   vim.api.nvim_win_close(winnr, true)
   vim.api.nvim_buf_delete(wp_bufnr, {})
   vim.api.nvim_buf_delete(bg_bufnr, {})
-  vim.api.nvim_del_augroup_by_name(constants.window_augroup)
+
   is_open = false
   wp_bufnr = nil
   bg_bufnr = nil
@@ -1439,28 +1454,40 @@ function Close()
   help_bufnr = nil
 end
 
+function M.clear_state()
+  state.load_error       = nil
+  state.wpi              = nil
+  state.waypoints        = {}
+  state.sorted_waypoints = {}
 
-function ClearState()
-  state.load_error      = nil
-  state.wpi             = nil
-  state.waypoints       = {}
+  state.after_context    = 0
+  state.before_context   = 0
+  state.context          = 0
 
-  state.after_context   = 0
-  state.before_context  = 0
-  state.context         = 0
-
-  state.show_annotation = true
-  state.show_path       = true
-  state.show_full_path  = false
-  state.show_line_num   = true
-  state.show_file_text  = true
-  state.show_context    = true
+  state.show_annotation  = true
+  state.show_path        = true
+  state.show_full_path   = false
+  state.show_line_num    = true
+  state.show_file_text   = true
+  state.show_context     = true
   state.view = {
     lnum     = nil,
     col      = 0,
     leftcol  = 0,
   }
-  assert(os.remove(config.file))
+
+  os.remove(config.file)
+end
+
+function M.clear_state_and_close()
+  if is_open then
+    M.close()
+  end
+  M.clear_state()
+end
+
+function M.clear_state_and_keep_open()
+  M.clear_state()
   set_waypoint_keybinds()
   draw_waypoint_window()
 end
