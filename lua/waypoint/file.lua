@@ -44,7 +44,7 @@ local function encode()
       -- extmarks don't persist between sessions, so clear this information
       waypoint.extmark_id = nil
       waypoint.bufnr = nil
-      waypoint.linenr = extmark[1]
+      waypoint.linenr = extmark[1] + 1
       waypoint.error = nil
     end
   end
@@ -150,15 +150,15 @@ function M.load()
       waypoint.bufnr = bufnr
       if bufnr ~= -1 then
         buffer_init(bufnr)
-        -- zero-indexed line number
+        -- one-indexed line number
         local linenr = waypoint.linenr
         local virt_text = nil
 
         local line_count = vim.api.nvim_buf_line_count(bufnr)
 
         if linenr < line_count then
-          local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, linenr, -1, {
-            id = linenr + 1,
+          local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, linenr - 1, -1, {
+            id = linenr,
             sign_text = config.mark_char,
             priority = 1,
             sign_hl_group = constants.hl_sign,

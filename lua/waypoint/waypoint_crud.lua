@@ -103,7 +103,7 @@ function M.toggle_waypoint()
   local filepath = vim.fn.expand("%")
 
   --- @type integer
-  local cur_line_nr = vim.api.nvim_win_get_cursor(0)[1] -- Get current line number
+  local cur_line_nr = vim.api.nvim_win_get_cursor(0)[1] -- Get current line number (one-indexed)
 
   --- @type integer
   local existing_waypoint_i = M.find_waypoint(filepath, cur_line_nr)

@@ -491,11 +491,11 @@ local function set_shared_keybinds(bufnr)
 
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_annotation,       ":lua ToggleAnnotation()<CR>")
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_path,             ":lua TogglePath()<CR>")
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_full_path,        ":lua ToggleFullPath()<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_full_path,        M.toggle_full_path)
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_line_num,         ":lua ToggleLineNum()<CR>")
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_file_text,        ":lua ToggleFileText()<CR>")
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_context,          ":lua ToggleContext()<CR>")
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_sort,             ":lua ToggleSort()<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_sort,             M.toggle_sort)
 
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings.set_quickfix_list,       ":<C-u>lua SetQFList()<CR>")
 end
@@ -1072,7 +1072,7 @@ function TogglePath()
   end
 end
 
-function ToggleFullPath()
+function M.toggle_full_path()
   state.show_full_path = not state.show_full_path
   if help_bufnr then
     draw_help()
@@ -1108,7 +1108,7 @@ function ToggleContext()
   end
 end
 
-function ToggleSort()
+function M.toggle_sort()
   local waypoints
   local other_waypoints
   if state.sort_by_file_and_line then
@@ -1470,6 +1470,9 @@ function M.clear_state()
   state.show_line_num    = true
   state.show_file_text   = true
   state.show_context     = true
+
+  state.sort_by_file_and_line = false
+
   state.view = {
     lnum     = nil,
     col      = 0,

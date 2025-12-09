@@ -1,4 +1,4 @@
-local p = require ("waypoint.print")
+local p = require("waypoint.print")
 
 local M = {}
 
@@ -178,12 +178,29 @@ function M.validate(t, schema, forbid_extra_properties)
   return true, nil, nil, ""
 end
 
-function M.assert_exists(file_path)
+function M.assert_file_exists(file_path)
   local f = io.open(file_path)
   if f then
     f:close()
   end
   assert(f)
+end
+
+
+function M.split(str, pattern)
+  local result = {}
+  local front = 1
+  local back, pattern_back = string.find(str, pattern)
+  while back do
+    table.insert(result, string.sub(str, front, back - 1))
+    front = pattern_back + 1
+    back, pattern_back = string.find(str, pattern, front)
+  end
+  if front <= #str then
+    table.insert(result, string.sub(str, front))
+  end
+
+  return result
 end
 
 return M

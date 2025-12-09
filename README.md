@@ -114,6 +114,10 @@ bugs
 [x] get rid of the optimization to vary the widths of the waypoint context if it hits eof or bof
 [x] add display of what toggles are on in the border of the waypoint window
 [x] fix all the lua lsp diagnostic warnings that you can
+[x] find out how telescope does
+    [x] releases (they use git tags)
+    [x] tests
+[x] change line numbers so they're stored 1-indexed
 [ ] increase the performance of highlights and draw calls in general
 [ ] think about persisting waypoints on every waypoint state change. maybe every time the waypoint window closes
 [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
@@ -138,17 +142,11 @@ features
     [ ] if highlighting fails for some reason, just show an error message and turn off highlighting
 [ ] tests
 [ ] add ability to move all waypoints in a file to another file (fixes renaming file)
-[ ] add ability to undo deleting waypoints with u
 [ ] implement some kind of thing to handle errors and rollback state if you encounter them
 [ ] increase ability to recover from erroneous state (grep for <TBD>)
 [ ] decide once and for all what I want to do about annotations
-[ ] change line numbers so they're stored 1-indexed
 [ ] remove all asserts from the code
-[ ] add a last updated timestamp to the config file
 [ ] when you change directories, reload waypoints from file
-[ ] find out how telescope does
-    [x] releases (they use git tags)
-    [ ] tests
 [ ] see if you can fix the markdown header treesitter highlight bug
 [ ] add user command wrappers for bindable functions
 [ ] swap out nvim_buf_set_keymap for vim.keymap.set with {buffer = x} so I don't have to declare global lua functions
@@ -172,6 +170,7 @@ features
 [ ] allow for fixing of waypoints for missing files, allowing user to switch all marks to a different file
 [ ] add ability to save and load waypoints to different files
 [ ] save waypoints parallel directory structure like swap files so they don't clutter the repo
+[ ] add ability to undo deleting waypoints with u
 
 
 still got some weird treesitter behavior

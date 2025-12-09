@@ -3,17 +3,27 @@ local window_augroup = "waypoint.window"
 
 ---@class Constants
 ---@field augroup string
+---@field window_augroup string
 ---@field hl_group string
 ---@field hl_selected string
 ---@field hl_sign string
+---@field hl_directory string
 ---@field hl_footer_after_context string
+---@field hl_linenr string
 ---@field hl_footer_before_context string
 ---@field hl_footer_context string
 ---@field hl_footer_waypoint_nr string
+---@field hl_toggle_on string
+---@field hl_toggle_off string
+---@field hl_keybinding string
 ---@field ns integer
+---@field max_indent integer
+---@field table_separator string
 ---@field highlights_on boolean
 ---@field debug boolean
 ---@field debug_file string
+---@field test_output_file string
+---@field is_release boolean
 local M = {
   augroup = augroup,
   window_augroup = window_augroup,
@@ -44,7 +54,8 @@ local M = {
   highlights_on = true,
   debug = true,
   debug_file = "./debug.log",
-  test_output_file = "./test_output.txt"
+  test_output_file = "./test_output.txt",
+  is_release = false,
 }
 
 -- candidate indentation styles
