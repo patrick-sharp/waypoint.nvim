@@ -178,4 +178,12 @@ function M.validate(t, schema, forbid_extra_properties)
   return true, nil, nil, ""
 end
 
+function M.assert_exists(file_path)
+  local f = io.open(file_path)
+  if f then
+    f:close()
+  end
+  assert(f)
+end
+
 return M

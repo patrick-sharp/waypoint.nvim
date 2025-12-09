@@ -26,7 +26,5 @@ describe('Context basic', function()
   floating_window.decrease_context()
   assert(state.context == 0)
 
-  floating_window.close()
-
   return true
 end)

@@ -5,11 +5,12 @@ local floating_window = require'waypoint.floating_window'
 local test_list = require'waypoint.test.test_list'
 
 -- these files call test_list.describe, which adds tests to the list
-local _ = require'waypoint.test.tests.context_basic.test'
+local _ = require'waypoint.test.tests.context_basic'
+local _ = require'waypoint.test.tests.sort'
 
 local border = "\n================================================================\n"
 local PASS = "✓ PASS"
-local FAIL = "⃠⃠𐄂 FAIL"
+local FAIL = "𐄂 FAIL"
 
 local function log_test_output()
   local file = io.open(constants.test_output_file, "w")
@@ -73,6 +74,24 @@ function M.run_tests()
   end
 
   log_test_output()
+  vim.cmd.edit({args = {constants.test_output_file}, bang=true})
+end
+
+function M.run_test(opts)
+  ---@param test_name string
+  local test_name = opts.args
+  local matches = false
+
+  for _,test in ipairs(test_list.tests) do
+    if test.name == test_name then
+      matches = true
+      floating_window.clear_state_and_close()
+      test.fn()
+    end
+  end
+  if not matches then
+    vim.notify('No test named ' .. test_name, vim.log.levels.ERROR)
+  end
 end
 
 return M

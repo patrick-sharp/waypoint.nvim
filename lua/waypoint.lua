@@ -102,7 +102,9 @@ function M.setup(opts)
   bind_key('<leader><leader>s', file.save)
   bind_key('<leader><leader>l', file.load)
 
+  -- these commands should be run from the root directory of this git repo
   vim.api.nvim_create_user_command('WaypointRunTests', test.run_tests, {})
+  vim.api.nvim_create_user_command('WaypointRunTest', test.run_test, {nargs = 1})
 end
 
 return M

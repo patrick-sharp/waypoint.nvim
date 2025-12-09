@@ -43,7 +43,7 @@ function M.add_waypoint(filepath, line_nr, annotation)
     annotation = annotation,
     linenr = line_nr,
     bufnr = bufnr,
-    text = vim.api.nvim_buf_get_lines(bufnr, line_nr, line_nr + 1, true)[1],
+    text = vim.api.nvim_buf_get_lines(bufnr, line_nr - 1, line_nr, true)[1],
     error = nil,
   }
 
