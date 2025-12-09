@@ -7,6 +7,14 @@ local test_list = require'waypoint.test.test_list'
 -- these files call test_list.describe, which adds tests to the list
 local _ = require'waypoint.test.tests.context_basic'
 local _ = require'waypoint.test.tests.sort'
+-- other tests to write
+-- * deleting waypoints
+-- * loading from files
+-- * toggling off different parts of the file
+-- * moving waypoints around
+-- * advanced navigations (outer/inner/neighbor/top/bottom)
+-- * navigations outside the waypoint window (next/previous etc.)
+-- * indentation
 
 local border = "\n================================================================\n"
 local PASS = "✓ PASS"
