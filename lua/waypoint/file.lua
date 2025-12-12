@@ -35,20 +35,36 @@ local function read_file(path)
 end
 
 local function encode()
-  local state_copy = u.deep_copy(state)
-  state_copy.sorted_waypoints = nil
-  for _, waypoint in pairs(state_copy.waypoints) do
+  local state_to_encode = {}
+  state_to_encode.wpi = state.wpi
+  state_to_encode.waypoints = {}
+  state_to_encode.sort_by_file_and_line = state.sort_by_file_and_line
+  state_to_encode.show_context = state.show_context
+  state_to_encode.show_file_text = state.show_file_text
+  state_to_encode.show_full_path = state.show_full_path
+  state_to_encode.show_path = state.show_path
+  state_to_encode.show_line_num = state.show_line_num
+  state_to_encode.show_annotation = state.show_annotation
+  state_to_encode.context = state.context
+  state_to_encode.after_context = state.after_context
+  state_to_encode.before_context = state.before_context
+  state_to_encode.view = {
+    leftcol = state.view.leftcol,
+    col = state.view.col
+  }
+  for _, waypoint in pairs(state.waypoints) do
+    local waypoint_to_encode = {}
     local extmark = uw.extmark_for_waypoint(waypoint)
     if extmark then
-      -- extmarks don't persist between sessions, so clear this information
-      waypoint.extmark_id = nil
-      waypoint.bufnr = nil
-      waypoint.linenr = extmark[1] + 1
-      waypoint.error = nil
+      waypoint_to_encode.text = waypoint.text
+      waypoint_to_encode.indent = waypoint.indent
+      waypoint_to_encode.filepath = waypoint.filepath
+      waypoint_to_encode.linenr = extmark[1] + 1
     end
+    table.insert(state_to_encode.waypoints, waypoint_to_encode)
   end
 
-  local data = pretty(state_copy)
+  local data = pretty(state_to_encode)
   return data
 end
 

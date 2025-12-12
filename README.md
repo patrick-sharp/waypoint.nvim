@@ -123,7 +123,7 @@ bugs
 [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
     https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua
     maybe use vim.schedule to do it async if worried about perf?
-[ ] fix bugs around closing buffers with waypoints in them
+[ ] fix bugs around closing buffers with waypoints in them (use BufDelete autocmd)
 [ ] handle the case where the file gets renamed while open
     do this by associating waypoints with a buffer number when loaded into state, and a file name when persisted to json
 [ ] handle the case where the extmark gets deleted

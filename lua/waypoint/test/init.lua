@@ -16,6 +16,8 @@ local _ = require'waypoint.test.tests.missing_file'
 -- * advanced navigations (outer/inner/neighbor/top/bottom)
 -- * navigations outside the waypoint window (next/previous etc.)
 -- * indentation
+-- * doing normal crud operations with waypoints in missing files or outside file range
+-- * multiple waypoints getting moved onto the same line by a filter
 
 local border = "\n================================================================\n"
 local PASS = "✓ PASS"

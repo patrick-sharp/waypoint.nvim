@@ -85,6 +85,10 @@ function M.setup(opts)
     group = constants.augroup,
     callback = filter.fix_waypoint_positions,
   })
+  vim.api.nvim_create_autocmd("BufDelete", {
+    callback = function() print("LEFT", vim.fn.bufnr()) end,
+  })
+
 
   bind_key(config.keybindings.global_keybindings.current_waypoint,        floating_window.GoToCurrentWaypoint)
   bind_key(config.keybindings.global_keybindings.prev_waypoint,           floating_window.GoToPrevWaypoint)

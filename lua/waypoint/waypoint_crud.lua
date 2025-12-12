@@ -59,7 +59,7 @@ end
 function M.find_waypoint(filepath, linenr)
   local bufnr = vim.fn.bufnr(filepath)
   for i, waypoint in ipairs(state.waypoints) do
-    if waypoint.filepath == filepath and waypoint.extmark_id then
+    if waypoint.filepath == filepath and waypoint.extmark_id ~= -1 then
       local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {})
       local extmark_row = extmark[1] + 1 -- have to do this because extmark line numbers are 0 indexed
       if extmark_row == linenr then
