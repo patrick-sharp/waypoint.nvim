@@ -302,7 +302,6 @@ local function draw_waypoint_window(action)
       -- line number
       if state.show_line_num then
         if j >= file_start_idx and j < file_end_idx then
-          p(context_start_linenr, j, file_start_idx, context_start_linenr + j - file_start_idx + 1)
           table.insert(row, tostring(context_start_linenr + j - file_start_idx))
         else
           table.insert(row, "")

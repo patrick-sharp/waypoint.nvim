@@ -68,7 +68,6 @@ describe('Sort', function()
   local pattern = ' ' .. constants.table_separator .. ' '
 
   lines = vim.api.nvim_buf_get_lines(bufnr, 0, 5, true)
-  p(u.split(lines[1], pattern))
   assert(u.split(lines[1], pattern)[2] == file_0)
   assert(u.split(lines[2], pattern)[2] == file_1)
   assert(u.split(lines[3], pattern)[2] == file_1)
