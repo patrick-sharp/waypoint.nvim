@@ -133,8 +133,7 @@ bugs
 [ ] handle the case where there is a swap file (or any error opening the file)
 features
 [ ] repair state when draw_waypoint_window is called
-[ ] add perf logging for each function
-[ ] treesitter highlight bugs in readme for skhd somehow
+[ ] add perf logging for each function (use require('jit.p'))
 [ ] switch to making new state for saving / loading instead of mutating existing state to get there
 [ ] figure out some way to deal with extmarks moving around when you autoformat
 [ ] try to find out if that periodic hanging issue I get is due to waypoint or something else
@@ -169,7 +168,7 @@ features
     [ ] move selection of waypoints around
 [ ] allow for fixing of waypoints for missing files, allowing user to switch all marks to a different file
 [ ] add ability to save and load waypoints to different files
-[ ] save waypoints parallel directory structure like swap files so they don't clutter the repo
+[ ] save waypoints parallel directory structure like swap files so they don't clutter the repo (use vim.fn.mkdir(path, 'p'))
 [ ] add ability to undo deleting waypoints with u
 
 

@@ -490,7 +490,7 @@ end
 
 -- shared between the help buffer and the waypoint buffer
 local function set_shared_keybinds(bufnr)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.exit_waypoint_window,    ":lua Leave()<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.exit_waypoint_window,    M.leave)
 
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings.increase_context,        M.increase_context)
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings.decrease_context,        M.decrease_context)
@@ -520,7 +520,7 @@ local function set_waypoint_keybinds()
   set_shared_keybinds(wp_bufnr)
 
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.show_help,            ":<C-u>lua ToggleHelp()<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.exit_waypoint_window, ":lua Leave()<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.exit_waypoint_window, M.leave)
 
   if state.load_error then
     vim.keymap.set('n', '<CR>', M.clear_state, keymap_opts(wp_bufnr))
@@ -538,10 +538,10 @@ local function set_waypoint_keybinds()
   -- the actual function you're binding has to access vim.v.count or 
   -- vim.v.count1 to access the count.
 
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.indent,                  ":<C-u>lua IndentLine(1)<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.unindent,                ":<C-u>lua IndentLine(-1)<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.reset_waypoint_indent,   ":lua ResetCurrentIndent()<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.reset_all_indent,        ":lua ResetAllIndent()<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.indent,                  M.indent_line)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.unindent,                M.unindent_line)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.reset_waypoint_indent,   M.reset_current_indent)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.reset_all_indent,        M.reset_all_indent)
 
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.scroll_left,             ":<C-u>lua Scroll(1)<CR>")
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.scroll_right,            ":<C-u>lua Scroll(-1)<CR>")
@@ -564,8 +564,8 @@ local function set_waypoint_keybinds()
 
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.delete_waypoint,        ":<C-u>lua RemoveCurrentWaypoint()<CR>")
 
-  -- vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "sg",    ":lua MoveWaypointToTop()<CR>",                   keymap_opts)
-  -- vim.api.nvim_buf_set_keymap(wp_bufnr, "n", "sG",    ":lua MoveWaypointToBottom()<CR>",                keymap_opts)
+  -- bind_key(wp_bufnr, "n", "sg",    M.move_waypoint_to_top)
+  -- bind_key(wp_bufnr, "n", "sG",    M.move_waypoint_to_bottom)
 end
 
 local global_keybindings_description = {
@@ -804,7 +804,7 @@ end
 
 -- Function to indent or unindent the current line by 2 spaces
 -- if doIndent is true, indent. otherwise unindent
-function IndentLine(increment)
+local function indent_line(increment)
   if state.wpi == nil then return end
   local waypoints
   if state.sort_by_file_and_line then
@@ -819,6 +819,14 @@ function IndentLine(increment)
     )
   end
   draw_waypoint_window()
+end
+
+function M.indent_line()
+  indent_line(1)
+end
+
+function M.unindent_line()
+  indent_line(-1)
 end
 
 function MoveWaypointUp()
@@ -951,7 +959,7 @@ function M.GoToCurrentWaypoint()
     return
   end
 
-  if wp_bufnr then Leave() end
+  if wp_bufnr then m.leave() end
 
   local waypoint_bufnr = vim.fn.bufnr(waypoint.filepath)
   vim.api.nvim_win_set_buf(0, waypoint_bufnr)
@@ -1152,7 +1160,7 @@ function M.toggle_sort()
   end
 end
 
-function ResetCurrentIndent()
+function M.reset_current_indent()
   if state.wpi then
     local waypoints
     if state.sort_by_file_and_line then
@@ -1165,7 +1173,7 @@ function ResetCurrentIndent()
   draw_waypoint_window()
 end
 
-function ResetAllIndent()
+function M.reset_all_indent()
   for _,waypoint in pairs(state.waypoints) do
     waypoint.indent = 0
   end
@@ -1510,7 +1518,7 @@ function M.clear_state_and_keep_open()
   draw_waypoint_window()
 end
 
-function Leave()
+function M.leave()
   vim.cmd("wincmd w")
 end
 
