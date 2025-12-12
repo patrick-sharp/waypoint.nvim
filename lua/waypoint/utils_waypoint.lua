@@ -75,17 +75,18 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
   --- @type { [1]: integer, [2]: integer }
   local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {})
 
-  -- zero-indexed line number
-  local extmark_line_nr = extmark[1]
+  -- one-indexed line number
+  local extmark_line_nr = extmark[1] + 1
 
-  -- zero-indexed line number, inclusive bound
-  local start_line_nr = u.clamp(extmark[1] - num_lines_before, 0)
+  -- one-indexed line number, inclusive bound
+  local start_line_nr = u.clamp(extmark_line_nr - num_lines_before, 1)
   local line_count = vim.api.nvim_buf_line_count(bufnr)
-  -- zero-indexed line number, exclusive bound
-  local end_line_nr = u.clamp(extmark[1] + 1 + num_lines_after, 0, line_count)
+  -- one-indexed line number, exclusive bound
+  local end_line_nr = u.clamp(extmark_line_nr + num_lines_after + 1, 1, line_count)
 
   local marked_line_idx = extmark_line_nr - start_line_nr -- zero-indexed
-  local lines = vim.api.nvim_buf_get_lines(bufnr, start_line_nr, end_line_nr, false)
+  -- this function takes zero indexed-parameters, inclusive lower bound, exclusive upper bound
+  local lines = vim.api.nvim_buf_get_lines(bufnr, start_line_nr - 1, end_line_nr - 1, false)
 
   -- figure out how each line is highlighted
   --- @type waypoint.HighlightRange[][]
@@ -97,9 +98,9 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
     if not config.enable_highlight then
       no_active_highlights = true
     elseif file_uses_treesitter then
-      hlranges = highlight_treesitter.get_treesitter_syntax_highlights(bufnr, lines, start_line_nr, end_line_nr)
+      hlranges = highlight_treesitter.get_treesitter_syntax_highlights(bufnr, lines, start_line_nr - 1, end_line_nr - 1)
     elseif pcall(vim.api.nvim_buf_get_var, bufnr, "current_syntax") then
-      hlranges = highlight_vanilla.get_vanilla_syntax_highlights(bufnr, lines, start_line_nr)
+      hlranges = highlight_vanilla.get_vanilla_syntax_highlights(bufnr, lines, start_line_nr - 1)
     else
       no_active_highlights = true
     end
@@ -111,8 +112,8 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
 
   -- if the waypoint context extends to before the start of the file or after
   -- the end, pad to the length of the context with empty lines
-  local lines_before_start = start_line_nr - (extmark[1] - num_lines_before)
-  local lines_after_end = (extmark[1] + 1 + num_lines_after) - end_line_nr
+  local lines_before_start = start_line_nr - (extmark_line_nr - num_lines_before)
+  local lines_after_end = (extmark_line_nr + 1 + num_lines_after) - end_line_nr
 
   local lines_ = {}
   local hlranges_ = {}

@@ -19,4 +19,7 @@ function M.describe(name, fn)
   })
 end
 
+M.file_0 = "lua/waypoint/test/tests/common/file_0.lua"
+M.file_1 = "lua/waypoint/test/tests/common/file_1.lua"
+
 return M

@@ -7,6 +7,7 @@ local test_list = require'waypoint.test.test_list'
 -- these files call test_list.describe, which adds tests to the list
 local _ = require'waypoint.test.tests.context_basic'
 local _ = require'waypoint.test.tests.sort'
+local _ = require'waypoint.test.tests.missing_file'
 -- other tests to write
 -- * deleting waypoints
 -- * loading from files

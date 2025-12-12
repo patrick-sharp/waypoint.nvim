@@ -1,4 +1,8 @@
-local describe = require('waypoint.test.test_list').describe
+local test_list = require('waypoint.test.test_list')
+local describe = test_list.describe
+local file_0 = test_list.file_0
+local file_1 = test_list.file_1
+
 local floating_window = require("waypoint.floating_window")
 local constants = require("waypoint.constants")
 local state = require("waypoint.state")
@@ -6,9 +10,6 @@ local crud = require("waypoint.waypoint_crud")
 local u = require("waypoint.utils")
 
 describe('Sort', function()
-  local file_0 = "lua/waypoint/test/tests/sort/file_0.lua"
-  local file_1 = "lua/waypoint/test/tests/sort/file_1.lua"
-
   u.assert_file_exists(file_0)
   u.assert_file_exists(file_1)
 

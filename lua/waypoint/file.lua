@@ -10,7 +10,6 @@ local uw = require("waypoint.utils_waypoint")
 local highlight = require("waypoint.highlight")
 local pretty = require "waypoint.prettyjson"
 local waypoint_crud = require "waypoint.waypoint_crud"
-local p = require "waypoint.print"
 
 local function write_file(path, content)
   local uv = vim.uv or vim.loop  -- Compatibility for different Neovim versions
@@ -108,26 +107,8 @@ local waypoint_schema = {
   indent = "number",
 }
 
-function M.load()
-  local data = read_file(config.file)
-  if data == nil then return end
-  local decoded = vim.json.decode(data)
-  local is_valid, k, v, expected = u.validate(decoded, file_schema, false)
-  if not is_valid then
-    state.load_error = table.concat({
-      "Error loading waypoints from file: expected value of type ",
-      expected, " for key ", tostring(k),
-      ", but received ", tostring(v), " (of type ", type(v), ")."
-    })
-    print(state.load_error)
-    return
-  end
-
-  -- before we load in the waypoints in from a file, delete the current ones.
-  for _,waypoint in pairs(state.waypoints) do
-    local bufnr = vim.fn.bufnr(waypoint.filepath)
-    vim.api.nvim_buf_del_extmark(bufnr, constants.ns, waypoint.extmark_id)
-  end
+---@param decoded waypoint.State
+local function load_decoded_state_into_state(decoded)
   for _,waypoint in pairs(decoded.waypoints) do
     local ok, wpk, wpv, wp_expected = u.validate(waypoint, waypoint_schema, false)
     if not ok then
@@ -181,6 +162,35 @@ function M.load()
     state[state_k] = state_v
   end
   waypoint_crud.make_sorted_waypoints()
+end
+
+function M.load()
+  M.load_from_file(config.file)
+end
+
+---@param file string relative path config file.
+function M.load_from_file(file)
+  local data = read_file(file)
+  if data == nil then return end
+  local decoded = vim.json.decode(data)
+  local is_valid, k, v, expected = u.validate(decoded, file_schema, false)
+  if not is_valid then
+    state.load_error = table.concat({
+      "Error loading waypoints from file: expected value of type ",
+      expected, " for key ", tostring(k),
+      ", but received ", tostring(v), " (of type ", type(v), ")."
+    })
+    print(state.load_error)
+    return
+  end
+
+  -- before we load in the waypoints in from a file, delete the current ones.
+  for _,waypoint in pairs(state.waypoints) do
+    local bufnr = vim.fn.bufnr(waypoint.filepath)
+    vim.api.nvim_buf_del_extmark(bufnr, constants.ns, waypoint.extmark_id)
+  end
+
+  load_decoded_state_into_state(decoded)
 end
 
 return M

@@ -31,21 +31,32 @@ local function keymap_opts(bufnr)
   }
 end
 
-local sorted_mode_err_msg_table = {"Cannot move waypoints while sort is enabled. Press "}
-local toggle_sort = config.keybindings.waypoint_window_keybindings.toggle_sort
-if type(toggle_sort) == "string" then
-  table.insert(sorted_mode_err_msg_table, toggle_sort)
-else
-  for i, kb in ipairs(toggle_sort) do
-    if i ~= 1 then
-      table.insert(sorted_mode_err_msg_table, " or ")
+---@param t string[]
+---@param keybinding string | string[]
+local function add_stringifed_keybindings_to_table(t, keybinding)
+  if type(keybinding) == "string" then
+    table.insert(t, keybinding)
+  else
+    for i, kb in ipairs(keybinding) do
+      if i ~= 1 then
+        table.insert(t, " or ")
+      end
+      table.insert(t, kb)
     end
-    table.insert(sorted_mode_err_msg_table, kb)
   end
 end
-table.insert(sorted_mode_err_msg_table, " to toggle sort")
 
+local sorted_mode_err_msg_table = {"Cannot move waypoints while sort is enabled. Press "}
+local toggle_sort = config.keybindings.waypoint_window_keybindings.toggle_sort
+add_stringifed_keybindings_to_table(sorted_mode_err_msg_table, toggle_sort)
+table.insert(sorted_mode_err_msg_table, " to toggle sort")
 local sorted_mode_err_msg = table.concat(sorted_mode_err_msg_table)
+
+local missing_file_err_msg_table = {"Cannot go to waypoint in missing file. Press "}
+-- local toggle_sort = config.keybindings.waypoint_window_keybindings.toggle_sort
+-- add_stringifed_keybindings_to_table(missing_file_err_msg_table, toggle_sort)
+table.insert(missing_file_err_msg_table, "<TBD> to fix")
+local missing_file_err_msg = table.concat(missing_file_err_msg_table)
 
 -- I use this to avoid drawing twice when the cursor moves.
 -- I have no idea how nvim orders events and event handlers so hopefully this 
@@ -291,7 +302,8 @@ local function draw_waypoint_window(action)
       -- line number
       if state.show_line_num then
         if j >= file_start_idx and j < file_end_idx then
-          table.insert(row, tostring(context_start_linenr + j - file_start_idx + 1))
+          p(context_start_linenr, j, file_start_idx, context_start_linenr + j - file_start_idx + 1)
+          table.insert(row, tostring(context_start_linenr + j - file_start_idx))
         else
           table.insert(row, "")
         end
@@ -930,6 +942,10 @@ function M.GoToCurrentWaypoint()
     waypoint = state.waypoints[state.wpi]
   end
   assert(waypoint)
+  if waypoint.bufnr == -1 then
+    vim.notify(missing_file_err_msg, vim.log.levels.ERROR)
+    return
+  end
   local extmark = uw.extmark_for_waypoint(waypoint)
 
   if extmark == nil then
