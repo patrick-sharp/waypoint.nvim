@@ -10,6 +10,14 @@ local uw = require("waypoint.utils_waypoint")
 local highlight = require("waypoint.highlight")
 local pretty = require "waypoint.prettyjson"
 local waypoint_crud = require "waypoint.waypoint_crud"
+local levenshtein   = require "waypoint.levenshtein"
+
+-- like waypoint.Waypoint, but only a subset of properties that are persisted to a file
+---@class waypoint.SavedWaypoint
+---@field indent   integer
+---@field filepath string used as a backup if the bufnr becomes stale.
+---@field text     string | nil
+---@field linenr   integer the one-indexed line number the waypoint is on. Can become stale if a buffer edit causes the extmark to move.
 
 local function write_file(path, content)
   local uv = vim.uv or vim.loop  -- Compatibility for different Neovim versions
@@ -20,7 +28,6 @@ local function write_file(path, content)
   vim.uv.fs_write(fd, content, -1)
   uv.fs_close(fd)
 end
-
 
 local function read_file(path)
   local uv = vim.uv or vim.loop  -- Compatibility for different Neovim versions
@@ -207,6 +214,85 @@ function M.load_from_file(file)
   end
 
   load_decoded_state_into_state(decoded)
+end
+
+
+---@param bufnr integer
+---@param waypoint waypoint.Waypoint | waypoint.SavedWaypoint
+---@param linenr integer | nil overrides waypoint linenr if non-nil
+local function create_extmark_for_waypoint(bufnr, waypoint, linenr)
+  local extmark_linenr = linenr or waypoint.linenr
+  local extmark_id = vim.api.nvim_buf_set_extmark(
+    bufnr, constants.ns, extmark_linenr - 1, -1,
+    {
+      id = extmark_linenr,
+      sign_text = config.mark_char,
+      priority = 1,
+      sign_hl_group = constants.hl_sign,
+      virt_text = nil,
+      virt_text_pos = "eol",
+    }
+  )
+  return extmark_id
+end
+
+-- all waypoints are assumed to be in the same file.
+---@param filepath string
+---@param waypoints (waypoint.SavedWaypoint | waypoint.Waypoint)[]
+---@return waypoint.Waypoint[]
+function M.locate_waypoint_in_file(filepath, waypoints)
+  local bufnr = vim.fn.bufnr(filepath)
+  local does_file_exist = bufnr ~= -1
+  local line_count = vim.api.nvim_buf_line_count(bufnr)
+  ---@type waypoint.Waypoint[]
+  local result = {}
+  local lines = vim.api.nvim_buf_get_lines(
+    bufnr, 0, line_count, true
+  )
+
+  if not does_file_exist then
+    for _, waypoint in ipairs(waypoints) do
+      table.insert(result,
+        {
+          extmark_id = -1,
+          bufnr      = -1,
+          indent     = waypoint.indent,
+          filepath   = waypoint.filepath,
+          text       = waypoint.text,
+          linenr     = waypoint.linenr,
+        }
+      )
+    end
+
+    return result
+  end
+
+  for _, waypoint in ipairs(waypoints) do
+    local linenr = waypoint.linenr
+    local new_waypoint = {
+      extmark_id = -1,
+      bufnr      = bufnr,
+      indent     = waypoint.indent,
+      filepath   = waypoint.filepath,
+      text       = waypoint.text,
+      linenr     = -1
+    }
+    if waypoint.text == lines[linenr] then
+      if linenr < line_count then
+        new_waypoint.extmark_id = create_extmark_for_waypoint(bufnr, waypoint)
+      end
+      new_waypoint.linenr = waypoint.linenr
+      table.insert(result, new_waypoint)
+    else
+      local new_linenr = levenshtein.find_best_match(waypoint, lines)
+      if new_linenr ~= -1 then
+        new_waypoint.extmark_id = create_extmark_for_waypoint(bufnr, waypoint, new_linenr)
+      end
+      new_waypoint.linenr = new_linenr
+      table.insert(result, new_waypoint)
+    end
+  end
+  return result
 end
 
 return M

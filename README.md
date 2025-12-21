@@ -149,6 +149,7 @@ features
 [ ] see if you can fix the markdown header treesitter highlight bug
 [ ] add user command wrappers for bindable functions
 [ ] swap out nvim_buf_set_keymap for vim.keymap.set with {buffer = x} so I don't have to declare global lua functions
+[ ] fix bug where toggles don't change in help mode
 
 ### ADVANCED FEATURES:
 [x] delete waypoint from floating window with dd
@@ -201,3 +202,16 @@ what to do if file changes name or is deleted?
 waypoint order
     by file and by line
     by manual order
+
+how to use luajit profiler
+https://luajit.org/ext_profiler.html
+
+require('jit.p').start('f', '/tmp/nvim_profile.txt')
+
+-- Execute the code you want to profile, for example:
+-- require('my_slow_plugin').some_function()
+-- Or run a series of complex edits
+
+-- Stop the session and write the profile
+require('jit.p').stop()
+

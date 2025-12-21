@@ -23,61 +23,64 @@
 ---@field global_keybindings          waypoint.GlobalKeybindings
 ---@field waypoint_window_keybindings waypoint.WaypointWindowKeybindings
 ---@field help_keybindings            waypoint.HelpKeybindings
----
+
+---@alias waypoint.Keybinding string | string[]
+
 ---@class waypoint.GlobalKeybindings
----@field current_waypoint        string | string[]
----@field next_waypoint           string | string[]
----@field prev_waypoint           string | string[]
----@field first_waypoint          string | string[]
----@field last_waypoint           string | string[]
----@field prev_neighbor_waypoint  string | string[]
----@field next_neighbor_waypoint  string | string[]
----@field prev_top_level_waypoint string | string[]
----@field next_top_level_waypoint string | string[]
----@field outer_waypoint          string | string[]
----@field inner_waypoint          string | string[]
----@field open_waypoint_window    string | string[]
----@field toggle_waypoint         string | string[]
+---@field current_waypoint        waypoint.Keybinding
+---@field next_waypoint           waypoint.Keybinding
+---@field prev_waypoint           waypoint.Keybinding
+---@field first_waypoint          waypoint.Keybinding
+---@field last_waypoint           waypoint.Keybinding
+---@field prev_neighbor_waypoint  waypoint.Keybinding
+---@field next_neighbor_waypoint  waypoint.Keybinding
+---@field prev_top_level_waypoint waypoint.Keybinding
+---@field next_top_level_waypoint waypoint.Keybinding
+---@field outer_waypoint          waypoint.Keybinding
+---@field inner_waypoint          waypoint.Keybinding
+---@field open_waypoint_window    waypoint.Keybinding
+---@field toggle_waypoint         waypoint.Keybinding
 
 ---@class waypoint.WaypointWindowKeybindings
----@field exit_waypoint_window     string | string[]
----@field increase_context         string | string[]
----@field decrease_context         string | string[]
----@field increase_before_context  string | string[]
----@field decrease_before_context  string | string[]
----@field increase_after_context   string | string[]
----@field decrease_after_context   string | string[]
----@field reset_context            string | string[]
----@field toggle_annotation        string | string[]
----@field toggle_path              string | string[]
----@field toggle_full_path         string | string[]
----@field toggle_line_num          string | string[]
----@field toggle_file_text         string | string[]
----@field toggle_context           string | string[]
----@field toggle_sort              string | string[]
----@field show_help                string | string[]
----@field set_quickfix_list        string | string[]
----@field indent                   string | string[]
----@field unindent                 string | string[]
----@field reset_waypoint_indent    string | string[]
----@field reset_all_indent         string | string[]
----@field scroll_right             string | string[]
----@field scroll_left              string | string[]
----@field reset_horizontal_scroll  string | string[]
----@field next_waypoint            string | string[]
----@field prev_waypoint            string | string[]
----@field first_waypoint           string | string[]
----@field last_waypoint            string | string[]
----@field outer_waypoint           string | string[]
----@field inner_waypoint           string | string[]
----@field next_neighbor_waypoint   string | string[]
----@field prev_neighbor_waypoint   string | string[]
----@field next_top_level_waypoint  string | string[]
----@field prev_top_level_waypoint  string | string[]
----@field delete_waypoint          string | string[]
----@field current_waypoint         string | string[]
----@field move_waypoint_down       string | string[]
----@field move_waypoint_up         string | string[]
+---@field exit_waypoint_window     waypoint.Keybinding
+---@field increase_context         waypoint.Keybinding
+---@field decrease_context         waypoint.Keybinding
+---@field increase_before_context  waypoint.Keybinding
+---@field decrease_before_context  waypoint.Keybinding
+---@field increase_after_context   waypoint.Keybinding
+---@field decrease_after_context   waypoint.Keybinding
+---@field reset_context            waypoint.Keybinding
+---@field toggle_annotation        waypoint.Keybinding
+---@field toggle_path              waypoint.Keybinding
+---@field toggle_full_path         waypoint.Keybinding
+---@field toggle_line_num          waypoint.Keybinding
+---@field toggle_file_text         waypoint.Keybinding
+---@field toggle_context           waypoint.Keybinding
+---@field toggle_sort              waypoint.Keybinding
+---@field show_help                waypoint.Keybinding
+---@field set_quickfix_list        waypoint.Keybinding
+---@field indent                   waypoint.Keybinding
+---@field unindent                 waypoint.Keybinding
+---@field reset_waypoint_indent    waypoint.Keybinding
+---@field reset_all_indent         waypoint.Keybinding
+---@field scroll_right             waypoint.Keybinding
+---@field scroll_left              waypoint.Keybinding
+---@field reset_horizontal_scroll  waypoint.Keybinding
+---@field next_waypoint            waypoint.Keybinding
+---@field prev_waypoint            waypoint.Keybinding
+---@field first_waypoint           waypoint.Keybinding
+---@field last_waypoint            waypoint.Keybinding
+---@field outer_waypoint           waypoint.Keybinding
+---@field inner_waypoint           waypoint.Keybinding
+---@field next_neighbor_waypoint   waypoint.Keybinding
+---@field prev_neighbor_waypoint   waypoint.Keybinding
+---@field next_top_level_waypoint  waypoint.Keybinding
+---@field prev_top_level_waypoint  waypoint.Keybinding
+---@field delete_waypoint          waypoint.Keybinding
+---@field current_waypoint         waypoint.Keybinding
+---@field move_waypoint_down       waypoint.Keybinding
+---@field move_waypoint_up         waypoint.Keybinding
+---@field move_waypoints_to_file   waypoint.Keybinding
 
 ---@class waypoint.HelpKeybindings
 ---@field exit_help string | string[]
@@ -113,58 +116,59 @@
 ---@field help_keybindings            nil | waypoint.HelpKeybindingsOverride
 ---
 ---@class waypoint.GlobalKeybindingsOverride
----@field current_waypoint        nil | string | string[]
----@field prev_waypoint           nil | string | string[]
----@field next_waypoint           nil | string | string[]
----@field first_waypoint          nil | string | string[]
----@field last_waypoint           nil | string | string[]
----@field prev_neighbor_waypoint  nil | string | string[]
----@field next_neighbor_waypoint  nil | string | string[]
----@field prev_top_level_waypoint nil | string | string[]
----@field next_top_level_waypoint nil | string | string[]
----@field outer_waypoint          nil | string | string[]
----@field inner_waypoint          nil | string | string[]
----@field open_waypoint_window    nil | string | string[]
----@field toggle_waypoint         nil | string | string[]
+---@field current_waypoint        nil | waypoint.Keybinding
+---@field prev_waypoint           nil | waypoint.Keybinding
+---@field next_waypoint           nil | waypoint.Keybinding
+---@field first_waypoint          nil | waypoint.Keybinding
+---@field last_waypoint           nil | waypoint.Keybinding
+---@field prev_neighbor_waypoint  nil | waypoint.Keybinding
+---@field next_neighbor_waypoint  nil | waypoint.Keybinding
+---@field prev_top_level_waypoint nil | waypoint.Keybinding
+---@field next_top_level_waypoint nil | waypoint.Keybinding
+---@field outer_waypoint          nil | waypoint.Keybinding
+---@field inner_waypoint          nil | waypoint.Keybinding
+---@field open_waypoint_window    nil | waypoint.Keybinding
+---@field toggle_waypoint         nil | waypoint.Keybinding
 
 ---@class waypoint.WaypointWindowKeybindingsOverride
----@field exit_waypoint_window     nil | string | string[]
----@field increase_context         nil | string | string[]
----@field decrease_context         nil | string | string[]
----@field increase_before_context  nil | string | string[]
----@field decrease_before_context  nil | string | string[]
----@field increase_after_context   nil | string | string[]
----@field decrease_after_context   nil | string | string[]
----@field reset_context            nil | string | string[]
----@field toggle_path              nil | string | string[]
----@field toggle_full_path         nil | string | string[]
----@field toggle_line_num          nil | string | string[]
----@field toggle_file_text         nil | string | string[]
----@field toggle_context           nil | string | string[]
----@field toggle_sort              nil | string | string[]
----@field show_help                nil | string | string[]
----@field set_quickfix_list        nil | string | string[]
----@field indent                   nil | string | string[]
----@field unindent                 nil | string | string[]
----@field reset_waypoint_indent    nil | string | string[]
----@field reset_all_indent         nil | string | string[]
----@field scroll_right             nil | string | string[]
----@field scroll_left              nil | string | string[]
----@field reset_horizontal_scroll  nil | string | string[]
----@field next_waypoint            nil | string | string[]
----@field prev_waypoint            nil | string | string[]
----@field first_waypoint           nil | string | string[]
----@field last_waypoint            nil | string | string[]
----@field outer_waypoint           nil | string | string[]
----@field inner_waypoint           nil | string | string[]
----@field next_neighbor_waypoint   nil | string | string[]
----@field prev_neighbor_waypoint   nil | string | string[]
----@field next_top_level_waypoint  nil | string | string[]
----@field prev_top_level_waypoint  nil | string | string[]
----@field delete_waypoint          nil | string | string[]
----@field current_waypoint         nil | string | string[]
----@field move_waypoint_down       nil | string | string[]
----@field move_waypoint_up         nil | string | string[]
+---@field exit_waypoint_window     nil | waypoint.Keybinding
+---@field increase_context         nil | waypoint.Keybinding
+---@field decrease_context         nil | waypoint.Keybinding
+---@field increase_before_context  nil | waypoint.Keybinding
+---@field decrease_before_context  nil | waypoint.Keybinding
+---@field increase_after_context   nil | waypoint.Keybinding
+---@field decrease_after_context   nil | waypoint.Keybinding
+---@field reset_context            nil | waypoint.Keybinding
+---@field toggle_path              nil | waypoint.Keybinding
+---@field toggle_full_path         nil | waypoint.Keybinding
+---@field toggle_line_num          nil | waypoint.Keybinding
+---@field toggle_file_text         nil | waypoint.Keybinding
+---@field toggle_context           nil | waypoint.Keybinding
+---@field toggle_sort              nil | waypoint.Keybinding
+---@field show_help                nil | waypoint.Keybinding
+---@field set_quickfix_list        nil | waypoint.Keybinding
+---@field indent                   nil | waypoint.Keybinding
+---@field unindent                 nil | waypoint.Keybinding
+---@field reset_waypoint_indent    nil | waypoint.Keybinding
+---@field reset_all_indent         nil | waypoint.Keybinding
+---@field scroll_right             nil | waypoint.Keybinding
+---@field scroll_left              nil | waypoint.Keybinding
+---@field reset_horizontal_scroll  nil | waypoint.Keybinding
+---@field next_waypoint            nil | waypoint.Keybinding
+---@field prev_waypoint            nil | waypoint.Keybinding
+---@field first_waypoint           nil | waypoint.Keybinding
+---@field last_waypoint            nil | waypoint.Keybinding
+---@field outer_waypoint           nil | waypoint.Keybinding
+---@field inner_waypoint           nil | waypoint.Keybinding
+---@field next_neighbor_waypoint   nil | waypoint.Keybinding
+---@field prev_neighbor_waypoint   nil | waypoint.Keybinding
+---@field next_top_level_waypoint  nil | waypoint.Keybinding
+---@field prev_top_level_waypoint  nil | waypoint.Keybinding
+---@field delete_waypoint          nil | waypoint.Keybinding
+---@field current_waypoint         nil | waypoint.Keybinding
+---@field move_waypoint_down       nil | waypoint.Keybinding
+---@field move_waypoint_up         nil | waypoint.Keybinding
+---@field move_waypoints_to_file   nil | waypoint.Keybinding
 
 ---@class waypoint.HelpKeybindingsOverride
 ---@field exit_help nil | string | string[]
@@ -245,6 +249,7 @@ local M = {
       current_waypoint        = "<CR>",
       move_waypoint_up        = "K",
       move_waypoint_down      = "J",
+      move_waypoints_to_file  = "rw",
     },
     help_keybindings = {
       exit_help = {"q", "<esc>", "g?"}

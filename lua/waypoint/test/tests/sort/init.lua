@@ -4,10 +4,10 @@ local file_0 = test_list.file_0
 local file_1 = test_list.file_1
 
 local floating_window = require("waypoint.floating_window")
-local constants = require("waypoint.constants")
 local state = require("waypoint.state")
 local crud = require("waypoint.waypoint_crud")
 local u = require("waypoint.utils")
+local tu = require'waypoint.test.util'
 
 describe('Sort', function()
   u.assert_file_exists(file_0)
@@ -64,15 +64,14 @@ describe('Sort', function()
   floating_window.toggle_full_path()
 
   local lines
-  local bufnr = vim.fn.bufnr()
-  local pattern = ' ' .. constants.table_separator .. ' '
 
-  lines = vim.api.nvim_buf_get_lines(bufnr, 0, 5, true)
-  assert(u.split(lines[1], pattern)[2] == file_0)
-  assert(u.split(lines[2], pattern)[2] == file_1)
-  assert(u.split(lines[3], pattern)[2] == file_1)
-  assert(u.split(lines[4], pattern)[2] == file_0)
-  assert(u.split(lines[5], pattern)[2] == file_0)
+  lines = tu.get_waypoint_buffer_lines()
+
+  assert(lines[1][2] == file_0)
+  assert(lines[2][2] == file_1)
+  assert(lines[3][2] == file_1)
+  assert(lines[4][2] == file_0)
+  assert(lines[5][2] == file_0)
 
   floating_window.toggle_sort()
 
@@ -82,10 +81,10 @@ describe('Sort', function()
 
   assert_waypoint_locations()
 
-  lines = vim.api.nvim_buf_get_lines(bufnr, 0, 5, true)
-  assert(u.split(lines[1], pattern)[2] == file_0)
-  assert(u.split(lines[2], pattern)[2] == file_0)
-  assert(u.split(lines[3], pattern)[2] == file_0)
-  assert(u.split(lines[4], pattern)[2] == file_1)
-  assert(u.split(lines[5], pattern)[2] == file_1)
+  lines = tu.get_waypoint_buffer_lines()
+  assert(lines[1][2] == file_0)
+  assert(lines[2][2] == file_0)
+  assert(lines[3][2] == file_0)
+  assert(lines[4][2] == file_1)
+  assert(lines[5][2] == file_1)
 end)

@@ -31,31 +31,16 @@ local function keymap_opts(bufnr)
   }
 end
 
----@param t string[]
----@param keybinding string | string[]
-local function add_stringifed_keybindings_to_table(t, keybinding)
-  if type(keybinding) == "string" then
-    table.insert(t, keybinding)
-  else
-    for i, kb in ipairs(keybinding) do
-      if i ~= 1 then
-        table.insert(t, " or ")
-      end
-      table.insert(t, kb)
-    end
-  end
-end
-
 local sorted_mode_err_msg_table = {"Cannot move waypoints while sort is enabled. Press "}
 local toggle_sort = config.keybindings.waypoint_window_keybindings.toggle_sort
-add_stringifed_keybindings_to_table(sorted_mode_err_msg_table, toggle_sort)
+u.add_stringifed_keybindings_to_table(sorted_mode_err_msg_table, toggle_sort)
 table.insert(sorted_mode_err_msg_table, " to toggle sort")
 local sorted_mode_err_msg = table.concat(sorted_mode_err_msg_table)
 
 local missing_file_err_msg_table = {"Cannot go to waypoint in missing file. Press "}
--- local toggle_sort = config.keybindings.waypoint_window_keybindings.toggle_sort
--- add_stringifed_keybindings_to_table(missing_file_err_msg_table, toggle_sort)
-table.insert(missing_file_err_msg_table, "<TBD> to fix")
+local move_waypoints_to_file = config.keybindings.waypoint_window_keybindings.move_waypoints_to_file
+u.add_stringifed_keybindings_to_table(missing_file_err_msg_table, move_waypoints_to_file)
+table.insert(missing_file_err_msg_table, " to fix")
 local missing_file_err_msg = table.concat(missing_file_err_msg_table)
 
 -- I use this to avoid drawing twice when the cursor moves.
@@ -563,12 +548,13 @@ local function set_waypoint_keybinds()
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.current_waypoint,        ":<C-u>lua GoToCurrentWaypoint()<CR>")
 
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.delete_waypoint,        ":<C-u>lua RemoveCurrentWaypoint()<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.move_waypoints_to_file, M.move_waypoints_to_file)
 
   -- bind_key(wp_bufnr, "n", "sg",    M.move_waypoint_to_top)
   -- bind_key(wp_bufnr, "n", "sG",    M.move_waypoint_to_bottom)
 end
 
-local global_keybindings_description = {
+M.global_keybindings_description = {
   {"toggle_waypoint"         ,  "Toggle a waypoint on the cursor's current line"}       ,
   {"open_waypoint_window"    ,  "Show the waypoint window"}                             ,
   {"current_waypoint"        ,  "Jump to current waypoint"}                             ,
@@ -584,7 +570,7 @@ local global_keybindings_description = {
   {"inner_waypoint"          ,  "Jump to the next waypoint indented one level more"}    ,
 }
 
-local waypoint_window_keybindings_description = {
+M.waypoint_window_keybindings_description = {
   {"current_waypoint"        , "Jump to the current waypoint's location"}                   ,
   {"delete_waypoint"         , "Delete the current waypoint from the waypoint list"}        ,
   {"move_waypoint_down"      , "Move the current waypoint before the previous waypoint"}    ,
@@ -623,9 +609,10 @@ local waypoint_window_keybindings_description = {
   {"next_neighbor_waypoint"  , "Move to the next waypoint at the same indentation"}         ,
   {"prev_top_level_waypoint" , "Move to the previous unindented waypoint"}                  ,
   {"next_top_level_waypoint" , "Move to the next unindented waypoint"}                      ,
+  {"move_waypoints_to_file"  , "Move all waypoints in one file to another file"}            ,
 }
 
-local help_keybindings_description = {
+M.help_keybindings_description = {
   {"exit_help", "Exit help and return to the waypoint window"},
 }
 
@@ -765,9 +752,9 @@ local function draw_help()
 
   -- show keybindings
 
-  insert_lines_for_keybindings(lines, highlights, config.keybindings.global_keybindings, global_keybindings_description, "Global", "global")
-  insert_lines_for_keybindings(lines, highlights, config.keybindings.waypoint_window_keybindings, waypoint_window_keybindings_description, "Waypoint window", "waypoint window")
-  insert_lines_for_keybindings(lines, highlights, config.keybindings.help_keybindings, help_keybindings_description, "Help", "help")
+  insert_lines_for_keybindings(lines, highlights, config.keybindings.global_keybindings, M.global_keybindings_description, "Global", "global")
+  insert_lines_for_keybindings(lines, highlights, config.keybindings.waypoint_window_keybindings, M.waypoint_window_keybindings_description, "Waypoint window", "waypoint window")
+  insert_lines_for_keybindings(lines, highlights, config.keybindings.help_keybindings, M.help_keybindings_description, "Help", "help")
 
   vim.api.nvim_buf_set_lines(help_bufnr, 0, -1, true, lines)
   -- hlranges is the set of highlight ranges for this line of the help
@@ -959,7 +946,7 @@ function M.GoToCurrentWaypoint()
     return
   end
 
-  if wp_bufnr then m.leave() end
+  if wp_bufnr then M.leave() end
 
   local waypoint_bufnr = vim.fn.bufnr(waypoint.filepath)
   vim.api.nvim_win_set_buf(0, waypoint_bufnr)
@@ -1322,6 +1309,13 @@ function M.GoToNextTopLevelWaypoint()
   GoToCurrentWaypoint()
 end
 
+---@param source_file string
+---@param dest_file string
+function M.move_waypoints_to_file(source_file, dest_file)
+  for _,waypoint in pairs(state.waypoints) do
+  end
+  draw_waypoint_window()
+end
 
 local function set_waypoint_for_cursor()
   if ignore_next_cursormoved then
@@ -1520,6 +1514,10 @@ end
 
 function M.leave()
   vim.cmd("wincmd w")
+end
+
+function M.get_bufnr()
+  return wp_bufnr
 end
 
 return M

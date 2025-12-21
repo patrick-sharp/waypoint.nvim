@@ -23,13 +23,13 @@
 		},
 		{
 			"indent": 0,
-			"text":  "local M = {}\n",
-			"linenr": 1,
+			"text":  "    table.insert(t, i)",
+			"linenr": 8,
 			"filepath": "./lua/waypoint/test/tests/common/does_not_exist.lua"
 		},
 		{
 			"indent": 0,
-			"text":  "\n",
+			"text":  "  end\n",
 			"linenr": 9,
 			"filepath": "./lua/waypoint/test/tests/common/does_not_exist.lua"
 		}

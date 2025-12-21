@@ -24,6 +24,8 @@ local window_augroup = "waypoint.window"
 ---@field debug_file string
 ---@field test_output_file string
 ---@field is_release boolean
+---@field file_dne_error string
+---@field line_oob_error string
 local M = {
   augroup = augroup,
   window_augroup = window_augroup,
@@ -56,6 +58,8 @@ local M = {
   debug_file = "./debug.log",
   test_output_file = "./test_output.txt",
   is_release = false,
+  file_dne_error = "Error: file does not exist",
+  line_oob_error = "Error: line number is out of bounds",
 }
 
 -- candidate indentation styles

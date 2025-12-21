@@ -203,4 +203,32 @@ function M.split(str, pattern)
   return result
 end
 
+function M.trim(s)
+  return s:gsub("^%s*(.-)%s*$", "%1")
+end
+
+---@param t string[]
+---@param keybinding string | string[]
+function M.add_stringifed_keybindings_to_table(t, keybinding)
+  if type(keybinding) == "string" then
+    table.insert(t, keybinding)
+  else
+    for i, kb in ipairs(keybinding) do
+      if i ~= 1 then
+        table.insert(t, " or ")
+      end
+      table.insert(t, kb)
+    end
+  end
+end
+
+---@param t table
+function M.len(t)
+  local count = 0
+  for _,_ in pairs(t) do
+    count = count + 1
+  end
+  return count
+end
+
 return M

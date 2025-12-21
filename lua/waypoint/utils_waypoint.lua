@@ -19,6 +19,12 @@ function M.extmark_for_waypoint(waypoint)
   return nil
 end
 
+local missing_file_err_msg_table = {constants.file_dne_error, ". Press "}
+local move_waypoints_to_file = config.keybindings.waypoint_window_keybindings.move_waypoints_to_file
+u.add_stringifed_keybindings_to_table(missing_file_err_msg_table, move_waypoints_to_file)
+table.insert(missing_file_err_msg_table, ", or run MoveWaypointsToFile <source> <dest> to fix")
+local missing_file_err_msg = table.concat(missing_file_err_msg_table)
+
 --- @class waypoint.WaypointFileText
 --- @field extmark              { [1]: integer, [2]: integer } the zero-indexed row,col coordinates of the extmark corresponding to this waypoint
 --- @field lines                string[] the lines of text from the file the waypoint is in. Includes the line the waypoint is on and the lines in the context around the waypoint.
@@ -47,9 +53,10 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
     if waypoint.error then
       table.insert(lines, "Error: " .. waypoint.error)
     elseif waypoint.bufnr == -1 then
-      table.insert(lines, "Error: file does not exist")
+
+      table.insert(lines, missing_file_err_msg)
     else
-      table.insert(lines, "Error: line number is out of bounds")
+      table.insert(lines, constants.line_oob_error)
     end
     table.insert(hlranges, {{
       nsid = constants.ns,
