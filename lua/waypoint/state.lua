@@ -31,6 +31,7 @@
 ---@field show_context          boolean whether or not to show the context around the waypoint instead of just the line of text the waypoint is on
 ---@field sort_by_file_and_line boolean whether or not to show the context around the waypoint instead of just the line of text the waypoint is on
 ---@field view                  waypoint.View
+---@field should_notify         boolean whether or not to actually print when message.notify is called
 
 ---@type waypoint.State
 local M = {
@@ -56,6 +57,7 @@ local M = {
     col      = 0,
     leftcol  = 0,
   },
+  should_notify = true,
 }
 
 return M

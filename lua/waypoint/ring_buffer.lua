@@ -13,7 +13,6 @@ local default_capacity = 32
 ---@return waypoint.RingBuffer
 function M.new(capacity)
   return {
-    idx = 0,
     earliest_idx = 0,
     latest_idx = 0,
     array = {},
@@ -71,6 +70,14 @@ function M.peek(this)
   end
   local idx = M.curr_idx(this)
   return this.array[idx], true
+end
+
+---@param this waypoint.RingBuffer
+function M.clear(this)
+  this.earliest_idx = 0
+  this.latest_idx = 0
+  this.array = {}
+  this.size = 0
 end
 
 return M

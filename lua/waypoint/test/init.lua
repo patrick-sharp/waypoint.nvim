@@ -3,6 +3,7 @@ local M = {}
 local constants = require'waypoint.constants'
 local floating_window = require'waypoint.floating_window'
 local test_list = require'waypoint.test.test_list'
+local state = require'waypoint.state'
 
 -- these files call test_list.describe, which adds tests to the list
 local _ = require'waypoint.test.tests.context_basic'
@@ -81,12 +82,14 @@ local function log_test_output()
 end
 
 function M.run_tests()
+  state.should_notify = false
   for _,test in ipairs(test_list.tests) do
     floating_window.clear_state_and_close()
     _, test.err = pcall(test.fn)
     test.pass = true
     floating_window.clear_state_and_close()
   end
+  state.should_notify = true
 
   log_test_output()
   vim.cmd.edit({args = {constants.test_output_file}, bang=true})

@@ -1,5 +1,7 @@
 local M = {}
 
+local message = require("waypoint.message")
+local ring_buffer = require("waypoint.ring_buffer")
 local constants = require("waypoint.constants")
 local floating_window = require("waypoint.floating_window")
 local u = require("waypoint.utils")
@@ -26,11 +28,21 @@ end
 
 ---@return string | nil
 function M.get_last_message()
-  local messages = vim.split(vim.fn.execute(":messages"), "\n")
-  if #messages == nil then
+  local res, ok = ring_buffer.peek(message.messages)
+  if ok then
+    return res.msg
+  else
+    return nil
+  end
+end
+
+---@return string | nil
+function M.nvim_get_last_message()
+  local msgs = vim.split(vim.fn.execute(":messages"), "\n")
+  if #msgs == nil then
     return
   end
-  return messages[#messages]
+  return msgs[#msgs]
 end
 
 function M.assert_eq(a, b)

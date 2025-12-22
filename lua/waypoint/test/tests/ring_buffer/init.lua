@@ -99,4 +99,12 @@ describe('Ring buffer', function()
   res, ok = ring_buffer.peek(rb)
   tu.assert_eq(res, 8)
   tu.assert_eq(ok, true)
+
+  -- clear
+
+  ring_buffer.clear(rb)
+  tu.assert_eq(rb.size, 0)
+  res, ok = ring_buffer.peek(rb)
+  tu.assert_eq(res, nil)
+  tu.assert_eq(ok, false)
 end)

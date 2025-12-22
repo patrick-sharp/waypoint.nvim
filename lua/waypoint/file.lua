@@ -241,7 +241,6 @@ end
 ---@param filepath string
 ---@param waypoints (waypoint.SavedWaypoint | waypoint.Waypoint)[]
 function M.locate_waypoints_in_file(filepath, waypoints)
-  if true then return end
   local bufnr = vim.fn.bufnr(filepath)
   local does_file_exist = bufnr ~= -1
   local line_count = vim.api.nvim_buf_line_count(bufnr)

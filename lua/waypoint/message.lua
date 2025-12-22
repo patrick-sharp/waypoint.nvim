@@ -1,7 +1,9 @@
 local M = {}
 
 local config = require("waypoint.config")
+local state = require("waypoint.state")
 local u = require("waypoint.utils")
+local ring_buffer = require("waypoint.ring_buffer")
 
 local sorted_mode_err_msg_table = {"Cannot move waypoints while sort is enabled. Press "}
 local toggle_sort = config.keybindings.waypoint_window_keybindings.toggle_sort
@@ -39,6 +41,18 @@ end
 ---@return string
 function M.moved_waypoints_to_file(num_waypoints, src, dst)
   return "Moved " .. tostring(num_waypoints) .. " waypoints from " .. src .. " to " .. dst
+end
+
+M.messages = ring_buffer.new(config.max_msg_history)
+
+---@param msg string
+---@param level integer | nil
+function M.notify(msg, level)
+  level = level or vim.log.levels.INFO
+  ring_buffer.push(M.messages, {msg = msg, level = level})
+  if state.should_notify then
+    vim.notify(msg, level)
+  end
 end
 
 return M

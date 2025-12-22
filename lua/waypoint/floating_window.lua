@@ -814,7 +814,7 @@ function MoveWaypointUp()
     or state.sort_by_file_and_line
   )
   if state.sort_by_file_and_line then
-    vim.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
+    message.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
   end
   if should_return then return end
 
@@ -834,7 +834,7 @@ function MoveWaypointDown()
     or state.sort_by_file_and_line
   )
   if state.sort_by_file_and_line then
-    vim.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
+    message.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
   end
   if should_return then return end
 
@@ -854,7 +854,7 @@ function MoveWaypointToTop()
     or state.sort_by_file_and_line
   )
   if state.sort_by_file_and_line then
-    vim.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
+    message.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
   end
   if should_return then return end
 
@@ -874,7 +874,7 @@ function MoveWaypointToBottom()
     or state.sort_by_file_and_line
   )
   if state.sort_by_file_and_line then
-    vim.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
+    message.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
   end
   if should_return then return end
 
@@ -928,7 +928,7 @@ function M.GoToCurrentWaypoint()
   end
   assert(waypoint)
   if waypoint.bufnr == -1 then
-    vim.notify(M.missing_file_err_msg, vim.log.levels.ERROR)
+    message.notify(M.missing_file_err_msg, vim.log.levels.ERROR)
     return
   end
   local extmark = uw.extmark_for_waypoint(waypoint)
@@ -1305,11 +1305,11 @@ end
 ---@return boolean # if the move was successful
 function M.move_waypoints_to_file(source_file_path, dest_file_path)
   if source_file_path == dest_file_path then
-    vim.notify(message.files_same(source_file_path), vim.log.levels.ERROR)
+    message.notify(message.files_same(source_file_path), vim.log.levels.ERROR)
     return false
   end
   if not u.file_exists(dest_file_path) then
-    vim.notify(message.file_dne(dest_file_path), vim.log.levels.ERROR)
+    message.notify(message.file_dne(dest_file_path), vim.log.levels.ERROR)
     return false
   end
   ---@type waypoint.Waypoint[]
@@ -1321,12 +1321,12 @@ function M.move_waypoints_to_file(source_file_path, dest_file_path)
     end
   end
   if #waypoints_in_file == 0 then
-    vim.notify(message.no_waypoints_in_file(source_file_path), vim.log.levels.ERROR)
+    message.notify(message.no_waypoints_in_file(source_file_path), vim.log.levels.ERROR)
     return false
   end
 
   file.locate_waypoints_in_file(dest_file_path, waypoints_in_file)
-  vim.notify(message.moved_waypoints_to_file(#waypoints_in_file, source_file_path, dest_file_path), vim.log.levels.INFO)
+  message.notify(message.moved_waypoints_to_file(#waypoints_in_file, source_file_path, dest_file_path), vim.log.levels.INFO)
 
   draw_waypoint_window()
   return true
