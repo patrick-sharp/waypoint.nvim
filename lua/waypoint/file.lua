@@ -275,6 +275,7 @@ function M.locate_waypoints_in_file(filepath, waypoints)
       end
       waypoint.linenr = waypoint.linenr
     else
+      print("HI HI HI HI")
       local new_linenr = levenshtein.find_best_match(waypoint, lines)
       waypoint.filepath = filepath
       if new_linenr ~= -1 then

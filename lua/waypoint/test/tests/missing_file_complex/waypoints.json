@@ -1,0 +1,31 @@
+{
+	"wpi": 1,
+	"sort_by_file_and_line": false,
+	"show_context": true,
+	"show_file_text": true,
+	"show_full_path": true,
+	"show_path": true,
+	"show_line_num": true,
+	"view": {
+		"leftcol": 0,
+		"col": 0
+	},
+	"context": 0,
+	"after_context": 0,
+	"before_context": 0,
+	"show_annotation": false,
+	"waypoints": [
+		{
+			"indent": 0,
+			"text":  "table insert results hello",
+			"linenr": 8,
+			"filepath": "lua/waypoint/test/tests/common/does_not_exist.lua"
+		},
+		{
+			"indent": 0,
+			"text":  "table insert results world",
+			"linenr": 9,
+			"filepath": "lua/waypoint/test/tests/common/does_not_exist.lua"
+		}
+	]
+}

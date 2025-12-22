@@ -1,5 +1,6 @@
 local test_list = require('waypoint.test.test_list')
 local describe = test_list.describe
+local file_0 = test_list.file_0
 local file_1 = test_list.file_1
 
 local file = require'waypoint.file'
@@ -59,4 +60,14 @@ describe('Missing file', function()
   msg = tu.get_last_message()
   assert(result)
   tu.assert_eq(msg, message.moved_waypoints_to_file(2, nonexistent_file, file_1))
+
+  lines = tu.get_waypoint_buffer_lines()
+  assert(lines[1][2] == file_0)
+  assert(lines[1][3] == "local M = {}\n")
+
+  assert(lines[2][2] == file_1)
+  assert(lines[2][3] == "table.insert(t, i)")
+
+  assert(lines[3][2] == file_1)
+  assert(lines[3][3] == "end\n")
 end)

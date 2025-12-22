@@ -7,11 +7,12 @@ local state = require'waypoint.state'
 
 -- these files call test_list.describe, which adds tests to the list
 local _ = require'waypoint.test.tests.context_basic'
-local _ = require'waypoint.test.tests.sort'
-local _ = require'waypoint.test.tests.missing_file'
-local _ = require'waypoint.test.tests.levenshtein'
 local _ = require'waypoint.test.tests.help'
+local _ = require'waypoint.test.tests.levenshtein'
+local _ = require'waypoint.test.tests.missing_file'
+local _ = require'waypoint.test.tests.missing_file_complex'
 local _ = require'waypoint.test.tests.ring_buffer'
+local _ = require'waypoint.test.tests.sort'
 -- other tests to write
 -- * deleting waypoints
 -- * loading from files

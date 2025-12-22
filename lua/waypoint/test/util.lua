@@ -6,6 +6,7 @@ local constants = require("waypoint.constants")
 local floating_window = require("waypoint.floating_window")
 local u = require("waypoint.utils")
 
+---strings returned by thins function are trimmed to make testing more legible and not depend on screen size
 ---@return string[][]
 function M.get_waypoint_buffer_lines()
   local pattern = ' ' .. constants.table_separator .. ' '
