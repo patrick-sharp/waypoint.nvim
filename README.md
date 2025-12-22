@@ -133,22 +133,19 @@ I frequently use the following abbreviations in this codebase:
 - [ ] handle the case where the file gets renamed while open
     - do this by associating waypoints with a buffer number when loaded into state, and a file name when persisted to json
 - [ ] handle the case where the extmark gets deleted
-    - do this by keeping track of waypoint line number and extmark number. on every state edit, synchronize them
-    - also do something about extmarks getting set to the same location when all of a file is deleted for whatever reason 
 - [ ] when you expand the context, keep the selected waypoint at the same point in the window rather than centering on it
 - [ ] handle the case where there is a swap file (or any error opening the file)
 
 #### features
 
+- [x] figure out some way to deal with extmarks moving around when you autoformat
+- [x] tests
+- [x] add ability to move all waypoints in a file to another file (fixes renaming file)
 - [ ] repair state when draw_waypoint_window is called
 - [ ] add perf logging for each function (use require('jit.p'))
 - [ ] switch to making new state for saving / loading instead of mutating existing state to get there
-- [ ] figure out some way to deal with extmarks moving around when you autoformat
-- [ ] try to find out if that periodic hanging issue I get is due to waypoint or something else
 - [ ] create better error handling and reporting
     - [ ] if highlighting fails for some reason, just show an error message and turn off highlighting
-- [ ] tests
-- [ ] add ability to move all waypoints in a file to another file (fixes renaming file)
 - [ ] implement some kind of thing to handle errors and rollback state if you encounter them
 - [ ] increase ability to recover from erroneous state (grep for <TBD>)
 - [ ] decide once and for all what I want to do about annotations
@@ -177,7 +174,7 @@ I frequently use the following abbreviations in this codebase:
 - [x] add option for relative waypoint numbers
 - [ ] add visual mode
     - [ ] move selection of waypoints around
-- [ ] allow for fixing of waypoints for missing files, allowing user to switch all marks to a different file
+- [x] allow for fixing of waypoints for missing files, allowing user to switch all waypoints to a different file
 - [ ] add ability to save and load waypoints to different files
 - [ ] save waypoints parallel directory structure like swap files so they don't clutter the repo (use vim.fn.mkdir(path, 'p'))
 - [ ] add ability to undo deleting waypoints with u
