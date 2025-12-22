@@ -99,7 +99,9 @@ I frequently use the following abbreviations in this codebase:
 - [x] add ability to move to next waypoint at the same indentation level
 - [x] add ability to move to previous waypoint at one fewer indentation
 - [x] add ability to move to previous waypoint at no indentation
-- bugs
+
+#### bugs
+
 - [x] handle the case where the file doesn't exist when opening
     - if the file doesn't exist, just show a message next to the waypoint that it doesn't exist, and don't allow the user to go to it.
 - [x] think about maybe adding scrolloff so the next waypoint is always visible?
@@ -135,7 +137,9 @@ I frequently use the following abbreviations in this codebase:
     - also do something about extmarks getting set to the same location when all of a file is deleted for whatever reason 
 - [ ] when you expand the context, keep the selected waypoint at the same point in the window rather than centering on it
 - [ ] handle the case where there is a swap file (or any error opening the file)
-- features
+
+#### features
+
 - [ ] repair state when draw_waypoint_window is called
 - [ ] add perf logging for each function (use require('jit.p'))
 - [ ] switch to making new state for saving / loading instead of mutating existing state to get there
