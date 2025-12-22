@@ -22,6 +22,7 @@ local _ = require'waypoint.test.tests.ring_buffer'
 -- * indentation
 -- * doing normal crud operations with waypoints in missing files or outside file range
 -- * multiple waypoints getting moved onto the same line by a filter
+-- * rename file and make sure waypoints in that file are updated
 
 local border = "\n================================================================\n"
 local PASS = "✓ PASS"
