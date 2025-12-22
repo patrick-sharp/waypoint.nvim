@@ -18,6 +18,7 @@
 ---@field max_context                      integer
 ---@field waypoint_dir                     string
 ---@field keybindings                      waypoint.Keybindings
+---@field max_undo_history                 integer
 
 ---@class waypoint.Keybindings
 ---@field global_keybindings          waypoint.GlobalKeybindings
@@ -109,6 +110,7 @@
 ---@field max_context                      nil | integer
 ---@field waypoint_dir                     nil | string
 ---@field keybindings                      nil | waypoint.Keybindings
+---@field max_undo_history                 nil | integer
 
 ---@class waypoint.KeybindingsOverride
 ---@field global_keybindings          nil | waypoint.GlobalKeybindingsOverride
@@ -254,7 +256,8 @@ local M = {
     help_keybindings = {
       exit_help = {"q", "<esc>", "g?"}
     },
-  }
+  },
+  max_undo_history = 32,
 }
 
 return M

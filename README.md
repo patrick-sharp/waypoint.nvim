@@ -14,6 +14,7 @@ I frequently use the following abbreviations in this codebase:
 ## TODO:
 
 ### MVP:
+
 [x] autosave
 [x] autoload
 [x] syntax highlighting for file text with vanilla vim syntax
@@ -26,6 +27,7 @@ I frequently use the following abbreviations in this codebase:
   [x] color for annotation
 
 ### POLISH:
+
 [x] Waypoint window automatically resizes when window resizes
 [x] nicer colors / chars
   [x] nicer unicode table chars
@@ -144,14 +146,18 @@ features
 [ ] implement some kind of thing to handle errors and rollback state if you encounter them
 [ ] increase ability to recover from erroneous state (grep for <TBD>)
 [ ] decide once and for all what I want to do about annotations
+    [ ] annotations should be displayed instead of file text
 [ ] remove all asserts from the code
 [ ] when you change directories, reload waypoints from file
 [ ] see if you can fix the markdown header treesitter highlight bug
 [ ] add user command wrappers for bindable functions
 [ ] swap out nvim_buf_set_keymap for vim.keymap.set with {buffer = x} so I don't have to declare global lua functions
 [ ] fix bug where toggles don't change in help mode
+[ ] think about using t\[#t + 1\] = x instead of table.insert(t, x) for better perf
+[ ] think about adding a list of waypoint-specific messages
 
 ### ADVANCED FEATURES:
+
 [x] delete waypoint from floating window with dd
 [x] allow cursor to move within a waypoint if you're searching, and for subsequent searches to move between waypoints
 [x] quickfixlist for waypoints

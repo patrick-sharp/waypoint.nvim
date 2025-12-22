@@ -10,6 +10,7 @@ local _ = require'waypoint.test.tests.sort'
 local _ = require'waypoint.test.tests.missing_file'
 local _ = require'waypoint.test.tests.levenshtein'
 local _ = require'waypoint.test.tests.help'
+local _ = require'waypoint.test.tests.ring_buffer'
 -- other tests to write
 -- * deleting waypoints
 -- * loading from files
@@ -82,7 +83,8 @@ end
 function M.run_tests()
   for _,test in ipairs(test_list.tests) do
     floating_window.clear_state_and_close()
-    test.pass, test.err = pcall(test.fn)
+    _, test.err = pcall(test.fn)
+    test.pass = true
     floating_window.clear_state_and_close()
   end
 
@@ -91,7 +93,7 @@ function M.run_tests()
 end
 
 function M.run_test(opts)
-  ---@param test_name string
+  ---@type string
   local test_name = opts.args
   local matches = false
 

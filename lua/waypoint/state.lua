@@ -5,7 +5,7 @@
 ---@field bufnr         integer the buffer number the waypoint is in. can become stale if the file is deleted and reopened.
 ---@field indent        integer
 ---@field annotation    string | nil
----@field filepath      string used as a backup if the bufnr becomes stale.
+---@field filepath      string relative path to file the waypoint is in. Does NOT start with ./, i.e. a path to ./lua/myfile.lua would be stored as lua/myfile.lua
 ---@field text          string | nil
 ---@field linenr        integer the one-indexed line number the waypoint is on. Can become stale if a buffer edit causes the extmark to move.
 ---@field error         string | nil

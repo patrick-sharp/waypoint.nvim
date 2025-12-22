@@ -17,11 +17,24 @@ function M.get_waypoint_buffer_lines()
   for i = 1, line_count do
     local split = u.split(lines[i], pattern)
     for k,v in ipairs(split) do
-      split[k] = u.trim(v)
+      split[k] = vim.trim(v)
     end
     table.insert(result, split)
   end
   return result
+end
+
+---@return string | nil
+function M.get_last_message()
+  local messages = vim.split(vim.fn.execute(":messages"), "\n")
+  if #messages == nil then
+    return
+  end
+  return messages[#messages]
+end
+
+function M.assert_eq(a, b)
+  assert(a == b, "\n" .. vim.inspect(a) .. "\n~=\n" .. vim.inspect(b))
 end
 
 return M

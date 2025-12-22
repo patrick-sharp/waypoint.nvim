@@ -128,7 +128,7 @@ end
 
 --- @param a string the first hl_group
 --- @param b string the first hl_group
---- @return integer the sum of the absolute differences between the rgb values of the hl_groups' background colors
+--- @return integer # the sum of the absolute differences between the rgb values of the hl_groups' background colors
 function M.hl_background_distance(a, b)
   local bg_a = vim.api.nvim_get_hl(0, {name = a, link = false}).bg
   local bg_b = vim.api.nvim_get_hl(0, {name = b, link = false}).bg
@@ -178,14 +178,13 @@ function M.validate(t, schema, forbid_extra_properties)
   return true, nil, nil, ""
 end
 
-function M.assert_file_exists(file_path)
+function M.file_exists(file_path)
   local f = io.open(file_path)
   if f then
     f:close()
   end
-  assert(f)
+  return f ~= nil
 end
-
 
 function M.split(str, pattern)
   local result = {}
@@ -201,10 +200,6 @@ function M.split(str, pattern)
   end
 
   return result
-end
-
-function M.trim(s)
-  return s:gsub("^%s*(.-)%s*$", "%1")
 end
 
 ---@param t string[]

@@ -11,6 +11,5 @@ describe('Levenshtein', function()
   assert(levenshtein_distance("ab", "b") == 1)
   assert(levenshtein_distance("aaaaabbbbb", "bbbbb") == 5)
   assert(levenshtein_distance("abcde", "bcde") == 1)
-
-  return true
+  assert(levenshtein_distance("abcdefg", "zzzzz") == 7)
 end)

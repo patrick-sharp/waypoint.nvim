@@ -4,13 +4,13 @@ local M = {}
 
 local config = require("waypoint.config")
 local constants = require("waypoint.constants")
+local highlight = require("waypoint.highlight")
+local levenshtein   = require "waypoint.levenshtein"
+local pretty = require "waypoint.prettyjson"
 local state = require("waypoint.state")
 local u = require("waypoint.utils")
 local uw = require("waypoint.utils_waypoint")
-local highlight = require("waypoint.highlight")
-local pretty = require "waypoint.prettyjson"
 local waypoint_crud = require "waypoint.waypoint_crud"
-local levenshtein   = require "waypoint.levenshtein"
 
 -- like waypoint.Waypoint, but only a subset of properties that are persisted to a file
 ---@class waypoint.SavedWaypoint
@@ -237,62 +237,54 @@ local function create_extmark_for_waypoint(bufnr, waypoint, linenr)
 end
 
 -- all waypoints are assumed to be in the same file.
+-- mutates the waypoint objects to put them in the new file
 ---@param filepath string
 ---@param waypoints (waypoint.SavedWaypoint | waypoint.Waypoint)[]
----@return waypoint.Waypoint[]
-function M.locate_waypoint_in_file(filepath, waypoints)
+function M.locate_waypoints_in_file(filepath, waypoints)
+  if true then return end
   local bufnr = vim.fn.bufnr(filepath)
   local does_file_exist = bufnr ~= -1
   local line_count = vim.api.nvim_buf_line_count(bufnr)
-  ---@type waypoint.Waypoint[]
-  local result = {}
   local lines = vim.api.nvim_buf_get_lines(
     bufnr, 0, line_count, true
   )
 
   if not does_file_exist then
     for _, waypoint in ipairs(waypoints) do
-      table.insert(result,
-        {
-          extmark_id = -1,
-          bufnr      = -1,
-          indent     = waypoint.indent,
-          filepath   = waypoint.filepath,
-          text       = waypoint.text,
-          linenr     = waypoint.linenr,
-        }
-      )
+      waypoint.extmark_id = -1
+      waypoint.bufnr      = -1
+      waypoint.indent     = waypoint.indent
+      waypoint.filepath   = waypoint.filepath
+      waypoint.text       = waypoint.text
+      waypoint.linenr     = waypoint.linenr
     end
 
-    return result
+    return
   end
 
   for _, waypoint in ipairs(waypoints) do
     local linenr = waypoint.linenr
-    local new_waypoint = {
-      extmark_id = -1,
-      bufnr      = bufnr,
-      indent     = waypoint.indent,
-      filepath   = waypoint.filepath,
-      text       = waypoint.text,
-      linenr     = -1
-    }
+    waypoint.extmark_id = -1
+    waypoint.bufnr      = -1
+    waypoint.indent     = waypoint.indent
+    waypoint.filepath   = waypoint.filepath
+    waypoint.text       = waypoint.text
+    waypoint.linenr     = waypoint.linenr
     if waypoint.text == lines[linenr] then
       if linenr < line_count then
-        new_waypoint.extmark_id = create_extmark_for_waypoint(bufnr, waypoint)
+        waypoint.extmark_id = create_extmark_for_waypoint(bufnr, waypoint)
       end
-      new_waypoint.linenr = waypoint.linenr
-      table.insert(result, new_waypoint)
+      waypoint.linenr = waypoint.linenr
     else
       local new_linenr = levenshtein.find_best_match(waypoint, lines)
+      waypoint.filepath = filepath
       if new_linenr ~= -1 then
-        new_waypoint.extmark_id = create_extmark_for_waypoint(bufnr, waypoint, new_linenr)
+        waypoint.error = constants.no_matching_waypoint_error
+      else
+        waypoint.linenr = new_linenr
       end
-      new_waypoint.linenr = new_linenr
-      table.insert(result, new_waypoint)
     end
   end
-  return result
 end
 
 return M

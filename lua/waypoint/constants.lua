@@ -26,6 +26,7 @@ local window_augroup = "waypoint.window"
 ---@field is_release boolean
 ---@field file_dne_error string
 ---@field line_oob_error string
+---@field no_matching_waypoint_error string
 local M = {
   augroup = augroup,
   window_augroup = window_augroup,
@@ -60,6 +61,7 @@ local M = {
   is_release = false,
   file_dne_error = "Error: file does not exist",
   line_oob_error = "Error: line number is out of bounds",
+  no_matching_waypoint_error = "Error: could not find a close enough match for this waypoint",
 }
 
 -- candidate indentation styles

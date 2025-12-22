@@ -8,6 +8,8 @@ local u = require("waypoint.utils")
 local uw = require("waypoint.utils_waypoint")
 local p = require("waypoint.print")
 local highlight = require("waypoint.highlight")
+local message = require("waypoint.message")
+local file = require("waypoint.file")
 
 -- these are some pieces of window state that don't belong in the main state
 -- table because they shouldn't be persisted to a file
@@ -31,17 +33,6 @@ local function keymap_opts(bufnr)
   }
 end
 
-local sorted_mode_err_msg_table = {"Cannot move waypoints while sort is enabled. Press "}
-local toggle_sort = config.keybindings.waypoint_window_keybindings.toggle_sort
-u.add_stringifed_keybindings_to_table(sorted_mode_err_msg_table, toggle_sort)
-table.insert(sorted_mode_err_msg_table, " to toggle sort")
-local sorted_mode_err_msg = table.concat(sorted_mode_err_msg_table)
-
-local missing_file_err_msg_table = {"Cannot go to waypoint in missing file. Press "}
-local move_waypoints_to_file = config.keybindings.waypoint_window_keybindings.move_waypoints_to_file
-u.add_stringifed_keybindings_to_table(missing_file_err_msg_table, move_waypoints_to_file)
-table.insert(missing_file_err_msg_table, " to fix")
-local missing_file_err_msg = table.concat(missing_file_err_msg_table)
 
 -- I use this to avoid drawing twice when the cursor moves.
 -- I have no idea how nvim orders events and event handlers so hopefully this 
@@ -823,7 +814,7 @@ function MoveWaypointUp()
     or state.sort_by_file_and_line
   )
   if state.sort_by_file_and_line then
-    vim.notify(sorted_mode_err_msg, vim.log.levels.ERROR)
+    vim.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
   end
   if should_return then return end
 
@@ -843,7 +834,7 @@ function MoveWaypointDown()
     or state.sort_by_file_and_line
   )
   if state.sort_by_file_and_line then
-    vim.notify(sorted_mode_err_msg, vim.log.levels.ERROR)
+    vim.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
   end
   if should_return then return end
 
@@ -863,7 +854,7 @@ function MoveWaypointToTop()
     or state.sort_by_file_and_line
   )
   if state.sort_by_file_and_line then
-    vim.notify(sorted_mode_err_msg, vim.log.levels.ERROR)
+    vim.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
   end
   if should_return then return end
 
@@ -883,7 +874,7 @@ function MoveWaypointToBottom()
     or state.sort_by_file_and_line
   )
   if state.sort_by_file_and_line then
-    vim.notify(sorted_mode_err_msg, vim.log.levels.ERROR)
+    vim.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
   end
   if should_return then return end
 
@@ -937,7 +928,7 @@ function M.GoToCurrentWaypoint()
   end
   assert(waypoint)
   if waypoint.bufnr == -1 then
-    vim.notify(missing_file_err_msg, vim.log.levels.ERROR)
+    vim.notify(M.missing_file_err_msg, vim.log.levels.ERROR)
     return
   end
   local extmark = uw.extmark_for_waypoint(waypoint)
@@ -1309,12 +1300,36 @@ function M.GoToNextTopLevelWaypoint()
   GoToCurrentWaypoint()
 end
 
----@param source_file string
----@param dest_file string
-function M.move_waypoints_to_file(source_file, dest_file)
-  for _,waypoint in pairs(state.waypoints) do
+---@param source_file_path string
+---@param dest_file_path string
+---@return boolean # if the move was successful
+function M.move_waypoints_to_file(source_file_path, dest_file_path)
+  if source_file_path == dest_file_path then
+    vim.notify(message.files_same(source_file_path), vim.log.levels.ERROR)
+    return false
   end
+  if not u.file_exists(dest_file_path) then
+    vim.notify(message.file_dne(dest_file_path), vim.log.levels.ERROR)
+    return false
+  end
+  ---@type waypoint.Waypoint[]
+  local waypoints_in_file = {}
+  source_file_path = vim.fs.normalize(source_file_path)
+  for _,waypoint in pairs(state.waypoints) do
+    if waypoint.filepath == source_file_path then
+      table.insert(waypoints_in_file, waypoint)
+    end
+  end
+  if #waypoints_in_file == 0 then
+    vim.notify(message.no_waypoints_in_file(source_file_path), vim.log.levels.ERROR)
+    return false
+  end
+
+  file.locate_waypoints_in_file(dest_file_path, waypoints_in_file)
+  vim.notify(message.moved_waypoints_to_file(#waypoints_in_file, source_file_path, dest_file_path), vim.log.levels.INFO)
+
   draw_waypoint_window()
+  return true
 end
 
 local function set_waypoint_for_cursor()

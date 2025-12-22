@@ -6,6 +6,7 @@ local file = require'waypoint.file'
 local floating_window = require("waypoint.floating_window")
 local state = require("waypoint.state")
 local constants = require("waypoint.constants")
+local message = require("waypoint.message")
 local tu = require'waypoint.test.util'
 
 describe('Missing file', function()
@@ -28,9 +29,34 @@ describe('Missing file', function()
   assert(lines[3][3] == "9")
   assert(has_file_dne(lines[3][4]))
 
-  local nonexistent_file = "./lua/waypoint/test/tests/common/does_not_exist.lua"
+  local nonexistent_file = "lua/waypoint/test/tests/common/does_not_exist.lua"
+  local nonexistent_file_other = "lua/waypoint/test/tests/common/does_not_exist_other.lua"
 
-  floating_window.move_waypoints_to_file(nonexistent_file, file_1)
+  local result
+  local msg
 
-  return true
+  result = floating_window.move_waypoints_to_file(nonexistent_file, nonexistent_file)
+  msg = tu.get_last_message()
+  assert(not result)
+  tu.assert_eq(msg, message.files_same(nonexistent_file))
+
+  result = floating_window.move_waypoints_to_file(nonexistent_file, nonexistent_file_other)
+  msg = tu.get_last_message()
+  assert(not result)
+  tu.assert_eq(msg, message.file_dne(nonexistent_file_other))
+
+  result = floating_window.move_waypoints_to_file(nonexistent_file_other, nonexistent_file)
+  msg = tu.get_last_message()
+  assert(not result)
+  tu.assert_eq(msg, message.file_dne(nonexistent_file))
+
+  result = floating_window.move_waypoints_to_file(nonexistent_file_other, file_1)
+  msg = tu.get_last_message()
+  assert(not result)
+  tu.assert_eq(msg, message.no_waypoints_in_file(nonexistent_file_other))
+
+  result = floating_window.move_waypoints_to_file(nonexistent_file, file_1)
+  msg = tu.get_last_message()
+  assert(result)
+  tu.assert_eq(msg, message.moved_waypoints_to_file(2, nonexistent_file, file_1))
 end)

@@ -10,8 +10,8 @@ local u = require("waypoint.utils")
 local tu = require'waypoint.test.util'
 
 describe('Sort', function()
-  u.assert_file_exists(file_0)
-  u.assert_file_exists(file_1)
+  assert(u.file_exists(file_0))
+  assert(u.file_exists(file_1))
 
   assert(state.sort_by_file_and_line == false)
 
