@@ -10,7 +10,6 @@ local constants = require("waypoint.constants")
 local config = require("waypoint.config")
 local filter = require("waypoint.filter")
 local test = require("waypoint.test")
-local p = require("waypoint.print")
 
 
 -- binds the keybinding (or keybindings) to the given function 
@@ -103,8 +102,27 @@ function M.setup(opts)
   bind_key('<leader><leader>l', file.load)
 
   -- these commands should be run from the root directory of this git repo
-  vim.api.nvim_create_user_command('WaypointRunTests', test.run_tests, {})
-  vim.api.nvim_create_user_command('WaypointRunTest', test.run_test, {nargs = 1})
+  if not constants.is_release then
+    vim.api.nvim_create_user_command('WaypointRunTests', test.run_tests, {})
+    vim.api.nvim_create_user_command('WaypointRunTest', test.run_test, {nargs = 1})
+  end
+
+  -- why does vim not allow you specify a command with just 2 args???
+  -- I would like to have the syntax be :MoveWaypointsToFile <src> <dest>,
+  -- however that gets complicated when file paths have spaces. The autocomplete
+  -- in the vim command mode doesn't escape spaces in paths. If I wanted to have
+  -- the two-arg syntax, then you would have to separate the file paths by
+  -- unescaped spaces and escape whatever spaces may be in your file path.
+  -- Unfortunately, if you do that, then anyone moving files with spaces in the
+  -- path won't get autocomplete, which is a really bad experience. To avoid
+  -- that, I've decided to make the command move the current waypoint's file's
+  -- waypoints to the new path.
+  -- If someone actually wants to all this programatically, they can use the floating_window.move_waypoints_to_file function directly
+  vim.api.nvim_create_user_command(
+    'MoveWaypointsToFile',
+    floating_window.move_waypoints_to_file_command,
+    {nargs = 1}
+  )
 end
 
 return M

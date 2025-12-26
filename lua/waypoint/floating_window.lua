@@ -6,7 +6,6 @@ local constants = require("waypoint.constants")
 local state = require("waypoint.state")
 local u = require("waypoint.utils")
 local uw = require("waypoint.utils_waypoint")
-local p = require("waypoint.print")
 local highlight = require("waypoint.highlight")
 local message = require("waypoint.message")
 local file = require("waypoint.file")
@@ -86,6 +85,29 @@ local function get_win_opts()
     style = "minimal",
   }
   return win_opts
+end
+
+---@return waypoint.Waypoint | nil
+function M.get_current_waypoint()
+  if state.wpi == nil then
+    return nil
+  end
+
+  local waypoints
+  if state.sort_by_file_and_line then
+    waypoints = state.sorted_waypoints
+  else
+    waypoints = state.waypoints
+  end
+  return waypoints[state.wpi]
+end
+
+function M.get_waypoints()
+  if state.sort_by_file_and_line then
+    return state.sorted_waypoints
+  else
+    return state.waypoints
+  end
 end
 
 ---@param option boolean
@@ -196,14 +218,12 @@ local function draw_waypoint_window(action)
     num_lines_after = 0
   end
 
-
   local waypoints
   if state.sort_by_file_and_line then
     waypoints = state.sorted_waypoints
   else
     waypoints = state.waypoints
   end
-
 
   for i, waypoint in ipairs(waypoints) do
     --- @type waypoint.WaypointFileText
@@ -539,7 +559,7 @@ local function set_waypoint_keybinds()
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.current_waypoint,        ":<C-u>lua GoToCurrentWaypoint()<CR>")
 
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.delete_waypoint,        ":<C-u>lua RemoveCurrentWaypoint()<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.move_waypoints_to_file, M.move_waypoints_to_file)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.move_waypoints_to_file, M.move_waypoints_to_file_wrapper)
 
   -- bind_key(wp_bufnr, "n", "sg",    M.move_waypoint_to_top)
   -- bind_key(wp_bufnr, "n", "sG",    M.move_waypoint_to_bottom)
@@ -1330,6 +1350,58 @@ function M.move_waypoints_to_file(source_file_path, dest_file_path)
 
   draw_waypoint_window()
   return true
+end
+
+---@param opts vim.api.keyset.create_user_command.command_args
+function M.move_waypoints_to_file_command(opts)
+  local new_file = opts.args
+  local waypoint = M.get_current_waypoint()
+  if waypoint == nil then
+    message.notify("No current waypoint")
+    return
+  end
+  M.move_waypoints_to_file(waypoint.filepath, new_file)
+end
+
+function M.move_waypoints_to_file_wrapper()
+  local has_telescope, _ = pcall(require, "telescope")
+  local waypoint = M.get_current_waypoint()
+  if waypoint == nil then
+    message.notify("No currently selected waypoint", vim.log.levels.ERROR)
+    return
+  end
+
+  if not has_telescope then
+    vim.fn.feedkeys(':MoveWaypointsToFile ', 'n')
+  else
+    local builtin = require('telescope.builtin')
+    local actions = require('telescope.actions')
+    local action_state = require('telescope.actions.state')
+
+    builtin.find_files({
+      attach_mappings = function(prompt_bufnr, _)
+        actions.select_default:replace(function()
+          actions.close(prompt_bufnr)
+          local selection = action_state.get_selected_entry()
+          local selected_file = selection.path or selection[1]
+          local path = vim.fn.fnamemodify(selected_file, ":.")
+
+          local choice = vim.fn.confirm(
+            "Move waypoints?\nfrom: " ..
+            vim.fs.normalize(waypoint.filepath) ..
+            "\nto:   " .. path, "&yes\n&no", 2
+          )
+
+          if choice == 1 then
+            M.open()
+            M.move_waypoints_to_file(waypoint.filepath, path)
+          end
+        end)
+        return true
+      end,
+    })
+  end
+
 end
 
 local function set_waypoint_for_cursor()

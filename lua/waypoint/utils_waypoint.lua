@@ -5,7 +5,6 @@ local config = require("waypoint.config")
 local highlight_treesitter = require("waypoint.highlight_treesitter")
 local highlight_vanilla = require("waypoint.highlight_vanilla")
 local u = require("waypoint.utils")
-local p = require ("waypoint.print")
 
 --- @param waypoint waypoint.Waypoint
 --- @return { [1]: integer, [2]: integer } | nil
@@ -22,7 +21,6 @@ end
 local missing_file_err_msg_table = {constants.file_dne_error, ". Press "}
 local move_waypoints_to_file = config.keybindings.waypoint_window_keybindings.move_waypoints_to_file
 u.add_stringifed_keybindings_to_table(missing_file_err_msg_table, move_waypoints_to_file)
-table.insert(missing_file_err_msg_table, ", or run MoveWaypointsToFile <source> <dest> to fix")
 local missing_file_err_msg = table.concat(missing_file_err_msg_table)
 
 --- @class waypoint.WaypointFileText
@@ -40,6 +38,7 @@ local missing_file_err_msg = table.concat(missing_file_err_msg_table)
 --- @return waypoint.WaypointFileText
 function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
   local bufnr = vim.fn.bufnr(waypoint.filepath)
+  --local bufnr = waypoint.bufnr
 
   if waypoint.extmark_id == -1 then
     --- @type string[]

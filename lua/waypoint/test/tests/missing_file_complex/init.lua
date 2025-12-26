@@ -1,6 +1,5 @@
 local test_list = require('waypoint.test.test_list')
 local describe = test_list.describe
-local file_0 = test_list.file_0
 local file_1 = test_list.file_1
 
 local file = require'waypoint.file'

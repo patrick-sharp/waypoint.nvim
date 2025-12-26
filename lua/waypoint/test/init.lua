@@ -101,8 +101,8 @@ function M.run_tests()
   vim.cmd.edit({args = {constants.test_output_file}, bang=true})
 end
 
+---@param opts vim.api.keyset.create_user_command.command_args
 function M.run_test(opts)
-  ---@type string
   local test_name = opts.args
   local matches = false
 

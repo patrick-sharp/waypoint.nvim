@@ -121,20 +121,20 @@ I frequently use the following abbreviations in this codebase:
 - [x] change line numbers so they're stored 1-indexed
 - [x] add a list of waypoint-specific messages
 - [x] swap out nvim_buf_set_keymap for vim.keymap.set with {buffer = x} so I don't have to declare global lua functions
+- [x] figure out some way to deal with extmarks moving around when you autoformat
+- [x] tests
+- [x] add ability to move all waypoints in a file to another file (fixes renaming file)
+- [x] figure out how to make choosing a file to move waypoints to a good experience (telescope, fzf, etc)
 - [ ] increase the performance of highlights and draw calls in general
 - [ ] think about persisting waypoints on every waypoint state change. maybe every time the waypoint window closes
 - [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
     - https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua
     - maybe use vim.schedule to do it async if worried about perf?
 - [ ] fix bugs around closing buffers with waypoints in them (use BufDelete autocmd)
-- [ ] handle the case where the file gets renamed while open
-    - do this by associating waypoints with a buffer number when loaded into state, and a file name when persisted to json
+- [ ] write a test for a file getting renamed while open
 - [ ] handle the case where the extmark gets deleted
 - [ ] when you expand the context, keep the selected waypoint at the same point in the window rather than centering on it
 - [ ] handle the case where there is a swap file (or any error opening the file)
-- [x] figure out some way to deal with extmarks moving around when you autoformat
-- [x] tests
-- [x] add ability to move all waypoints in a file to another file (fixes renaming file)
 - [ ] repair state when draw_waypoint_window is called
 - [ ] add perf logging for each function (use require('jit.p'))
 - [ ] switch to making new state for saving / loading instead of mutating existing state to get there
@@ -147,10 +147,9 @@ I frequently use the following abbreviations in this codebase:
 - [ ] remove all asserts from the code
 - [ ] when you change directory, reload waypoints from file (DirChanged autocmd)
 - [ ] see if you can fix the markdown header treesitter highlight bug
-- [ ] add user command wrappers for bindable functions
 - [ ] fix bug where toggles don't change in help mode
 - [ ] think about using t\[#t + 1\] = x instead of table.insert(t, x) for better perf
-- [ ] figure out how to make choosing a file to move waypoints to a good experience (telescope, fzf, etc)
+- [ ] get rid of the rest of the global lua functions in floating_window, replacing them with module-scoped functions
 
 
 ### ADVANCED FEATURES:
@@ -168,9 +167,9 @@ I frequently use the following abbreviations in this codebase:
 - [x] view where everything is sorted by file by line
     - [x] keybind: ts to toggle sort 
 - [x] add option for relative waypoint numbers
+- [x] allow for fixing of waypoints for missing files, allowing user to switch all waypoints to a different file
 - [ ] add visual mode
     - [ ] move selection of waypoints around
-- [x] allow for fixing of waypoints for missing files, allowing user to switch all waypoints to a different file
 - [ ] add ability to save and load waypoints to different files
 - [ ] save waypoints parallel directory structure like swap files so they don't clutter the repo (use vim.fn.mkdir(path, 'p'))
 - [ ] add ability to undo deleting waypoints with u

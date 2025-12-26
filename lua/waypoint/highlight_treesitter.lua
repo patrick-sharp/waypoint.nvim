@@ -2,7 +2,6 @@ local M = {}
 local highlighter = vim.treesitter.highlighter
 local constants = require("waypoint.constants")
 local u = require("waypoint.utils")
-local p = require("waypoint.print")
 
 
 -- resolve hl links
