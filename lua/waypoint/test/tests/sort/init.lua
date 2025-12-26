@@ -65,7 +65,7 @@ describe('Sort', function()
 
   local lines
 
-  lines = tu.get_waypoint_buffer_lines()
+  lines = tu.get_waypoint_buffer_lines_trimmed()
 
   assert(lines[1][2] == file_0)
   assert(lines[2][2] == file_1)
@@ -81,7 +81,7 @@ describe('Sort', function()
 
   assert_waypoint_locations()
 
-  lines = tu.get_waypoint_buffer_lines()
+  lines = tu.get_waypoint_buffer_lines_trimmed()
   assert(lines[1][2] == file_0)
   assert(lines[2][2] == file_0)
   assert(lines[3][2] == file_0)

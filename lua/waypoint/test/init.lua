@@ -70,8 +70,12 @@ local function log_test_output()
   if #fail > 0 then
     file:write("\n")
   end
-  for _,test in ipairs(fail) do
-    file:write(FAIL .. " " .. test.name .. "\n")
+  for i,test in ipairs(fail) do
+    local extra_newline = ""
+    if i > 1 then
+      extra_newline = "\n"
+    end
+    file:write(extra_newline .. FAIL .. " " .. test.name .. "\n")
     if test.err then
       file:write(tostring(test.err) .. "\n")
     end
@@ -87,8 +91,8 @@ function M.run_tests()
   state.should_notify = false
   for _,test in ipairs(test_list.tests) do
     floating_window.clear_state_and_close()
-    _, test.err = pcall(test.fn)
-    test.pass = true
+    _, test.err = xpcall(test.fn, debug.traceback)
+    test.pass = not test.err
     floating_window.clear_state_and_close()
   end
   state.should_notify = true
@@ -107,6 +111,7 @@ function M.run_test(opts)
       matches = true
       floating_window.clear_state_and_close()
       test.fn()
+      break
     end
   end
   if not matches then

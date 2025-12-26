@@ -99,9 +99,6 @@ I frequently use the following abbreviations in this codebase:
 - [x] add ability to move to next waypoint at the same indentation level
 - [x] add ability to move to previous waypoint at one fewer indentation
 - [x] add ability to move to previous waypoint at no indentation
-
-#### bugs
-
 - [x] handle the case where the file doesn't exist when opening
     - if the file doesn't exist, just show a message next to the waypoint that it doesn't exist, and don't allow the user to go to it.
 - [x] think about maybe adding scrolloff so the next waypoint is always visible?
@@ -135,9 +132,6 @@ I frequently use the following abbreviations in this codebase:
 - [ ] handle the case where the extmark gets deleted
 - [ ] when you expand the context, keep the selected waypoint at the same point in the window rather than centering on it
 - [ ] handle the case where there is a swap file (or any error opening the file)
-
-#### features
-
 - [x] figure out some way to deal with extmarks moving around when you autoformat
 - [x] tests
 - [x] add ability to move all waypoints in a file to another file (fixes renaming file)
@@ -151,11 +145,13 @@ I frequently use the following abbreviations in this codebase:
 - [ ] decide once and for all what I want to do about annotations
     - [ ] annotations should be displayed instead of file text
 - [ ] remove all asserts from the code
-- [ ] when you change directories, reload waypoints from file
+- [ ] when you change directory, reload waypoints from file (DirChanged autocmd)
 - [ ] see if you can fix the markdown header treesitter highlight bug
 - [ ] add user command wrappers for bindable functions
 - [ ] fix bug where toggles don't change in help mode
 - [ ] think about using t\[#t + 1\] = x instead of table.insert(t, x) for better perf
+- [ ] figure out how to make choosing a file to move waypoints to a good experience (telescope, fzf, etc)
+
 
 ### ADVANCED FEATURES:
 

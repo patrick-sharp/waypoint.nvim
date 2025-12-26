@@ -11,6 +11,7 @@ local state = require("waypoint.state")
 local u = require("waypoint.utils")
 local uw = require("waypoint.utils_waypoint")
 local waypoint_crud = require "waypoint.waypoint_crud"
+local message = require "waypoint.message"
 
 -- like waypoint.Waypoint, but only a subset of properties that are persisted to a file
 ---@class waypoint.SavedWaypoint
@@ -242,46 +243,50 @@ end
 ---@param waypoints (waypoint.SavedWaypoint | waypoint.Waypoint)[]
 function M.locate_waypoints_in_file(filepath, waypoints)
   local bufnr = vim.fn.bufnr(filepath)
-  local does_file_exist = bufnr ~= -1
+  ---@type boolean
+  if bufnr == -1 then
+    local does_file_exist = vim.fn.filereadable(filepath) ~= 0
+    if does_file_exist then
+      bufnr = vim.fn.bufadd(filepath)
+      buffer_init(bufnr)
+    else
+      message.notify("Error: " .. filepath .. " does not exist")
+      for _, waypoint in ipairs(waypoints) do
+        waypoint.extmark_id = -1
+        waypoint.bufnr      = -1
+      end
+
+      return
+    end
+  end
+
   local line_count = vim.api.nvim_buf_line_count(bufnr)
   local lines = vim.api.nvim_buf_get_lines(
     bufnr, 0, line_count, true
   )
 
-  if not does_file_exist then
-    for _, waypoint in ipairs(waypoints) do
-      waypoint.extmark_id = -1
-      waypoint.bufnr      = -1
-      waypoint.indent     = waypoint.indent
-      waypoint.filepath   = waypoint.filepath
-      waypoint.text       = waypoint.text
-      waypoint.linenr     = waypoint.linenr
-    end
-
-    return
-  end
-
+  -- if a match can't be found for a waypoint, it will have a bufnr of -1 and its original filepath
   for _, waypoint in ipairs(waypoints) do
     local linenr = waypoint.linenr
     waypoint.extmark_id = -1
     waypoint.bufnr      = -1
-    waypoint.indent     = waypoint.indent
-    waypoint.filepath   = waypoint.filepath
-    waypoint.text       = waypoint.text
-    waypoint.linenr     = waypoint.linenr
     if waypoint.text == lines[linenr] then
       if linenr < line_count then
         waypoint.extmark_id = create_extmark_for_waypoint(bufnr, waypoint)
       end
       waypoint.linenr = waypoint.linenr
+      waypoint.bufnr = bufnr
+      waypoint.filepath = filepath
     else
-      print("HI HI HI HI")
       local new_linenr = levenshtein.find_best_match(waypoint, lines)
       waypoint.filepath = filepath
-      if new_linenr ~= -1 then
+      if new_linenr == -1 then
         waypoint.error = constants.no_matching_waypoint_error
       else
         waypoint.linenr = new_linenr
+        waypoint.bufnr = bufnr
+        waypoint.text = lines[new_linenr]
+        waypoint.extmark_id = create_extmark_for_waypoint(bufnr, waypoint)
       end
     end
   end

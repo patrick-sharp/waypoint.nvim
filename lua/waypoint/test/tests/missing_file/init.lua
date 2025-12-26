@@ -22,7 +22,7 @@ describe('Missing file', function()
     return string.sub(str, 1, #constants.file_dne_error) == constants.file_dne_error
   end
 
-  lines = tu.get_waypoint_buffer_lines()
+  lines = tu.get_waypoint_buffer_lines_trimmed()
   assert(lines[1][3] == "1")
   assert(not has_file_dne(lines[1][4]))
   assert(lines[2][3] == "8")
@@ -49,25 +49,37 @@ describe('Missing file', function()
   result = floating_window.move_waypoints_to_file(nonexistent_file_other, nonexistent_file)
   msg = tu.get_last_message()
   assert(not result)
-  tu.assert_eq(msg, message.file_dne(nonexistent_file))
+  tu.assert_eq(message.file_dne(nonexistent_file), msg)
 
   result = floating_window.move_waypoints_to_file(nonexistent_file_other, file_1)
   msg = tu.get_last_message()
   assert(not result)
-  tu.assert_eq(msg, message.no_waypoints_in_file(nonexistent_file_other))
+  tu.assert_eq(message.no_waypoints_in_file(nonexistent_file_other), msg)
 
   result = floating_window.move_waypoints_to_file(nonexistent_file, file_1)
   msg = tu.get_last_message()
-  assert(result)
-  tu.assert_eq(msg, message.moved_waypoints_to_file(2, nonexistent_file, file_1))
+  tu.assert_eq(true, result)
+  tu.assert_eq(message.moved_waypoints_to_file(2, nonexistent_file, file_1), msg)
 
-  lines = tu.get_waypoint_buffer_lines()
-  assert(lines[1][2] == file_0)
-  assert(lines[1][3] == "local M = {}\n")
+  -- assert that we opened file_1 to put waypoints in it
+  local file_1_bufnr = vim.fn.bufnr(file_1)
+  tu.assert_neq(-1, file_1_bufnr)
 
-  assert(lines[2][2] == file_1)
-  assert(lines[2][3] == "table.insert(t, i)")
+  tu.assert_eq(file_1, state.waypoints[2].filepath)
+  tu.assert_eq(8, state.waypoints[2].linenr)
+  tu.assert_eq(file_1_bufnr, state.waypoints[2].bufnr)
 
-  assert(lines[3][2] == file_1)
-  assert(lines[3][3] == "end\n")
+  tu.assert_eq(file_1, state.waypoints[3].filepath)
+  tu.assert_eq(9, state.waypoints[3].linenr)
+  tu.assert_eq(file_1_bufnr, state.waypoints[3].bufnr)
+
+  lines = tu.get_waypoint_buffer_lines_trimmed()
+  tu.assert_eq(file_0, lines[1][2])
+  tu.assert_eq("local M = {}", lines[1][4])
+
+  tu.assert_eq(file_1, lines[2][2])
+  tu.assert_eq("table.insert(t, i)", lines[2][4])
+
+  tu.assert_eq(file_1, lines[3][2])
+  tu.assert_eq("end", lines[3][4])
 end)

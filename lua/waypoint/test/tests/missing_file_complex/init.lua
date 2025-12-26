@@ -14,7 +14,7 @@ local tu = require'waypoint.test.util'
 -- This causes the locate_waypoints_in_file function to use a levenshtein search
 describe('Missing file complex', function()
   file.load_from_file("lua/waypoint/test/tests/missing_file_complex/waypoints.json")
-  assert(#state.waypoints == 3)
+  tu.assert_eq(2, #state.waypoints)
 
   floating_window.open()
 
@@ -24,11 +24,11 @@ describe('Missing file complex', function()
     return string.sub(str, 1, #constants.file_dne_error) == constants.file_dne_error
   end
 
-  lines = tu.get_waypoint_buffer_lines()
-  assert(lines[1][3] == "8")
-  assert(not has_file_dne(lines[1][4]))
-  assert(lines[2][3] == "9")
-  assert(has_file_dne(lines[2][4]))
+  lines = tu.get_waypoint_buffer_lines_trimmed()
+  tu.assert_eq("8", lines[1][3])
+  tu.assert_eq(true, has_file_dne(lines[1][4]))
+  tu.assert_eq("9", lines[2][3])
+  tu.assert_eq(true, has_file_dne(lines[2][4]))
 
   local nonexistent_file = "lua/waypoint/test/tests/common/does_not_exist.lua"
 
@@ -40,12 +40,23 @@ describe('Missing file complex', function()
   assert(result)
   tu.assert_eq(msg, message.moved_waypoints_to_file(2, nonexistent_file, file_1))
 
-  lines = tu.get_waypoint_buffer_lines()
-  assert(lines[1][2] == file_1)
-  assert(lines[1][3] == "14")
-  assert(lines[1][4] == "table.insert(results, \"hello\")")
+  local file_1_bufnr = vim.fn.bufnr(file_1)
+  tu.assert_neq(-1, file_1_bufnr)
 
-  assert(lines[2][2] == file_1)
-  assert(lines[2][3] == "18")
-  assert(lines[2][4] == "table.insert(results, \"world\")")
+  tu.assert_eq(file_1, state.waypoints[1].filepath)
+  tu.assert_eq(14, state.waypoints[1].linenr)
+  tu.assert_eq(file_1_bufnr, state.waypoints[1].bufnr)
+
+  tu.assert_eq(file_1, state.waypoints[2].filepath)
+  tu.assert_eq(18, state.waypoints[2].linenr)
+  tu.assert_eq(file_1_bufnr, state.waypoints[2].bufnr)
+
+  lines = tu.get_waypoint_buffer_lines_trimmed()
+  tu.assert_eq(file_1, lines[1][2])
+  tu.assert_eq("14", lines[1][3])
+  tu.assert_eq("table.insert(results, \"hello\")", lines[1][4])
+
+  tu.assert_eq(file_1, lines[2][2])
+  tu.assert_eq("18", lines[2][3])
+  tu.assert_eq("table.insert(results, \"world\")", lines[2][4])
 end)

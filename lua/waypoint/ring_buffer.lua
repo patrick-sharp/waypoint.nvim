@@ -1,8 +1,8 @@
 local M = {}
 
 ---@class waypoint.RingBuffer
----@field earliest_idx integer index of earliest inserted element
----@field latest_idx   integer index of latest inserted element
+---@field start_idx integer index of earliest inserted element
+---@field end_idx   integer index of latest inserted element
 ---@field array        any[]
 ---@field size         integer
 ---@field capacity     integer
@@ -13,8 +13,8 @@ local default_capacity = 32
 ---@return waypoint.RingBuffer
 function M.new(capacity)
   return {
-    earliest_idx = 0,
-    latest_idx = 0,
+    start_idx = -1,
+    end_idx = -1,
     array = {},
     size = 0,
     capacity = capacity or default_capacity,
@@ -23,20 +23,23 @@ end
 
 ---@param this waypoint.RingBuffer
 function M.curr_idx(this)
-  return (this.earliest_idx + this.size - 1) % this.capacity
+  if this.start_idx == -1 then
+    return 1
+  end
+  return (this.start_idx - 1 + math.max(this.size - 1, 0)) % this.capacity + 1
 end
 
 ---@param this waypoint.RingBuffer
 function M.push(this, element)
+  if this.start_idx == -1 then
+    this.start_idx = 1
+  elseif this.size == this.capacity then
+    this.start_idx = this.start_idx % this.capacity + 1
+  end
   this.size = math.min(this.size + 1, this.capacity)
   local idx = M.curr_idx(this)
-  this[idx] = element
-  this.latest_idx = idx
-  if this.earliest_idx == 0 then
-    this.earliest_idx = 1
-  elseif idx == this.earliest_idx then
-    this.earliest_idx = (idx + 1) % this.capacity
-  end
+  this.array[idx] = element
+  this.end_idx = idx
 end
 
 ---@param this waypoint.RingBuffer
@@ -54,11 +57,11 @@ end
 ---@param this waypoint.RingBuffer
 ---@return boolean # return true if successful, or false if unsuccessful
 function M.repush(this)
-  if M.curr_idx(this) == this.latest_idx then
+  if this.start_idx == -1 or M.curr_idx(this) == this.end_idx then
     return false
   end
 
-  this.size = math.min(this.size + 1, this.capacity)
+  this.size = this.size + 1
   return true
 end
 
@@ -74,8 +77,8 @@ end
 
 ---@param this waypoint.RingBuffer
 function M.clear(this)
-  this.earliest_idx = 0
-  this.latest_idx = 0
+  this.start_idx = 0
+  this.end_idx = 0
   this.array = {}
   this.size = 0
 end

@@ -8,7 +8,7 @@ local u = require("waypoint.utils")
 
 ---strings returned by thins function are trimmed to make testing more legible and not depend on screen size
 ---@return string[][]
-function M.get_waypoint_buffer_lines()
+function M.get_waypoint_buffer_lines_trimmed()
   local pattern = ' ' .. constants.table_separator .. ' '
   local bufnr = floating_window.get_bufnr()
   local line_count = vim.api.nvim_buf_line_count(bufnr)
@@ -46,8 +46,16 @@ function M.nvim_get_last_message()
   return msgs[#msgs]
 end
 
-function M.assert_eq(a, b)
-  assert(a == b, "\n" .. vim.inspect(a) .. "\n~=\n" .. vim.inspect(b))
+---@param expected any
+---@param actual any
+function M.assert_eq(expected, actual)
+  assert(expected == actual, "\nShould equal:\nExpected: " .. vim.inspect(expected) .. "\nActual:   " .. vim.inspect(actual))
+end
+
+---@param unexpected any
+---@param actual any
+function M.assert_neq(unexpected, actual)
+  assert(unexpected ~= actual, "\nShould not equal:\nUnexpected: " .. vim.inspect(unexpected) .. "\nActual:   " .. vim.inspect(actual))
 end
 
 return M

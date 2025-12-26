@@ -17,7 +17,7 @@
 	"waypoints": [
 		{
 			"indent": 0,
-			"text":  "local M = {}\n",
+			"text":  "local M = {}",
 			"linenr": 1,
 			"filepath": "lua/waypoint/test/tests/common/file_0.lua"
 		},
@@ -29,7 +29,7 @@
 		},
 		{
 			"indent": 0,
-			"text":  "  end\n",
+			"text":  "  end",
 			"linenr": 9,
 			"filepath": "lua/waypoint/test/tests/common/does_not_exist.lua"
 		}

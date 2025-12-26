@@ -51,7 +51,7 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
       table.insert(hlranges, {})
     end
     if waypoint.error then
-      table.insert(lines, "Error: " .. waypoint.error)
+      table.insert(lines, waypoint.error)
     elseif waypoint.bufnr == -1 then
 
       table.insert(lines, missing_file_err_msg)

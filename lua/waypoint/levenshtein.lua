@@ -13,12 +13,12 @@ function M.find_best_match(waypoint, lines)
   for i, s in ipairs(lines) do
     local trimmed_waypoint_text = vim.trim(waypoint.text)
     local trimmed_line = vim.trim(s)
-    local distance = M.levenshtein_distance(trimmed_waypoint_text, trimmed_waypoint_text)
+    local distance = M.levenshtein_distance(trimmed_waypoint_text, trimmed_line)
     local distance_threshold = math.max(#trimmed_waypoint_text, #trimmed_line) * distance_threshold_factor
     if distance < distance_threshold then
       if best_distance == -1 then
         best_match = i
-        best_match = distance
+        best_distance = distance
       elseif distance < best_distance then
         best_match = i
         best_distance = distance
@@ -28,7 +28,7 @@ function M.find_best_match(waypoint, lines)
         local best_linenr_diff = math.abs(waypoint.linenr - best_match)
         if linenr_diff < best_linenr_diff then
           best_match = i
-          best_match = distance
+          best_distance = distance
         end
       end
     end
@@ -66,25 +66,6 @@ function M.levenshtein_distance(s1, s2)
   end
 
   return matrix[len1][len2]
-end
-
-local function compute_distances(t, str)
-  local distances = {}
-  for i, s in ipairs(t) do
-    distances[i] = {
-      string = s,
-      distance = levenshtein_distance(str, s)
-    }
-  end
-  return distances
-end
-
-local function compute_distances_simple(t, str)
-  local distances = {}
-  for i, s in ipairs(t) do
-    distances[i] = levenshtein_distance(str, s)
-  end
-  return distances
 end
 
 return M
