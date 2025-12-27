@@ -8,6 +8,7 @@ local waypoint_crud = require"waypoint.waypoint_crud"
 
 ---@class waypoint.Action
 ---@field waypoints waypoint.Waypoint[]
+---@field window_action waypoint.window_actions
 ---@field undo_msg string
 ---@field redo_msg string
 

@@ -5,7 +5,6 @@ local file_1 = test_list.file_1
 local waypoints_json = test_list.waypoints_json
 
 local floating_window = require("waypoint.floating_window")
-local state = require("waypoint.state")
 local file = require'waypoint.file'
 local u = require("waypoint.utils")
 local tu = require'waypoint.test.util'
@@ -25,23 +24,27 @@ describe('Toggles', function()
 
   lines = tu.get_waypoint_buffer_lines_trimmed()
 
+  local wp_1_text = "local M = {}"
+  local wp_2_text = "table.insert(t, i)"
+  local wp_3_text = "end"
+
   tu.assert_eq(4, #lines[1])
   tu.assert_eq("1",                  lines[1][1])
   tu.assert_eq(file_0,               lines[1][2])
   tu.assert_eq("1",                  lines[1][3])
-  tu.assert_eq("local M = {}",       lines[1][4])
+  tu.assert_eq(wp_1_text,            lines[1][4])
 
   tu.assert_eq(4, #lines[2])
   tu.assert_eq("2",                  lines[2][1])
   tu.assert_eq(file_1,               lines[2][2])
   tu.assert_eq("8",                  lines[2][3])
-  tu.assert_eq("table.insert(t, i)", lines[2][4])
+  tu.assert_eq(wp_2_text, lines[2][4])
 
   tu.assert_eq(4, #lines[3])
   tu.assert_eq("3",                  lines[3][1])
   tu.assert_eq(file_1,               lines[3][2])
   tu.assert_eq("9",                  lines[3][3])
-  tu.assert_eq("end",                lines[3][4])
+  tu.assert_eq(wp_3_text,            lines[3][4])
 
   floating_window.toggle_text()
   lines = tu.get_waypoint_buffer_lines_trimmed()
@@ -117,19 +120,19 @@ describe('Toggles', function()
   tu.assert_eq("1",                  lines[1][1])
   tu.assert_eq(file_0,               lines[1][2])
   tu.assert_eq("1",                  lines[1][3])
-  tu.assert_eq("local M = {}",       lines[1][4])
+  tu.assert_eq(wp_1_text,            lines[1][4])
 
   tu.assert_eq(4, #lines[2])
   tu.assert_eq("2",                  lines[2][1])
   tu.assert_eq(file_1,               lines[2][2])
   tu.assert_eq("8",                  lines[2][3])
-  tu.assert_eq("table.insert(t, i)", lines[2][4])
+  tu.assert_eq(wp_2_text,            lines[2][4])
 
   tu.assert_eq(4, #lines[3])
   tu.assert_eq("3",                  lines[3][1])
   tu.assert_eq(file_1,               lines[3][2])
   tu.assert_eq("9",                  lines[3][3])
-  tu.assert_eq("end",                lines[3][4])
+  tu.assert_eq(wp_3_text,            lines[3][4])
 
   floating_window.increase_context()
 

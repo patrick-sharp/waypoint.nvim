@@ -9,6 +9,7 @@ local uw = require("waypoint.utils_waypoint")
 local highlight = require("waypoint.highlight")
 local message = require("waypoint.message")
 local file = require("waypoint.file")
+local undo = require("waypoint.undo")
 
 -- these are some pieces of window state that don't belong in the main state
 -- table because they shouldn't be persisted to a file
@@ -31,7 +32,13 @@ local function keymap_opts(bufnr)
     buffer = bufnr,
   }
 end
-
+ ---@enum waypoint.window_actions
+M.WINDOW_ACTIONS = {
+	swap                    = "swap",
+	move_to_waypoint        = "move_to_waypoint",
+  context                 = "context",
+  set_waypoint_for_cursor = "set_waypoint_for_cursor",
+}
 
 -- I use this to avoid drawing twice when the cursor moves.
 -- I have no idea how nvim orders events and event handlers so hopefully this 
@@ -168,6 +175,7 @@ local function repair_state()
 
 end
 
+---@param action waypoint.window_actions | nil
 local function draw_waypoint_window(action)
   set_modifiable(wp_bufnr, true)
 
@@ -466,10 +474,18 @@ local function draw_waypoint_window(action)
   end
 end
 
+---@type table<integer, table<string, boolean>>
+M.bound_keys = {}
+
 -- binds the keybinding (or keybindings) to the given action 
---- @param keybinding string | string[]
+--- @param keybindings table<string, waypoint.Keybinding>
+--- @param action string
 --- @param fn string | function the vim mapping string that this keybind should perform
-local function bind_key(bufnr, keybinding, fn)
+local function bind_key(bufnr, keybindings, action, fn)
+  if not keybindings[action] then
+    error(action .. " is not a key in the provided keybindings table")
+  end
+  local keybinding = keybindings[action]
   if type(keybinding) == "string" then
     vim.keymap.set('n', keybinding, fn, keymap_opts(bufnr))
   elseif type(keybinding) == "table" then
@@ -482,40 +498,42 @@ local function bind_key(bufnr, keybinding, fn)
   else
     error("Type of param keybinding should be string or table, but was " .. type(keybinding) .. ".")
   end
+  M.bound_keys[bufnr] = (M.bound_keys[bufnr] or {})
+  M.bound_keys[bufnr][action] = true
 end
 
 -- shared between the help buffer and the waypoint buffer
 local function set_shared_keybinds(bufnr)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.exit_waypoint_window,    M.leave)
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "exit_waypoint_window",    M.leave)
 
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.increase_context,        M.increase_context)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.decrease_context,        M.decrease_context)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.increase_before_context, M.increase_before_context)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.decrease_before_context, M.decrease_before_context)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.increase_after_context,  M.increase_after_context)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.decrease_after_context,  M.decrease_after_context)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.reset_context,           ":<C-u>lua ResetContext()<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "increase_context",        M.increase_context)
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "decrease_context",        M.decrease_context)
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "increase_before_context", M.increase_before_context)
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "decrease_before_context", M.decrease_before_context)
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "increase_after_context",  M.increase_after_context)
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "decrease_after_context",  M.decrease_after_context)
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "reset_context",           ":<C-u>lua ResetContext()<CR>")
 
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_path,             M.toggle_path)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_full_path,        M.toggle_full_path)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_line_num,         M.toggle_line_number)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_file_text,        M.toggle_text)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_context,          M.toggle_context)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_sort,             M.toggle_sort)
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "toggle_path",             M.toggle_path)
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "toggle_full_path",        M.toggle_full_path)
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "toggle_line_num",         M.toggle_line_number)
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "toggle_file_text",        M.toggle_text)
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "toggle_context",          M.toggle_context)
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "toggle_sort",             M.toggle_sort)
 
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.set_quickfix_list,       ":<C-u>lua SetQFList()<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "set_quickfix_list",       ":<C-u>lua SetQFList()<CR>")
 end
 
 local function set_help_keybinds()
   set_shared_keybinds(help_bufnr)
-  bind_key(help_bufnr, config.keybindings.help_keybindings.exit_help, M.toggle_help)
+  bind_key(help_bufnr, config.keybindings.help_keybindings, "exit_help", M.toggle_help)
 end
 
 local function set_waypoint_keybinds()
   set_shared_keybinds(wp_bufnr)
 
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.show_help,            M.toggle_help)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.exit_waypoint_window, M.leave)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "show_help",            M.toggle_help)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "exit_waypoint_window", M.leave)
 
   if state.load_error then
     vim.keymap.set('n', '<CR>', M.clear_state, keymap_opts(wp_bufnr))
@@ -533,35 +551,37 @@ local function set_waypoint_keybinds()
   -- the actual function you're binding has to access vim.v.count or 
   -- vim.v.count1 to access the count.
 
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.indent,                  M.indent_line)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.unindent,                M.unindent_line)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.reset_waypoint_indent,   M.reset_current_indent)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.reset_all_indent,        M.reset_all_indent)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "indent",                  M.indent_line)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "unindent",                M.unindent_line)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "reset_waypoint_indent",   M.reset_current_indent)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "reset_all_indent",        M.reset_all_indent)
 
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.scroll_left,             ":<C-u>lua Scroll(1)<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.scroll_right,            ":<C-u>lua Scroll(-1)<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.reset_horizontal_scroll, ":lua ResetScroll()<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "scroll_left",             ":<C-u>lua Scroll(1)<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "scroll_right",            ":<C-u>lua Scroll(-1)<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "reset_horizontal_scroll", ":lua ResetScroll()<CR>")
 
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.prev_waypoint,           ":lua PrevWaypoint()<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.next_waypoint,           ":lua NextWaypoint()<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.first_waypoint,          ":lua MoveToFirstWaypoint()<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.last_waypoint,           ":lua MoveToLastWaypoint()<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.prev_neighbor_waypoint,  ":<C-u>lua MoveToPrevNeighborWaypoint(true)<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.next_neighbor_waypoint,  ":<C-u>lua MoveToNextNeighborWaypoint(true)<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.prev_top_level_waypoint, ":<C-u>lua MoveToPrevTopLevelWaypoint(true)<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.next_top_level_waypoint, ":<C-u>lua MoveToNextTopLevelWaypoint(true)<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.outer_waypoint,          ":<C-u>lua MoveToOuterWaypoint(true)<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.inner_waypoint,          ":<C-u>lua MoveToInnerWaypoint(true)<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "prev_waypoint",           M.prev_waypoint)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "next_waypoint",           ":lua NextWaypoint()<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "first_waypoint",          ":lua MoveToFirstWaypoint()<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "last_waypoint",           ":lua MoveToLastWaypoint()<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "prev_neighbor_waypoint",  ":<C-u>lua MoveToPrevNeighborWaypoint(true)<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "next_neighbor_waypoint",  ":<C-u>lua MoveToNextNeighborWaypoint(true)<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "prev_top_level_waypoint", ":<C-u>lua MoveToPrevTopLevelWaypoint(true)<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "next_top_level_waypoint", ":<C-u>lua MoveToNextTopLevelWaypoint(true)<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "outer_waypoint",          ":<C-u>lua MoveToOuterWaypoint(true)<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "inner_waypoint",          ":<C-u>lua MoveToInnerWaypoint(true)<CR>")
 
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.move_waypoint_up,        ":<C-u>lua MoveWaypointUp()<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.move_waypoint_down,      ":<C-u>lua MoveWaypointDown()<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.current_waypoint,        ":<C-u>lua GoToCurrentWaypoint()<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "move_waypoint_up",        M.move_waypoint_up)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "move_waypoint_down",      M.move_waypoint_down)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "current_waypoint",        ":<C-u>lua GoToCurrentWaypoint()<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_top",    M.move_waypoint_to_top)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_bottom", M.move_waypoint_to_bottom)
 
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.delete_waypoint,        ":<C-u>lua RemoveCurrentWaypoint()<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.move_waypoints_to_file, M.move_waypoints_to_file_wrapper)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "delete_waypoint",         ":<C-u>lua RemoveCurrentWaypoint()<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "move_waypoints_to_file",  M.move_waypoints_to_file_wrapper)
 
-  -- bind_key(wp_bufnr, "n", "sg",    M.move_waypoint_to_top)
-  -- bind_key(wp_bufnr, "n", "sG",    M.move_waypoint_to_bottom)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "undo",                    M.undo)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "redo",                    M.redo)
 end
 
 M.global_keybindings_description = {
@@ -586,46 +606,48 @@ M.global_keybindings_description = {
 }
 
 M.waypoint_window_keybindings_description = {
-  {"current_waypoint"         , "Jump to the current waypoint's location"}                   ,
-  {"delete_waypoint"          , "Delete the current waypoint from the waypoint list"}        ,
-  {"move_waypoint_down"       , "Move the current waypoint before the previous waypoint"}    ,
-  {"move_waypoint_up"         , "Move the current waypoint after the next waypoint"}         ,
-  {"exit_waypoint_window"     , "Exit the waypoint window"}                                  ,
-  {"increase_context"         , "Increase the number of lines shown around each waypoint"}   ,
-  {"decrease_context"         , "Decrease the number of lines shown around each waypoint"}   ,
-  {"increase_before_context"  , "Increase the number of lines shown before each waypoint"}   ,
-  {"decrease_before_context"  , "Decrease the number of lines shown before each waypoint"}   ,
-  {"increase_after_context"   , "Increase the number of lines shown after each waypoint"}    ,
-  {"decrease_after_context"   , "Decrease the number of lines shown after each waypoint"}    ,
-  {"reset_context"            , "Show no lines around each waypoint"}                        ,
-  {"toggle_path"              , "Toggle whether the file path appears"}                      ,
-  {"toggle_full_path"         , "Toggle whether the full file path appears"}                 ,
-  {"toggle_line_num"          , "Toggle whether the line number appears"}                    ,
-  {"toggle_file_text"         , "Toggle whether the file text appears"}                      ,
-  {"toggle_context"           , "Toggle whether any lines are shown around each waypoint"}   ,
-  {"toggle_sort"              , "Toggle whether waypoints are sorted by file and line"}      ,
-  {"show_help"                , "Show this help window"}                                     ,
-  {"set_quickfix_list"        , "Set the quickfix list to locations of all waypoints"},
-  {"indent"                   , "Increase the indentation of the current waypoint"}          ,
-  {"unindent"                 , "Decrease the indentation of the current waypoint"}          ,
-  {"reset_waypoint_indent"    , "Set the current waypoint's indentation to zero"}            ,
-  {"reset_all_indent"         , "Set the indentation of all waypoints to zero"}              ,
-  {"scroll_right"             , "Scroll the waypoint window right"}                          ,
-  {"scroll_left"              , "Scroll the waypoint window left"}                           ,
-  {"reset_horizontal_scroll"  , "Scroll the waypoint window all the way left"}               ,
-  {"next_waypoint"            , "Move to the next waypoint in the waypoint window"}          ,
-  {"prev_waypoint"            , "Move to the previous waypoint in the waypoint window"}      ,
-  {"first_waypoint"           , "Move to the first waypoint in the waypoint window"}         ,
-  {"last_waypoint"            , "Move to the last waypoint in the waypoint window"}          ,
-  {"outer_waypoint"           , "Move to the previous waypoint indented one level less"}     ,
-  {"inner_waypoint"           , "Move to the next waypoint indented one level more"}         ,
-  {"prev_neighbor_waypoint"   , "Move to the previous waypoint at the same indentation"}     ,
-  {"next_neighbor_waypoint"   , "Move to the next waypoint at the same indentation"}         ,
-  {"prev_top_level_waypoint"  , "Move to the previous unindented waypoint"}                  ,
-  {"next_top_level_waypoint"  , "Move to the next unindented waypoint"}                      ,
-  {"move_waypoints_to_file"   , "Move all waypoints in one file to another file"}            ,
-  {"undo"                     , "Undo the last change to the waypoints"}                     ,
-  {"redo"                     , "Redo the last undone change to the waypoints"}              ,
+  {"current_waypoint"         , "Jump to the current waypoint's location"}                     ,
+  {"delete_waypoint"          , "Delete the current waypoint from the waypoint list"}          ,
+  {"move_waypoint_down"       , "Move the current waypoint before the previous waypoint"}      ,
+  {"move_waypoint_up"         , "Move the current waypoint after the next waypoint"}           ,
+  {"move_waypoint_to_top"     , "Move the current waypoint to the top of the waypoint list"}   ,
+  {"move_waypoint_to_bottom"  , "Move the current waypoint to the bottom of the waypoint list"},
+  {"exit_waypoint_window"     , "Exit the waypoint window"}                                    ,
+  {"increase_context"         , "Increase the number of lines shown around each waypoint"}     ,
+  {"decrease_context"         , "Decrease the number of lines shown around each waypoint"}     ,
+  {"increase_before_context"  , "Increase the number of lines shown before each waypoint"}     ,
+  {"decrease_before_context"  , "Decrease the number of lines shown before each waypoint"}     ,
+  {"increase_after_context"   , "Increase the number of lines shown after each waypoint"}      ,
+  {"decrease_after_context"   , "Decrease the number of lines shown after each waypoint"}      ,
+  {"reset_context"            , "Show no lines around each waypoint"}                          ,
+  {"toggle_path"              , "Toggle whether the file path appears"}                        ,
+  {"toggle_full_path"         , "Toggle whether the full file path appears"}                   ,
+  {"toggle_line_num"          , "Toggle whether the line number appears"}                      ,
+  {"toggle_file_text"         , "Toggle whether the file text appears"}                        ,
+  {"toggle_context"           , "Toggle whether any lines are shown around each waypoint"}     ,
+  {"toggle_sort"              , "Toggle whether waypoints are sorted by file and line"}        ,
+  {"show_help"                , "Show this help window"}                                       ,
+  {"set_quickfix_list"        , "Set the quickfix list to locations of all waypoints"}         ,
+  {"indent"                   , "Increase the indentation of the current waypoint"}            ,
+  {"unindent"                 , "Decrease the indentation of the current waypoint"}            ,
+  {"reset_waypoint_indent"    , "Set the current waypoint's indentation to zero"}              ,
+  {"reset_all_indent"         , "Set the indentation of all waypoints to zero"}                ,
+  {"scroll_right"             , "Scroll the waypoint window right"}                            ,
+  {"scroll_left"              , "Scroll the waypoint window left"}                             ,
+  {"reset_horizontal_scroll"  , "Scroll the waypoint window all the way left"}                 ,
+  {"next_waypoint"            , "Move to the next waypoint in the waypoint window"}            ,
+  {"prev_waypoint"            , "Move to the previous waypoint in the waypoint window"}        ,
+  {"first_waypoint"           , "Move to the first waypoint in the waypoint window"}           ,
+  {"last_waypoint"            , "Move to the last waypoint in the waypoint window"}            ,
+  {"outer_waypoint"           , "Move to the previous waypoint indented one level less"}       ,
+  {"inner_waypoint"           , "Move to the next waypoint indented one level more"}           ,
+  {"prev_neighbor_waypoint"   , "Move to the previous waypoint at the same indentation"}       ,
+  {"next_neighbor_waypoint"   , "Move to the next waypoint at the same indentation"}           ,
+  {"prev_top_level_waypoint"  , "Move to the previous unindented waypoint"}                    ,
+  {"next_top_level_waypoint"  , "Move to the next unindented waypoint"}                        ,
+  {"move_waypoints_to_file"   , "Move all waypoints in one file to another file"}              ,
+  {"undo"                     , "Undo the last change to the waypoints"}                       ,
+  {"redo"                     , "Redo the last undone change to the waypoints"}                ,
 }
 
 M.help_keybindings_description = {
@@ -832,87 +854,37 @@ function M.unindent_line()
   indent_line(-1)
 end
 
-function MoveWaypointUp()
-  local should_return = (
-    #state.waypoints <= 1
-    or (state.wpi == 1)
-    or state.sort_by_file_and_line
-  )
-  if state.sort_by_file_and_line then
-    message.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
-  end
-  if should_return then return end
-
-  for _=1, vim.v.count1 do
-    local temp = state.waypoints[state.wpi - 1]
-    state.waypoints[state.wpi - 1] = state.waypoints[state.wpi]
-    state.waypoints[state.wpi] = temp
-    state.wpi = state.wpi - 1
-  end
-  draw_waypoint_window("swap")
+function M.move_waypoint_up()
+  crud.move_waypoint_up()
+  draw_waypoint_window(M.WINDOW_ACTIONS.swap)
 end
 
-function MoveWaypointDown()
-  local should_return = (
-    #state.waypoints <= 1
-    or (state.wpi == #state.waypoints)
-    or state.sort_by_file_and_line
-  )
-  if state.sort_by_file_and_line then
-    message.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
-  end
-  if should_return then return end
-
-  for _=1, vim.v.count1 do
-    local temp = state.waypoints[state.wpi + 1]
-    state.waypoints[state.wpi + 1] = state.waypoints[state.wpi]
-    state.waypoints[state.wpi] = temp
-    state.wpi = state.wpi + 1
-  end
-  draw_waypoint_window("swap")
+function M.move_waypoint_down()
+  crud.move_waypoint_down()
+  draw_waypoint_window(M.WINDOW_ACTIONS.swap)
 end
 
-function MoveWaypointToTop()
-  local should_return = (
-    #state.waypoints <= 2
-    or state.wpi == 1
-    or state.sort_by_file_and_line
-  )
-  if state.sort_by_file_and_line then
-    message.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
-  end
-  if should_return then return end
-
-  local temp = state.waypoints[state.wpi]
-  for i=state.wpi, 2, -1 do
-    state.waypoints[i] = state.waypoints[i-1]
-  end
-  state.waypoints[1] = temp
-  state.wpi = 1
-  draw_waypoint_window("swap")
+function M.move_waypoint_to_top()
+  crud.move_waypoint_to_top()
+  draw_waypoint_window(M.WINDOW_ACTIONS.swap)
 end
 
-function MoveWaypointToBottom()
-  local should_return = (
-    #state.waypoints <= 2
-    or state.wpi == #state.waypoints
-    or state.sort_by_file_and_line
-  )
-  if state.sort_by_file_and_line then
-    message.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
-  end
-  if should_return then return end
-
-  local temp = state.waypoints[state.wpi]
-  for i=state.wpi, #state.waypoints - 1 do
-    state.waypoints[i] = state.waypoints[i+1]
-  end
-  state.waypoints[#state.waypoints] = temp
-  state.wpi = #state.waypoints
-  draw_waypoint_window("swap")
+function M.move_waypoint_to_bottom()
+  crud.move_waypoint_to_bottom()
+  draw_waypoint_window(M.WINDOW_ACTIONS.swap)
 end
 
-function NextWaypoint()
+function M.undo()
+  undo.undo()
+  draw_waypoint_window()
+end
+
+function M.redo()
+  undo.redo()
+  draw_waypoint_window()
+end
+
+function M.next_waypoint()
   if state.wpi == nil or state.wpi == #state.waypoints then return end
   for _=1, vim.v.count1 do
     state.wpi = u.clamp(
@@ -928,7 +900,7 @@ function NextWaypoint()
   end
 end
 
-function PrevWaypoint()
+function M.prev_waypoint()
   if state.wpi == nil or state.wpi == 1 then return end
   for _=1, vim.v.count1 do
     state.wpi = u.clamp(
@@ -981,12 +953,12 @@ end
 GoToCurrentWaypoint = M.GoToCurrentWaypoint
 
 function M.GoToNextWaypoint()
-  NextWaypoint()
+  M.next_waypoint()
   GoToCurrentWaypoint()
 end
 
 function M.GoToPrevWaypoint()
-  PrevWaypoint()
+  M.prev_waypoint()
   GoToCurrentWaypoint()
 end
 
@@ -1546,6 +1518,7 @@ end
 
 function M.close()
   if not is_open then return end
+  M.bound_keys = {}
 
   -- put this first so we don't call this function again through autocmds by deleting the window
   vim.api.nvim_del_augroup_by_name(constants.window_augroup)
@@ -1611,6 +1584,10 @@ end
 
 function M.get_bufnr()
   return wp_bufnr
+end
+
+function M.get_help_bufnr()
+  return help_bufnr
 end
 
 return M

@@ -1,9 +1,12 @@
+-- This file contains all methods that modify the waypoints
+
 local M = {}
 
 local config = require("waypoint.config")
 local constants = require("waypoint.constants")
 local state = require("waypoint.state")
 local u = require("waypoint.utils")
+local message = require("waypoint.message")
 
 ---@param a waypoint.Waypoint
 ---@param b waypoint.Waypoint
@@ -25,7 +28,7 @@ end
 ---@param filepath   string
 ---@param line_nr    integer one-indexed line number
 ---@param annotation string | nil
-function M.add_waypoint(filepath, line_nr, annotation)
+function M.append_waypoint(filepath, line_nr, annotation)
   if not u.is_file_buffer() then return end
   local bufnr = vim.fn.bufnr(filepath)
   local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, line_nr - 1, -1, {
@@ -51,6 +54,13 @@ function M.add_waypoint(filepath, line_nr, annotation)
   M.make_sorted_waypoints()
 
   state.wpi = state.wpi or 1
+end
+
+---@param filepath   string
+---@param line_nr    integer one-indexed line number
+---@param annotation string | nil
+function M.insert_waypoint(filepath, line_nr, annotation)
+  -- TODO
 end
 
 --- @param filepath string the path of the file to find the waypoint in
@@ -109,10 +119,98 @@ function M.toggle_waypoint()
   local existing_waypoint_i = M.find_waypoint(filepath, cur_line_nr)
 
   if existing_waypoint_i == -1 then
-    M.add_waypoint(filepath, cur_line_nr)
+    M.append_waypoint(filepath, cur_line_nr)
   else
     M.remove_waypoint(existing_waypoint_i, filepath)
   end
+end
+
+function M.move_waypoint_up()
+  local should_return = (
+    #state.waypoints <= 1
+    or (state.wpi == 1)
+    or state.sort_by_file_and_line
+  )
+  if state.sort_by_file_and_line then
+    message.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
+  end
+  if should_return then return end
+
+  for _=1, vim.v.count1 do
+    local temp = state.waypoints[state.wpi - 1]
+    state.waypoints[state.wpi - 1] = state.waypoints[state.wpi]
+    state.waypoints[state.wpi] = temp
+    state.wpi = state.wpi - 1
+  end
+end
+
+function M.move_waypoint_down()
+  local should_return = (
+    #state.waypoints <= 1
+    or (state.wpi == #state.waypoints)
+    or state.sort_by_file_and_line
+  )
+  if state.sort_by_file_and_line then
+    message.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
+  end
+  if should_return then return end
+
+  for _=1, vim.v.count1 do
+    local temp = state.waypoints[state.wpi + 1]
+    state.waypoints[state.wpi + 1] = state.waypoints[state.wpi]
+    state.waypoints[state.wpi] = temp
+    state.wpi = state.wpi + 1
+  end
+end
+
+function M.move_waypoint_to_top()
+  local should_return = (
+    #state.waypoints <= 2
+    or state.wpi == 1
+    or state.sort_by_file_and_line
+  )
+  if state.sort_by_file_and_line then
+    message.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
+  end
+  if should_return then return end
+
+  local temp = state.waypoints[state.wpi]
+  for i=state.wpi, 2, -1 do
+    state.waypoints[i] = state.waypoints[i-1]
+  end
+  state.waypoints[1] = temp
+  state.wpi = 1
+end
+
+function M.move_waypoint_to_bottom()
+  local should_return = (
+    #state.waypoints <= 2
+    or state.wpi == #state.waypoints
+    or state.sort_by_file_and_line
+  )
+  if state.sort_by_file_and_line then
+    message.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
+  end
+  if should_return then return end
+
+  local temp = state.waypoints[state.wpi]
+  for i=state.wpi, #state.waypoints - 1 do
+    state.waypoints[i] = state.waypoints[i+1]
+  end
+  state.waypoints[#state.waypoints] = temp
+  state.wpi = #state.waypoints
+end
+
+function M.delete_waypoint()
+  -- TODO
+end
+
+function M.insert_annotated_waypoint()
+  -- TODO
+end
+
+function M.append_annotated_waypoint()
+  -- TODO
 end
 
 return M

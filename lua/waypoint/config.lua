@@ -87,6 +87,8 @@
 ---@field move_waypoint_down       waypoint.Keybinding
 ---@field move_waypoint_up         waypoint.Keybinding
 ---@field move_waypoints_to_file   waypoint.Keybinding
+---@field move_waypoint_to_top     waypoint.Keybinding
+---@field move_waypoint_to_bottom  waypoint.Keybinding
 ---@field undo                     waypoint.Keybinding
 ---@field redo                     waypoint.Keybinding
 
@@ -184,6 +186,8 @@
 ---@field move_waypoint_down       nil | waypoint.Keybinding
 ---@field move_waypoint_up         nil | waypoint.Keybinding
 ---@field move_waypoints_to_file   nil | waypoint.Keybinding
+---@field move_waypoint_to_top     nil | waypoint.Keybinding
+---@field move_waypoint_to_bottom  nil | waypoint.Keybinding
 ---@field undo                     nil | waypoint.Keybinding
 ---@field redo                     nil | waypoint.Keybinding
 
@@ -272,6 +276,8 @@ local M = {
       current_waypoint        = "<CR>",
       move_waypoint_up        = "K",
       move_waypoint_down      = "J",
+      move_waypoint_to_top    = "sgg",
+      move_waypoint_to_bottom = "sG",
       move_waypoints_to_file  = "rw",
       undo                    = "u",
       redo                    = "<C-r>",
