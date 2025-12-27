@@ -152,6 +152,7 @@ I frequently use the following abbreviations in this codebase:
 - [ ] add ability to add waypoint with annotation
 - [ ] add ability to add waypoint inserted after the current waypoint, not just at the end
 - [ ] delete the toggle waypoint function
+- [ ] fix bug where if you go to waypoint without extmark it prints a nasty error
 
 ### ADVANCED FEATURES:
 
