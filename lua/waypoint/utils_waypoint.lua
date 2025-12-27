@@ -88,7 +88,7 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
   local start_line_nr = u.clamp(extmark_line_nr - num_lines_before, 1)
   local line_count = vim.api.nvim_buf_line_count(bufnr)
   -- one-indexed line number, exclusive bound
-  local end_line_nr = u.clamp(extmark_line_nr + num_lines_after + 1, 1, line_count)
+  local end_line_nr = u.clamp(extmark_line_nr + num_lines_after + 1, 1, line_count + 1)
 
   local marked_line_idx = extmark_line_nr - start_line_nr -- zero-indexed
   -- this function takes zero indexed-parameters, inclusive lower bound, exclusive upper bound

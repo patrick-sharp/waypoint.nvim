@@ -5,6 +5,8 @@ local state = require("waypoint.state")
 local u = require("waypoint.utils")
 local ring_buffer = require("waypoint.ring_buffer")
 
+M.messages = ring_buffer.new(config.max_msg_history)
+
 local sorted_mode_err_msg_table = {"Cannot move waypoints while sort is enabled. Press "}
 local toggle_sort = config.keybindings.waypoint_window_keybindings.toggle_sort
 u.add_stringifed_keybindings_to_table(sorted_mode_err_msg_table, toggle_sort)
@@ -43,7 +45,6 @@ function M.moved_waypoints_to_file(num_waypoints, src, dst)
   return "Moved " .. tostring(num_waypoints) .. " waypoints from " .. src .. " to " .. dst
 end
 
-M.messages = ring_buffer.new(config.max_msg_history)
 
 ---@param msg string
 ---@param level integer | nil

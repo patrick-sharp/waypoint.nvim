@@ -13,6 +13,7 @@ local _ = require'waypoint.test.tests.missing_file'
 local _ = require'waypoint.test.tests.missing_file_complex'
 local _ = require'waypoint.test.tests.ring_buffer'
 local _ = require'waypoint.test.tests.sort'
+local _ = require'waypoint.test.tests.toggles'
 -- other tests to write
 -- * deleting waypoints
 -- * loading from files
@@ -87,6 +88,18 @@ local function log_test_output()
   vim.notify("Test output saved to " .. constants.test_output_file, vim.log.levels.INFO)
 end
 
+-- open a new no name buffer and close everything else
+local function clear_buffers()
+  vim.api.nvim_command('enew')
+  local bufs = vim.api.nvim_list_bufs()
+  local current_buf = vim.api.nvim_get_current_buf()
+  for _, buf in ipairs(bufs) do
+    if buf ~= current_buf then
+      vim.api.nvim_buf_delete(buf, { force = true })
+    end
+  end
+end
+
 function M.run_tests()
   state.should_notify = false
   for _,test in ipairs(test_list.tests) do
@@ -94,6 +107,8 @@ function M.run_tests()
     _, test.err = xpcall(test.fn, debug.traceback)
     test.pass = not test.err
     floating_window.clear_state_and_close()
+    clear_buffers()
+    vim.cmd.normal('<C-c>') -- this resets vim.v.count and vim.v.count1, which can persist between tests otherwise
   end
   state.should_notify = true
 
@@ -109,6 +124,7 @@ function M.run_test(opts)
   for _,test in ipairs(test_list.tests) do
     if test.name == test_name then
       matches = true
+      clear_buffers()
       floating_window.clear_state_and_close()
       test.fn()
       break

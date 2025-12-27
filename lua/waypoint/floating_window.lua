@@ -496,12 +496,11 @@ local function set_shared_keybinds(bufnr)
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings.decrease_after_context,  M.decrease_after_context)
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings.reset_context,           ":<C-u>lua ResetContext()<CR>")
 
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_annotation,       ":lua ToggleAnnotation()<CR>")
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_path,             ":lua TogglePath()<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_path,             M.toggle_path)
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_full_path,        M.toggle_full_path)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_line_num,         ":lua ToggleLineNum()<CR>")
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_file_text,        ":lua ToggleFileText()<CR>")
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_context,          ":lua ToggleContext()<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_line_num,         M.toggle_line_number)
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_file_text,        M.toggle_text)
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_context,          M.toggle_context)
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings.toggle_sort,             M.toggle_sort)
 
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings.set_quickfix_list,       ":<C-u>lua SetQFList()<CR>")
@@ -509,13 +508,13 @@ end
 
 local function set_help_keybinds()
   set_shared_keybinds(help_bufnr)
-  bind_key(help_bufnr, config.keybindings.help_keybindings.exit_help, ":lua ToggleHelp()<CR>")
+  bind_key(help_bufnr, config.keybindings.help_keybindings.exit_help, M.toggle_help)
 end
 
 local function set_waypoint_keybinds()
   set_shared_keybinds(wp_bufnr)
 
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.show_help,            ":<C-u>lua ToggleHelp()<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.show_help,            M.toggle_help)
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings.exit_waypoint_window, M.leave)
 
   if state.load_error then
@@ -566,61 +565,67 @@ local function set_waypoint_keybinds()
 end
 
 M.global_keybindings_description = {
-  {"toggle_waypoint"         ,  "Toggle a waypoint on the cursor's current line"}       ,
-  {"open_waypoint_window"    ,  "Show the waypoint window"}                             ,
-  {"current_waypoint"        ,  "Jump to current waypoint"}                             ,
-  {"prev_waypoint"           ,  "Jump to previous waypoint"}                            ,
-  {"next_waypoint"           ,  "Jump to next waypoint"}                                ,
-  {"first_waypoint"          ,  "Jump to first waypoint"}                               ,
-  {"last_waypoint"           ,  "Jump to last waypoint"}                                ,
-  {"prev_neighbor_waypoint"  ,  "Jump to the previous waypoint at the same indentation"},
-  {"next_neighbor_waypoint"  ,  "Jump to the next waypoint at the same indentation"}    ,
-  {"prev_top_level_waypoint" ,  "Jump to the previous unindented waypoint"}             ,
-  {"next_top_level_waypoint" ,  "Jump to the next unindented waypoint"}                 ,
-  {"outer_waypoint"          ,  "Jump to the previous waypoint indented one level less"},
-  {"inner_waypoint"          ,  "Jump to the next waypoint indented one level more"}    ,
+  {"toggle_waypoint"          ,  "Toggle a waypoint on the cursor's current line"}                                                     ,
+  {"append_waypoint"          ,  "Create a waypoint on the current line, and add it to end of the waypoint list"}                      ,
+  {"insert_waypoint"          ,  "Create a waypoint on the current line, and add it immediately after the current waypoint"}           ,
+  {"append_annotated_waypoint",  "Create an annotated waypoint on the current line, and add it to end of the waypoint list"}           ,
+  {"insert_annotated_waypoint",  "Create an annotated waypoint on the current line, and add it immediately after the current waypoint"},
+  {"delete_waypoint"          ,  "Delete the waypoint on the current line"}                                                            ,
+  {"open_waypoint_window"     ,  "Show the waypoint window"}                                                                           ,
+  {"current_waypoint"         ,  "Jump to current waypoint"}                                                                           ,
+  {"prev_waypoint"            ,  "Jump to previous waypoint"}                                                                          ,
+  {"next_waypoint"            ,  "Jump to next waypoint"}                                                                              ,
+  {"first_waypoint"           ,  "Jump to first waypoint"}                                                                             ,
+  {"last_waypoint"            ,  "Jump to last waypoint"}                                                                              ,
+  {"prev_neighbor_waypoint"   ,  "Jump to the previous waypoint at the same indentation"}                                              ,
+  {"next_neighbor_waypoint"   ,  "Jump to the next waypoint at the same indentation"}                                                  ,
+  {"prev_top_level_waypoint"  ,  "Jump to the previous unindented waypoint"}                                                           ,
+  {"next_top_level_waypoint"  ,  "Jump to the next unindented waypoint"}                                                               ,
+  {"outer_waypoint"           ,  "Jump to the previous waypoint indented one level less"}                                              ,
+  {"inner_waypoint"           ,  "Jump to the next waypoint indented one level more"}                                                  ,
 }
 
 M.waypoint_window_keybindings_description = {
-  {"current_waypoint"        , "Jump to the current waypoint's location"}                   ,
-  {"delete_waypoint"         , "Delete the current waypoint from the waypoint list"}        ,
-  {"move_waypoint_down"      , "Move the current waypoint before the previous waypoint"}    ,
-  {"move_waypoint_up"        , "Move the current waypoint after the next waypoint"}         ,
-  {"exit_waypoint_window"    , "Exit the waypoint window"}                                  ,
-  {"increase_context"        , "Increase the number of lines shown around each waypoint"}   ,
-  {"decrease_context"        , "Decrease the number of lines shown around each waypoint"}   ,
-  {"increase_before_context" , "Increase the number of lines shown before each waypoint"}   ,
-  {"decrease_before_context" , "Decrease the number of lines shown before each waypoint"}   ,
-  {"increase_after_context"  , "Increase the number of lines shown after each waypoint"}    ,
-  {"decrease_after_context"  , "Decrease the number of lines shown after each waypoint"}    ,
-  {"reset_context"           , "Show no lines around each waypoint"}                        ,
-  {"toggle_annotation"       , "I'm probably gonna remove this anyway"}                     ,
-  {"toggle_path"             , "Toggle whether the file path appears"}                      ,
-  {"toggle_full_path"        , "Toggle whether the full file path appears"}                 ,
-  {"toggle_line_num"         , "Toggle whether the line number appears"}                    ,
-  {"toggle_file_text"        , "Toggle whether the file text appears"}                      ,
-  {"toggle_context"          , "Toggle whether any lines are shown around each waypoint"}   ,
-  {"toggle_sort"             , "Toggle whether waypoints are sorted by file and line"}      ,
-  {"show_help"               , "Show this help window"}                                     ,
-  {"set_quickfix_list"       , "Set the quickfix list to locations of all waypoints"},
-  {"indent"                  , "Increase the indentation of the current waypoint"}          ,
-  {"unindent"                , "Decrease the indentation of the current waypoint"}          ,
-  {"reset_waypoint_indent"   , "Set the current waypoint's indentation to zero"}            ,
-  {"reset_all_indent"        , "Set the indentation of all waypoints to zero"}              ,
-  {"scroll_right"            , "Scroll the waypoint window right"}                          ,
-  {"scroll_left"             , "Scroll the waypoint window left"}                           ,
-  {"reset_horizontal_scroll" , "Scroll the waypoint window all the way left"}               ,
-  {"next_waypoint"           , "Move to the next waypoint in the waypoint window"}          ,
-  {"prev_waypoint"           , "Move to the previous waypoint in the waypoint window"}      ,
-  {"first_waypoint"          , "Move to the first waypoint in the waypoint window"}         ,
-  {"last_waypoint"           , "Move to the last waypoint in the waypoint window"}          ,
-  {"outer_waypoint"          , "Move to the previous waypoint indented one level less"}     ,
-  {"inner_waypoint"          , "Move to the next waypoint indented one level more"}         ,
-  {"prev_neighbor_waypoint"  , "Move to the previous waypoint at the same indentation"}     ,
-  {"next_neighbor_waypoint"  , "Move to the next waypoint at the same indentation"}         ,
-  {"prev_top_level_waypoint" , "Move to the previous unindented waypoint"}                  ,
-  {"next_top_level_waypoint" , "Move to the next unindented waypoint"}                      ,
-  {"move_waypoints_to_file"  , "Move all waypoints in one file to another file"}            ,
+  {"current_waypoint"         , "Jump to the current waypoint's location"}                   ,
+  {"delete_waypoint"          , "Delete the current waypoint from the waypoint list"}        ,
+  {"move_waypoint_down"       , "Move the current waypoint before the previous waypoint"}    ,
+  {"move_waypoint_up"         , "Move the current waypoint after the next waypoint"}         ,
+  {"exit_waypoint_window"     , "Exit the waypoint window"}                                  ,
+  {"increase_context"         , "Increase the number of lines shown around each waypoint"}   ,
+  {"decrease_context"         , "Decrease the number of lines shown around each waypoint"}   ,
+  {"increase_before_context"  , "Increase the number of lines shown before each waypoint"}   ,
+  {"decrease_before_context"  , "Decrease the number of lines shown before each waypoint"}   ,
+  {"increase_after_context"   , "Increase the number of lines shown after each waypoint"}    ,
+  {"decrease_after_context"   , "Decrease the number of lines shown after each waypoint"}    ,
+  {"reset_context"            , "Show no lines around each waypoint"}                        ,
+  {"toggle_path"              , "Toggle whether the file path appears"}                      ,
+  {"toggle_full_path"         , "Toggle whether the full file path appears"}                 ,
+  {"toggle_line_num"          , "Toggle whether the line number appears"}                    ,
+  {"toggle_file_text"         , "Toggle whether the file text appears"}                      ,
+  {"toggle_context"           , "Toggle whether any lines are shown around each waypoint"}   ,
+  {"toggle_sort"              , "Toggle whether waypoints are sorted by file and line"}      ,
+  {"show_help"                , "Show this help window"}                                     ,
+  {"set_quickfix_list"        , "Set the quickfix list to locations of all waypoints"},
+  {"indent"                   , "Increase the indentation of the current waypoint"}          ,
+  {"unindent"                 , "Decrease the indentation of the current waypoint"}          ,
+  {"reset_waypoint_indent"    , "Set the current waypoint's indentation to zero"}            ,
+  {"reset_all_indent"         , "Set the indentation of all waypoints to zero"}              ,
+  {"scroll_right"             , "Scroll the waypoint window right"}                          ,
+  {"scroll_left"              , "Scroll the waypoint window left"}                           ,
+  {"reset_horizontal_scroll"  , "Scroll the waypoint window all the way left"}               ,
+  {"next_waypoint"            , "Move to the next waypoint in the waypoint window"}          ,
+  {"prev_waypoint"            , "Move to the previous waypoint in the waypoint window"}      ,
+  {"first_waypoint"           , "Move to the first waypoint in the waypoint window"}         ,
+  {"last_waypoint"            , "Move to the last waypoint in the waypoint window"}          ,
+  {"outer_waypoint"           , "Move to the previous waypoint indented one level less"}     ,
+  {"inner_waypoint"           , "Move to the next waypoint indented one level more"}         ,
+  {"prev_neighbor_waypoint"   , "Move to the previous waypoint at the same indentation"}     ,
+  {"next_neighbor_waypoint"   , "Move to the next waypoint at the same indentation"}         ,
+  {"prev_top_level_waypoint"  , "Move to the previous unindented waypoint"}                  ,
+  {"next_top_level_waypoint"  , "Move to the next unindented waypoint"}                      ,
+  {"move_waypoints_to_file"   , "Move all waypoints in one file to another file"}            ,
+  {"undo"                     , "Undo the last change to the waypoints"}                     ,
+  {"redo"                     , "Redo the last undone change to the waypoints"}              ,
 }
 
 M.help_keybindings_description = {
@@ -1084,7 +1089,7 @@ function ToggleAnnotation()
   end
 end
 
-function TogglePath()
+function M.toggle_path()
   state.show_path = not state.show_path
   if help_bufnr then
     draw_help()
@@ -1102,7 +1107,7 @@ function M.toggle_full_path()
   end
 end
 
-function ToggleLineNum()
+function M.toggle_line_number()
   state.show_line_num = not state.show_line_num
   if help_bufnr then
     draw_help()
@@ -1111,7 +1116,7 @@ function ToggleLineNum()
   end
 end
 
-function ToggleFileText()
+function M.toggle_text()
   state.show_file_text = not state.show_file_text
   if help_bufnr then
     draw_help()
@@ -1120,7 +1125,7 @@ function ToggleFileText()
   end
 end
 
-function ToggleContext()
+function M.toggle_context()
   state.show_context = not state.show_context
   if help_bufnr then
     draw_help()
@@ -1379,6 +1384,7 @@ function M.move_waypoints_to_file_wrapper()
     local action_state = require('telescope.actions.state')
 
     builtin.find_files({
+      prompt_title = "Move waypoints to file",
       attach_mappings = function(prompt_bufnr, _)
         actions.select_default:replace(function()
           actions.close(prompt_bufnr)
@@ -1458,7 +1464,7 @@ function SetQFList()
   vim.cmd('copen')
 end
 
-function ToggleHelp()
+function M.toggle_help()
   if help_bufnr then
     vim.api.nvim_win_set_buf(winnr, wp_bufnr)
     help_bufnr = nil

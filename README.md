@@ -131,7 +131,7 @@ I frequently use the following abbreviations in this codebase:
     - https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua
     - maybe use vim.schedule to do it async if worried about perf?
 - [ ] fix bugs around closing buffers with waypoints in them (use BufDelete autocmd)
-- [ ] write a test for a file getting renamed while open
+- [ ] write a test for a file getting renamed while open (use BufFilePost autocmd)
 - [ ] handle the case where the extmark gets deleted
 - [ ] when you expand the context, keep the selected waypoint at the same point in the window rather than centering on it
 - [ ] handle the case where there is a swap file (or any error opening the file)
@@ -148,9 +148,10 @@ I frequently use the following abbreviations in this codebase:
 - [ ] when you change directory, reload waypoints from file (DirChanged autocmd)
 - [ ] see if you can fix the markdown header treesitter highlight bug
 - [ ] fix bug where toggles don't change in help mode
-- [ ] think about using t\[#t + 1\] = x instead of table.insert(t, x) for better perf
 - [ ] get rid of the rest of the global lua functions in floating_window, replacing them with module-scoped functions
-
+- [ ] add ability to add waypoint with annotation
+- [ ] add ability to add waypoint inserted after the current waypoint, not just at the end
+- [ ] delete the toggle waypoint function
 
 ### ADVANCED FEATURES:
 
@@ -184,11 +185,16 @@ when a file changed in order to keep the extmarks in the right place as the
 file changes
 
 There isn't an autommand for all file changes. here's a list of ones you should cover:
-TextChanged      change made in normal mode
-TextChangedI     change made in insert mode
-TextChangedP     change made in insert mode with popup menu visible
-TextChangedT     change made in terminal mode (idk if this applies)
+
+repair linenr (based on new extmark location) for all these
+    TextChanged      change made in normal mode
+    TextChangedI     change made in insert mode
+    TextChangedP     change made in insert mode with popup menu visible
+    TextChangedT     change made in terminal mode (idk if this applies)
+
 FileChangedShell file changed by something besides vim
+    locate_waypoints_in_file as if new load
+    covers delete and external rename case
 
 how does Neoformat replace buffer contents but without scrubbing marks and extmarks?
     it uses an internal api to replace the buffer. this doesn't remove marks. the api for replacing buffer with shell output doesn't use the one neoformat uses.
@@ -196,10 +202,24 @@ how does Neoformat replace buffer contents but without scrubbing marks and extma
 redundancy?
 store extmark id, text, line number
 when extmark updates, update text and line number too
-when buffer updates, try to find the right location and move the extmark
 what to do if buffer update causes two extmarks to be on the same line?
 what to do if buffer updates and location can't be found?
 what to do if file changes name or is deleted?
+
+add
+    with annotation
+        insert
+        append
+    without
+        insert
+        append
+toggle
+    with annotation
+        insert
+        append
+    without
+        insert
+        append
 
 waypoint order
     by file and by line

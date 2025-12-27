@@ -21,5 +21,6 @@ end
 
 M.file_0 = "lua/waypoint/test/tests/common/file_0.lua"
 M.file_1 = "lua/waypoint/test/tests/common/file_1.lua"
+M.waypoints_json = "lua/waypoint/test/tests/common/waypoints.json"
 
 return M

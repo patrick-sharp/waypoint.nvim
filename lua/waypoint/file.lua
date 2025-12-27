@@ -161,7 +161,7 @@ local function load_decoded_state_into_state(decoded)
 
         local line_count = vim.api.nvim_buf_line_count(bufnr)
 
-        if linenr < line_count then
+        if linenr <= line_count then
           local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, linenr - 1, -1, {
             id = linenr,
             sign_text = config.mark_char,
