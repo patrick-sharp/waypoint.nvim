@@ -34,10 +34,11 @@ local function keymap_opts(bufnr)
 end
  ---@enum waypoint.window_actions
 M.WINDOW_ACTIONS = {
-	swap                    = "swap",
-	move_to_waypoint        = "move_to_waypoint",
+  swap                    = "swap",
+  move_to_waypoint        = "move_to_waypoint",
   context                 = "context",
   set_waypoint_for_cursor = "set_waypoint_for_cursor",
+  scroll                  = "scroll"
 }
 
 -- I use this to avoid drawing twice when the cursor moves.
@@ -427,7 +428,7 @@ local function draw_waypoint_window(action)
       vim.fn.setcursorcharpos(cursor_line + 1, state.view.col + 1)
     end
 
-    if action == "scroll" or action == "context" then
+    if action == M.WINDOW_ACTIONS.scroll or action == M.WINDOW_ACTIONS.context then
       --- @type integer
       local lnum
       if state.view.lnum == nil then
@@ -573,7 +574,7 @@ local function set_waypoint_keybinds()
 
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "move_waypoint_up",        M.move_waypoint_up)
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "move_waypoint_down",      M.move_waypoint_down)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "current_waypoint",        ":<C-u>lua GoToCurrentWaypoint()<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "current_waypoint",        M.GoToCurrentWaypoint)
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_top",    M.move_waypoint_to_top)
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_bottom", M.move_waypoint_to_bottom)
 
@@ -827,31 +828,12 @@ local function open_help()
   highlight.highlight_custom_groups()
 end
 
--- Function to indent or unindent the current line by 2 spaces
--- if doIndent is true, indent. otherwise unindent
-local function indent_line(increment)
-  if state.wpi == nil then return end
-  local waypoints
-  if state.sort_by_file_and_line then
-    waypoints = state.sorted_waypoints
-  else
-    waypoints = state.waypoints
-  end
-  for _=1, vim.v.count1 do
-    local indent = waypoints[state.wpi].indent + increment
-    waypoints[state.wpi].indent = u.clamp(
-      indent, 0, constants.max_indent
-    )
-  end
-  draw_waypoint_window()
-end
-
 function M.indent_line()
-  indent_line(1)
+  crud.indent_line(1)
 end
 
 function M.unindent_line()
-  indent_line(-1)
+  crud.indent_line(-1)
 end
 
 function M.move_waypoint_up()
@@ -875,11 +857,13 @@ function M.move_waypoint_to_bottom()
 end
 
 function M.undo()
+  -- TODO: also take window action
   undo.undo()
   draw_waypoint_window()
 end
 
 function M.redo()
+  -- TODO: also take window action
   undo.redo()
   draw_waypoint_window()
 end
@@ -925,7 +909,10 @@ function M.GoToCurrentWaypoint()
   end
   assert(waypoint)
   if waypoint.bufnr == -1 then
-    message.notify(M.missing_file_err_msg, vim.log.levels.ERROR)
+    message.notify(message.missing_file_err_msg, vim.log.levels.ERROR)
+    return
+  elseif waypoint.extmark_id == -1 then
+    message.notify(constants.line_oob_error, vim.log.levels.ERROR)
     return
   end
   local extmark = uw.extmark_for_waypoint(waypoint)
@@ -950,28 +937,26 @@ local function clamp_view()
   state.view.col = u.clamp(state.view.col, state.view.leftcol, state.view.leftcol + win_width - 1)
 end
 
-GoToCurrentWaypoint = M.GoToCurrentWaypoint
-
 function M.GoToNextWaypoint()
   M.next_waypoint()
-  GoToCurrentWaypoint()
+  M.GoToCurrentWaypoint()
 end
 
 function M.GoToPrevWaypoint()
   M.prev_waypoint()
-  GoToCurrentWaypoint()
+  M.GoToCurrentWaypoint()
 end
 
 function M.GoToFirstWaypoint()
   if state.wpi == nil then return end
   state.wpi = 1
-  GoToCurrentWaypoint()
+  M.GoToCurrentWaypoint()
 end
 
-function M.GoToLastWaypoint()
+function M.go_to_last_waypoint()
   if state.wpi == nil then return end
   state.wpi = #state.waypoints
-  GoToCurrentWaypoint()
+  M.GoToCurrentWaypoint()
 end
 
 local function increase_context(increment)
@@ -1136,22 +1121,12 @@ function M.toggle_sort()
 end
 
 function M.reset_current_indent()
-  if state.wpi then
-    local waypoints
-    if state.sort_by_file_and_line then
-      waypoints = state.sorted_waypoints
-    else
-      waypoints = state.waypoints
-    end
-    waypoints[state.wpi].indent = 0
-  end
+  crud.reset_current_indent()
   draw_waypoint_window()
 end
 
 function M.reset_all_indent()
-  for _,waypoint in pairs(state.waypoints) do
-    waypoint.indent = 0
-  end
+  crud.reset_all_indent()
   draw_waypoint_window()
 end
 
@@ -1159,14 +1134,14 @@ function MoveToFirstWaypoint()
   if state.wpi then
     state.wpi = 1
   end
-  draw_waypoint_window("move_to_waypoint")
+  draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
 end
 
 function MoveToLastWaypoint()
   if state.wpi then
     state.wpi = #state.waypoints
   end
-  draw_waypoint_window("move_to_waypoint")
+  draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
 end
 
 function MoveToOuterWaypoint(draw)
@@ -1202,12 +1177,12 @@ end
 
 function M.GoToOuterWaypoint()
   MoveToOuterWaypoint(false)
-  GoToCurrentWaypoint()
+  M.GoToCurrentWaypoint()
 end
 
 function M.GoToInnerWaypoint()
   MoveToInnerWaypoint(false)
-  GoToCurrentWaypoint()
+  M.GoToCurrentWaypoint()
 end
 
 function MoveToPrevNeighborWaypoint(draw)
@@ -1246,12 +1221,12 @@ end
 
 function M.GoToPrevNeighborWaypoint()
   MoveToPrevNeighborWaypoint(false)
-  GoToCurrentWaypoint()
+  M.GoToCurrentWaypoint()
 end
 
 function M.GoToNextNeighborWaypoint()
   MoveToNextNeighborWaypoint(false)
-  GoToCurrentWaypoint()
+  M.GoToCurrentWaypoint()
 end
 
 function MoveToPrevTopLevelWaypoint(draw)
@@ -1289,12 +1264,12 @@ end
 
 function M.GoToPrevTopLevelWaypoint()
   MoveToPrevTopLevelWaypoint(false)
-  GoToCurrentWaypoint()
+  M.GoToCurrentWaypoint()
 end
 
 function M.GoToNextTopLevelWaypoint()
   MoveToNextTopLevelWaypoint(false)
-  GoToCurrentWaypoint()
+  M.GoToCurrentWaypoint()
 end
 
 ---@param source_file_path string

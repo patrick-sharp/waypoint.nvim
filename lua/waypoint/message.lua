@@ -11,12 +11,14 @@ local sorted_mode_err_msg_table = {"Cannot move waypoints while sort is enabled.
 local toggle_sort = config.keybindings.waypoint_window_keybindings.toggle_sort
 u.add_stringifed_keybindings_to_table(sorted_mode_err_msg_table, toggle_sort)
 table.insert(sorted_mode_err_msg_table, " to toggle sort")
+
 M.sorted_mode_err_msg = table.concat(sorted_mode_err_msg_table)
 
 local missing_file_err_msg_table = {"Cannot go to waypoint in missing file. Press "}
 local move_waypoints_to_file = config.keybindings.waypoint_window_keybindings.move_waypoints_to_file
 u.add_stringifed_keybindings_to_table(missing_file_err_msg_table, move_waypoints_to_file)
 table.insert(missing_file_err_msg_table, " to fix")
+
 M.missing_file_err_msg = table.concat(missing_file_err_msg_table)
 
 ---@param path string

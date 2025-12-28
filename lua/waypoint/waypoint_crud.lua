@@ -63,6 +63,24 @@ function M.insert_waypoint(filepath, line_nr, annotation)
   -- TODO
 end
 
+function M.reset_current_indent()
+  if state.wpi then
+    local waypoints
+    if state.sort_by_file_and_line then
+      waypoints = state.sorted_waypoints
+    else
+      waypoints = state.waypoints
+    end
+    waypoints[state.wpi].indent = 0
+  end
+end
+
+function M.reset_all_indent()
+  for _,waypoint in pairs(state.waypoints) do
+    waypoint.indent = 0
+  end
+end
+
 --- @param filepath string the path of the file to find the waypoint in
 --- @param linenr integer the one-indexed line number to look for the waypoint on
 --- @return integer the one-indexed index of the waypoint if found, or -1 if not
@@ -199,6 +217,23 @@ function M.move_waypoint_to_bottom()
   end
   state.waypoints[#state.waypoints] = temp
   state.wpi = #state.waypoints
+end
+
+-- Function to indent or unindent the current line by 2 spaces
+function M.indent_line(increment)
+  if state.wpi == nil then return end
+  local waypoints
+  if state.sort_by_file_and_line then
+    waypoints = state.sorted_waypoints
+  else
+    waypoints = state.waypoints
+  end
+  for _=1, vim.v.count1 do
+    local indent = waypoints[state.wpi].indent + increment
+    waypoints[state.wpi].indent = u.clamp(
+      indent, 0, constants.max_indent
+    )
+  end
 end
 
 function M.delete_waypoint()
