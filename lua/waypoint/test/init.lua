@@ -6,7 +6,7 @@ local test_list = require'waypoint.test.test_list'
 local state = require'waypoint.state'
 
 -- these files call test_list.describe, which adds tests to the list
-local _ = require'waypoint.test.tests.context_basic'
+local _ = require'waypoint.test.tests.context'
 local _ = require'waypoint.test.tests.help'
 local _ = require'waypoint.test.tests.levenshtein'
 local _ = require'waypoint.test.tests.missing_file'

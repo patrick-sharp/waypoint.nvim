@@ -518,7 +518,7 @@ local function set_shared_keybinds(bufnr)
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "decrease_before_context", M.decrease_before_context)
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "increase_after_context",  M.increase_after_context)
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "decrease_after_context",  M.decrease_after_context)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "reset_context",           ":<C-u>lua ResetContext()<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "reset_context",           M.reset_context)
 
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "toggle_path",             M.toggle_path)
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "toggle_full_path",        M.toggle_full_path)
@@ -545,17 +545,6 @@ local function set_waypoint_keybinds()
     vim.keymap.set('n', '<CR>', M.clear_state, keymap_opts(wp_bufnr))
     return
   end
-
-  -- the <C-u> before the colon some keymaps allows them to be used with counts.
-  -- normally, typing a count and then colon will put you in command mode with 
-  -- .,.+count in front, which applies the command to the next <count> lines. 
-  -- for example, type 6 and then : will put you into command mode with :.,.+5
-  -- preset. If you run :.,.+5yank you will copy the current line and the 5 
-  -- lines after it.
-  -- The <C-u> is the bind to delete everything from the current cursor position
-  -- to the colon in command mode.
-  -- the actual function you're binding has to access vim.v.count or 
-  -- vim.v.count1 to access the count.
 
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "indent",                  M.indent_line)
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "unindent",                M.unindent_line)
@@ -1007,7 +996,7 @@ local function increase_after_context(increment)
   end
 
   clamp_view()
-  draw_waypoint_window("context")
+  draw_waypoint_window(M.WINDOW_ACTIONS.context)
 end
 
 function M.increase_after_context()
@@ -1018,11 +1007,11 @@ function M.decrease_after_context()
   increase_after_context(-1)
 end
 
-function ResetContext()
+function M.reset_context()
   state.context = 0
   state.before_context = 0
   state.after_context = 0
-  draw_waypoint_window("context")
+  draw_waypoint_window(M.WINDOW_ACTIONS.context)
 end
 
 function M.scroll(increment)
@@ -1033,7 +1022,7 @@ function M.scroll(increment)
     state.view.leftcol = u.clamp(state.view.leftcol + increment, 0, leftcol_max)
     state.view.col = u.clamp(state.view.col, state.view.leftcol, state.view.leftcol + win_width - 1)
   end
-  draw_waypoint_window("scroll")
+  draw_waypoint_window(M.WINDOW_ACTIONS.scroll)
 end
 
 function M.scroll_right()
@@ -1047,7 +1036,7 @@ end
 function M.reset_scroll()
   state.view.col = 0
   state.view.leftcol = 0
-  draw_waypoint_window("scroll")
+  draw_waypoint_window(M.WINDOW_ACTIONS.scroll)
 end
 
 function ToggleAnnotation()
