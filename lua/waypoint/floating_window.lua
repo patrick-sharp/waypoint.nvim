@@ -562,9 +562,9 @@ local function set_waypoint_keybinds()
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "reset_horizontal_scroll", ":lua ResetScroll()<CR>")
 
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "prev_waypoint",           M.prev_waypoint)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "next_waypoint",           ":lua NextWaypoint()<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "first_waypoint",          ":lua MoveToFirstWaypoint()<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "last_waypoint",           ":lua MoveToLastWaypoint()<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "next_waypoint",           M.next_waypoint)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "first_waypoint",          M.move_to_first_waypoint)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "last_waypoint",           M.move_to_last_waypoint)
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "prev_neighbor_waypoint",  ":<C-u>lua MoveToPrevNeighborWaypoint(true)<CR>")
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "next_neighbor_waypoint",  ":<C-u>lua MoveToNextNeighborWaypoint(true)<CR>")
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "prev_top_level_waypoint", ":<C-u>lua MoveToPrevTopLevelWaypoint(true)<CR>")
@@ -574,7 +574,7 @@ local function set_waypoint_keybinds()
 
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "move_waypoint_up",        M.move_waypoint_up)
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "move_waypoint_down",      M.move_waypoint_down)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "current_waypoint",        M.GoToCurrentWaypoint)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "current_waypoint",        M.go_to_current_waypoint)
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_top",    M.move_waypoint_to_top)
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_bottom", M.move_waypoint_to_bottom)
 
@@ -898,7 +898,7 @@ function M.prev_waypoint()
   end
 end
 
-function M.GoToCurrentWaypoint()
+function M.go_to_current_waypoint()
   if state.wpi == nil then return end
 
   local waypoint
@@ -939,24 +939,24 @@ end
 
 function M.GoToNextWaypoint()
   M.next_waypoint()
-  M.GoToCurrentWaypoint()
+  M.go_to_current_waypoint()
 end
 
 function M.GoToPrevWaypoint()
   M.prev_waypoint()
-  M.GoToCurrentWaypoint()
+  M.go_to_current_waypoint()
 end
 
 function M.GoToFirstWaypoint()
   if state.wpi == nil then return end
   state.wpi = 1
-  M.GoToCurrentWaypoint()
+  M.go_to_current_waypoint()
 end
 
 function M.go_to_last_waypoint()
   if state.wpi == nil then return end
   state.wpi = #state.waypoints
-  M.GoToCurrentWaypoint()
+  M.go_to_current_waypoint()
 end
 
 local function increase_context(increment)
@@ -1130,14 +1130,14 @@ function M.reset_all_indent()
   draw_waypoint_window()
 end
 
-function MoveToFirstWaypoint()
+function M.move_to_first_waypoint()
   if state.wpi then
     state.wpi = 1
   end
   draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
 end
 
-function MoveToLastWaypoint()
+function M.move_to_last_waypoint()
   if state.wpi then
     state.wpi = #state.waypoints
   end
@@ -1177,12 +1177,12 @@ end
 
 function M.GoToOuterWaypoint()
   MoveToOuterWaypoint(false)
-  M.GoToCurrentWaypoint()
+  M.go_to_current_waypoint()
 end
 
 function M.GoToInnerWaypoint()
   MoveToInnerWaypoint(false)
-  M.GoToCurrentWaypoint()
+  M.go_to_current_waypoint()
 end
 
 function MoveToPrevNeighborWaypoint(draw)
@@ -1221,12 +1221,12 @@ end
 
 function M.GoToPrevNeighborWaypoint()
   MoveToPrevNeighborWaypoint(false)
-  M.GoToCurrentWaypoint()
+  M.go_to_current_waypoint()
 end
 
 function M.GoToNextNeighborWaypoint()
   MoveToNextNeighborWaypoint(false)
-  M.GoToCurrentWaypoint()
+  M.go_to_current_waypoint()
 end
 
 function MoveToPrevTopLevelWaypoint(draw)
@@ -1264,12 +1264,12 @@ end
 
 function M.GoToPrevTopLevelWaypoint()
   MoveToPrevTopLevelWaypoint(false)
-  M.GoToCurrentWaypoint()
+  M.go_to_current_waypoint()
 end
 
 function M.GoToNextTopLevelWaypoint()
   MoveToNextTopLevelWaypoint(false)
-  M.GoToCurrentWaypoint()
+  M.go_to_current_waypoint()
 end
 
 ---@param source_file_path string
@@ -1563,6 +1563,10 @@ end
 
 function M.get_help_bufnr()
   return help_bufnr
+end
+
+function M.is_open()
+  return is_open
 end
 
 return M

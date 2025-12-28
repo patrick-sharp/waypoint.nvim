@@ -68,11 +68,11 @@ function M.setup(opts)
     callback = filter.fix_waypoint_positions,
   })
 
-  global_keybindings.bind_key(config.keybindings.global_keybindings, "current_waypoint",          floating_window.GoToCurrentWaypoint)
+  global_keybindings.bind_key(config.keybindings.global_keybindings, "current_waypoint",          floating_window.go_to_current_waypoint)
   global_keybindings.bind_key(config.keybindings.global_keybindings, "prev_waypoint",             floating_window.GoToPrevWaypoint)
   global_keybindings.bind_key(config.keybindings.global_keybindings, "next_waypoint",             floating_window.GoToNextWaypoint)
   global_keybindings.bind_key(config.keybindings.global_keybindings, "first_waypoint",            floating_window.GoToFirstWaypoint)
-  global_keybindings.bind_key(config.keybindings.global_keybindings, "last_waypoint",             floating_window.GoToLastWaypoint)
+  global_keybindings.bind_key(config.keybindings.global_keybindings, "last_waypoint",             floating_window.go_to_last_waypoint)
   global_keybindings.bind_key(config.keybindings.global_keybindings, "prev_neighbor_waypoint",    floating_window.GoToPrevNeighborWaypoint)
   global_keybindings.bind_key(config.keybindings.global_keybindings, "next_neighbor_waypoint",    floating_window.GoToNextNeighborWaypoint)
   global_keybindings.bind_key(config.keybindings.global_keybindings, "prev_top_level_waypoint",   floating_window.GoToPrevTopLevelWaypoint)
