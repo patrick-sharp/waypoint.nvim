@@ -248,4 +248,14 @@ function M.append_annotated_waypoint()
   -- TODO
 end
 
+function M.delete_current_waypoint()
+  if #state.waypoints == 0 then return end
+  M.remove_waypoint(state.wpi, state.waypoints[state.wpi].filepath)
+  if #state.waypoints == 0 then
+    state.wpi = nil
+  else
+    state.wpi = u.clamp(state.wpi, 1, #state.waypoints)
+  end
+end
+
 return M

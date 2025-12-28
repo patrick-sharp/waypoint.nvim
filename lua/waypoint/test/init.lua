@@ -13,10 +13,12 @@ local _ = require'waypoint.test.tests.missing_file'
 local _ = require'waypoint.test.tests.missing_file_complex'
 local _ = require'waypoint.test.tests.move'
 local _ = require'waypoint.test.tests.navigation_basic'
+local _ = require'waypoint.test.tests.quickfix_list'
 local _ = require'waypoint.test.tests.ring_buffer'
 local _ = require'waypoint.test.tests.scroll'
 local _ = require'waypoint.test.tests.sort'
 local _ = require'waypoint.test.tests.toggles'
+local _ = require'waypoint.test.tests.delete'
 -- other tests to write
 -- * deleting waypoints
 -- * loading from files

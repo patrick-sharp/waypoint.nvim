@@ -75,11 +75,11 @@ describe('Missing file', function()
 
   lines = tu.get_waypoint_buffer_lines_trimmed()
   tu.assert_eq(file_0, lines[1][2])
-  tu.assert_eq("local M = {}", lines[1][4])
+  tu.assert_eq(test_list.wp_1_text, lines[1][4])
 
   tu.assert_eq(file_1, lines[2][2])
-  tu.assert_eq("table.insert(t, i)", lines[2][4])
+  tu.assert_eq(test_list.wp_2_text, lines[2][4])
 
   tu.assert_eq(file_1, lines[3][2])
-  tu.assert_eq("end", lines[3][4])
+  tu.assert_eq(test_list.wp_3_text, lines[3][4])
 end)

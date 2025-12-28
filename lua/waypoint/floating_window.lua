@@ -527,7 +527,7 @@ local function set_shared_keybinds(bufnr)
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "toggle_context",          M.toggle_context)
   bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "toggle_sort",             M.toggle_sort)
 
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "set_quickfix_list",       ":<C-u>lua SetQFList()<CR>")
+  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "set_quickfix_list",       M.set_quickfix_list)
 end
 
 local function set_help_keybinds()
@@ -583,7 +583,7 @@ local function set_waypoint_keybinds()
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_top",    M.move_waypoint_to_top)
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_bottom", M.move_waypoint_to_bottom)
 
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "delete_waypoint",         ":<C-u>lua RemoveCurrentWaypoint()<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "delete_waypoint",         M.delete_current_waypoint)
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "move_waypoints_to_file",  M.move_waypoints_to_file_wrapper)
 
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "undo",                    M.undo)
@@ -1395,24 +1395,18 @@ function Resize()
   vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
 end
 
-function RemoveCurrentWaypoint()
-  if #state.waypoints == 0 then return end
-  crud.remove_waypoint(state.wpi, state.waypoints[state.wpi].filepath)
-  if #state.waypoints == 0 then
-    state.wpi = nil
-  else
-    state.wpi = u.clamp(state.wpi, 1, #state.waypoints)
-  end
+function M.delete_current_waypoint()
+  crud.delete_current_waypoint()
   draw_waypoint_window()
 end
 
-function SetQFList()
+function M.set_quickfix_list()
   local qflist = {}
   for _,waypoint in pairs(state.waypoints) do
     local bufnr = vim.fn.bufnr(waypoint.filepath)
     local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {})
-    local lnum = extmark[1]
-    local line = vim.api.nvim_buf_get_lines(bufnr, lnum, lnum + 1, false)[1]
+    local lnum = extmark[1] + 1 -- convert from zero-indexed to one-indexed
+    local line = vim.api.nvim_buf_get_lines(bufnr, lnum - 1, lnum, false)[1]
     table.insert(qflist, {
       filename = waypoint.filepath,
       lnum = lnum,

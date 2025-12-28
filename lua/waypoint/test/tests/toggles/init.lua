@@ -3,6 +3,9 @@ local describe = test_list.describe
 local file_0 = test_list.file_0
 local file_1 = test_list.file_1
 local waypoints_json = test_list.waypoints_json
+local wp_1_text = test_list.wp_1_text
+local wp_2_text = test_list.wp_2_text
+local wp_3_text = test_list.wp_3_text
 
 local floating_window = require("waypoint.floating_window")
 local file = require'waypoint.file'
@@ -23,10 +26,6 @@ describe('Toggles', function()
   local lines
 
   lines = tu.get_waypoint_buffer_lines_trimmed()
-
-  local wp_1_text = "local M = {}"
-  local wp_2_text = "table.insert(t, i)"
-  local wp_3_text = "end"
 
   tu.assert_eq(4, #lines[1])
   tu.assert_eq("1",                  lines[1][1])
