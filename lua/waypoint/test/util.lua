@@ -52,13 +52,13 @@ end
 ---@param expected any
 ---@param actual any
 function M.assert_eq(expected, actual)
-  assert(expected == actual, "\nShould equal:\nExpected: " .. vim.inspect(expected) .. "\nActual:   " .. vim.inspect(actual))
+  assert(expected == actual, "\n\nShould equal:\nExpected: " .. vim.inspect(expected) .. "\nActual:   " .. vim.inspect(actual) .. "\n")
 end
 
 ---@param unexpected any
 ---@param actual any
 function M.assert_neq(unexpected, actual)
-  assert(unexpected ~= actual, "\nShould not equal:\nUnexpected: " .. vim.inspect(unexpected) .. "\nActual:   " .. vim.inspect(actual))
+  assert(unexpected ~= actual, "\n\nShould not equal:\nUnexpected: " .. vim.inspect(unexpected) .. "\nActual:   " .. vim.inspect(actual) .. "\n")
 end
 
 return M

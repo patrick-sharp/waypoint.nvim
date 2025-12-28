@@ -62,6 +62,8 @@ local M = {
   file_dne_error = "Error: file does not exist",
   line_oob_error = "Error: line number is out of bounds",
   no_matching_waypoint_error = "Error: could not find a close enough match for this waypoint",
+  background_window_vpadding = 1,
+  background_window_hpadding = 2,
 }
 
 -- candidate indentation styles

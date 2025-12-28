@@ -64,11 +64,15 @@ local function get_total_height()
   return height
 end
 
-local function get_floating_window_width()
+function M.get_floating_window_width()
   return math.ceil(get_total_width() * config.window_width)
 end
 
-local function get_floating_window_height()
+function M.get_floating_window_writable_width()
+  return math.ceil(get_total_width() * config.window_width) - 4
+end
+
+function M.get_floating_window_height()
   return math.ceil(get_total_height() * config.window_height)
 end
 
@@ -78,8 +82,8 @@ local function get_win_opts()
   local height = get_total_height()
 
   -- Calculate floating window size
-  local win_width = get_floating_window_width()
-  local win_height = get_floating_window_height()
+  local win_width = M.get_floating_window_width()
+  local win_height = M.get_floating_window_height()
 
   -- Calculate starting position
   local row = math.ceil((height - win_height) / 2)
@@ -131,8 +135,9 @@ local function get_bg_win_opts(win_opts)
   assert(win_opts, "win_opts required arg to get_bg_win_opts")
   local bg_win_opts = u.shallow_copy(win_opts)
 
-  local hpadding = 2
-  local vpadding = 1
+  local hpadding = constants.background_window_hpadding
+  local vpadding = constants.background_window_vpadding
+
   bg_win_opts.row = win_opts.row - vpadding - 1
   bg_win_opts.col = win_opts.col - hpadding - 1
   bg_win_opts.width = win_opts.width + hpadding * 2
@@ -360,7 +365,7 @@ local function draw_waypoint_window(action)
     table.insert(table_cell_types, "string")
   end
 
-  local win_width = get_floating_window_width()
+  local win_width = M.get_floating_window_width()
   local aligned = uw.align_waypoint_table(
     rows, table_cell_types, hlranges,
     {
@@ -445,7 +450,7 @@ local function draw_waypoint_window(action)
       local view = vim.fn.winsaveview()
       local topline = view.topline
 
-      local win_height = get_floating_window_height()
+      local win_height = M.get_floating_window_height()
       if waypoint_topline < topline then
         view.topline = waypoint_topline
       elseif topline + win_height < waypoint_bottomline then
@@ -557,9 +562,9 @@ local function set_waypoint_keybinds()
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "reset_waypoint_indent",   M.reset_current_indent)
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "reset_all_indent",        M.reset_all_indent)
 
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "scroll_left",             ":<C-u>lua Scroll(1)<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "scroll_right",            ":<C-u>lua Scroll(-1)<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "reset_horizontal_scroll", ":lua ResetScroll()<CR>")
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "scroll_left",             M.scroll_left)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "scroll_right",            M.scroll_right)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "reset_horizontal_scroll", M.reset_scroll)
 
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "prev_waypoint",           M.prev_waypoint)
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "next_waypoint",           M.next_waypoint)
@@ -1020,7 +1025,7 @@ function ResetContext()
   draw_waypoint_window("context")
 end
 
-function Scroll(increment)
+function M.scroll(increment)
   local width = vim.api.nvim_get_option_value("columns", {})
   local win_width = math.ceil(width * config.window_width)
   for _=1, vim.v.count1 do
@@ -1031,7 +1036,15 @@ function Scroll(increment)
   draw_waypoint_window("scroll")
 end
 
-function ResetScroll()
+function M.scroll_right()
+  M.scroll(1)
+end
+
+function M.scroll_left()
+  M.scroll(-1)
+end
+
+function M.reset_scroll()
   state.view.col = 0
   state.view.leftcol = 0
   draw_waypoint_window("scroll")
