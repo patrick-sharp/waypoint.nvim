@@ -52,7 +52,6 @@ local function encode()
   state_to_encode.show_full_path = state.show_full_path
   state_to_encode.show_path = state.show_path
   state_to_encode.show_line_num = state.show_line_num
-  state_to_encode.show_annotation = state.show_annotation
   state_to_encode.context = state.context
   state_to_encode.after_context = state.after_context
   state_to_encode.before_context = state.before_context
@@ -109,7 +108,6 @@ end
 local file_schema = {
   waypoints = "table",
   -- wpi = "number",  -- commenting this out because wpi can be nil
-  show_annotation = "boolean",
   show_path = "boolean",
   show_full_path = "boolean",
   show_line_num = "boolean",

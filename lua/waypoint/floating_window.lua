@@ -152,9 +152,8 @@ local function get_bg_win_opts(win_opts)
   local c = {"C: " .. state.context, constants.hl_footer_context }
 
   -- toggles
-  local annotation = {"A", get_toggle_hl(state.show_annotation) }
-  local path =       {"N", get_toggle_hl(state.show_line_num) }
-  local num =        {"P", get_toggle_hl(state.show_path) }
+  local num =        {"N", get_toggle_hl(state.show_line_num) }
+  local path =       {"P", get_toggle_hl(state.show_path) }
   local full_path =  {"F", get_toggle_hl(state.show_full_path) }
   local text =       {"T", get_toggle_hl(state.show_file_text) }
   local context =    {"C", get_toggle_hl(state.show_context) }
@@ -170,7 +169,7 @@ local function get_bg_win_opts(win_opts)
     { "─ ", 'FloatBorder'},
     { "Press g? for help", constants.hl_selected },
     sep, a, sep, b, sep, c, sep, wpi, sep,
-    annotation, num, path, full_path, text, context, sort,
+    path, num, text, sep, full_path, context, sort,
     { " ", 'FloatBorder'},
   }
   bg_win_opts.title_pos = "center"
@@ -649,7 +648,16 @@ M.help_keybindings_description = {
   {"exit_help", "Exit help and return to the waypoint window"},
 }
 
-local function insert_lines_for_keybindings(lines, highlights, keybindings_group, keybindings_description, keybindings_group_title, keybindings_group_name)
+local kb_separator = " or "
+
+---@param lines string[]
+---@param highlights waypoint.HighlightRange[][][]
+---@param keybindings_group table
+---@param keybindings_description table
+---@param keybindings_group_title string
+---@param keybindings_group_name string
+---@param width_override (integer | nil)[] | nil
+local function insert_lines_for_keybindings(lines, highlights, keybindings_group, keybindings_description, keybindings_group_title, keybindings_group_name, width_override)
   table.insert(lines, "")
   table.insert(lines, "")
   table.insert(lines, keybindings_group_title .. " keybindings")
@@ -669,22 +677,21 @@ local function insert_lines_for_keybindings(lines, highlights, keybindings_group
     local kb
     local kb_hl
     if type(keybindings_group[action]) == 'string' then
-      kb = { description, keybindings_group[action], }
+      kb = { keybindings_group[action], description, }
       kb_hl = {
-        {},
         {{
           nsid = constants.ns,
           hl_group = constants.hl_keybinding,
           col_start = 1,
           col_end = #keybindings_group[action],
         }},
+        {},
       }
     elseif type(keybindings_group[action]) == 'table' then
       local kb_col = {}
       local kb_hl_col = {}
-      local separator = " or "
       local offset = 1
-      for i, kb_ in pairs(keybindings_group[action]) do
+      for i, kb_ in ipairs(keybindings_group[action]) do
         table.insert(kb_col, kb_)
         table.insert(kb_hl_col, {
           nsid = constants.ns,
@@ -692,13 +699,13 @@ local function insert_lines_for_keybindings(lines, highlights, keybindings_group
           col_start = offset,
           col_end = offset + #kb_ - 1,
         })
-        offset = offset + #kb_ + #separator
+        offset = offset + #kb_ + #kb_separator
         if i < #keybindings_group[action] then
-          table.insert(kb_col, separator)
+          table.insert(kb_col, kb_separator)
         end
       end
-      kb = {description, table.concat(kb_col)}
-      kb_hl = {{}, kb_hl_col}
+      kb = {table.concat(kb_col), description}
+      kb_hl = {kb_hl_col, {}}
     else
       error("Type of " .. keybindings_group_name.. " keybinding for" .. action .. " should be string or table")
     end
@@ -711,7 +718,7 @@ local function insert_lines_for_keybindings(lines, highlights, keybindings_group
     keybindings_highlights,
     {
       column_separator = "",
-      width_override = {55},
+      width_override = width_override,
     }
   )
   for i=1,#keybindings do
@@ -726,14 +733,40 @@ local function insert_lines_for_keybindings(lines, highlights, keybindings_group
   end
 end
 
+---@param kb_group table
+---@return integer
+local function find_max_keybinding_width(kb_group)
+  local kb_width_override = 0
+  for _,v in pairs(kb_group) do
+    local width
+    if type(v) == "string" then
+      width = u.vislen(v)
+    else
+      width = 0
+      for i, kb_ in ipairs(v) do
+        width = width + u.vislen(kb_)
+        if i < #v then
+          width = width + u.vislen(kb_separator)
+        end
+      end
+    end
+    kb_width_override = math.max(kb_width_override, width)
+  end
+  return kb_width_override
+end
 local function draw_help()
   set_modifiable(help_bufnr, true)
   local lines = {}
   local highlights = {}
 
+  -- update window config, used to update the footer a/b/c indicators and the size of the window
+  local win_opts = get_win_opts()
+  local bg_win_opts = get_bg_win_opts(win_opts)
+  vim.api.nvim_win_set_config(winnr, win_opts)
+  vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
+
   -- info about state
   local prop_names = {
-    {"show_annotation", "Show annotation:"},
     {"show_path", "Show file path:"},
     {"show_full_path", "Show full file path:"},
     {"show_file_text", "Show file text:"},
@@ -785,9 +818,16 @@ local function draw_help()
 
   -- show keybindings
 
-  insert_lines_for_keybindings(lines, highlights, config.keybindings.global_keybindings, M.global_keybindings_description, "Global", "global")
-  insert_lines_for_keybindings(lines, highlights, config.keybindings.waypoint_window_keybindings, M.waypoint_window_keybindings_description, "Waypoint window", "waypoint window")
-  insert_lines_for_keybindings(lines, highlights, config.keybindings.help_keybindings, M.help_keybindings_description, "Help", "help")
+  local kb_width_override = 0
+  kb_width_override = math.max(kb_width_override, find_max_keybinding_width(config.keybindings.global_keybindings))
+  kb_width_override = math.max(kb_width_override, find_max_keybinding_width(config.keybindings.waypoint_window_keybindings))
+  kb_width_override = math.max(kb_width_override, find_max_keybinding_width(config.keybindings.help_keybindings))
+
+  local width_override = {kb_width_override, nil}
+
+  insert_lines_for_keybindings(lines, highlights, config.keybindings.global_keybindings, M.global_keybindings_description, "Global", "global", width_override)
+  insert_lines_for_keybindings(lines, highlights, config.keybindings.waypoint_window_keybindings, M.waypoint_window_keybindings_description, "Waypoint window", "waypoint window", width_override)
+  insert_lines_for_keybindings(lines, highlights, config.keybindings.help_keybindings, M.help_keybindings_description, "Help", "help", width_override)
 
   vim.api.nvim_buf_set_lines(help_bufnr, 0, -1, true, lines)
   -- hlranges is the set of highlight ranges for this line of the help
@@ -1037,15 +1077,6 @@ function M.reset_scroll()
   state.view.col = 0
   state.view.leftcol = 0
   draw_waypoint_window(M.WINDOW_ACTIONS.scroll)
-end
-
-function ToggleAnnotation()
-  state.show_annotation = not state.show_annotation
-  if help_bufnr then
-    draw_help()
-  else
-    draw_waypoint_window()
-  end
 end
 
 function M.toggle_path()
@@ -1518,7 +1549,6 @@ function M.clear_state()
   state.before_context   = 0
   state.context          = 0
 
-  state.show_annotation  = true
   state.show_path        = true
   state.show_full_path   = false
   state.show_line_num    = true

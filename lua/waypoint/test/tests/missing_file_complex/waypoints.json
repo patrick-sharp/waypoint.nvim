@@ -13,7 +13,6 @@
 	"context": 0,
 	"after_context": 0,
 	"before_context": 0,
-	"show_annotation": false,
 	"waypoints": [
 		{
 			"indent": 0,

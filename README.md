@@ -125,6 +125,8 @@ I frequently use the following abbreviations in this codebase:
 - [x] tests
 - [x] add ability to move all waypoints in a file to another file (fixes renaming file)
 - [x] figure out how to make choosing a file to move waypoints to a good experience (telescope, fzf, etc)
+- [x] fix bug where toggles don't change in help mode
+- [x] fix bug where if you go to waypoint without extmark it prints a cryptic error
 - [ ] increase the performance of highlights and draw calls in general
 - [ ] think about persisting waypoints on every waypoint state change. maybe every time the waypoint window closes
 - [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
@@ -147,12 +149,11 @@ I frequently use the following abbreviations in this codebase:
 - [ ] remove all asserts from the code
 - [ ] when you change directory, reload waypoints from file (DirChanged autocmd)
 - [ ] see if you can fix the markdown header treesitter highlight bug
-- [ ] fix bug where toggles don't change in help mode
 - [ ] get rid of the rest of the global lua functions in floating_window, replacing them with module-scoped functions
 - [ ] add ability to add waypoint with annotation
 - [ ] add ability to add waypoint inserted after the current waypoint, not just at the end
 - [ ] delete the toggle waypoint function
-- [ ] fix bug where if you go to waypoint without extmark it prints a nasty error
+- [ ] add cumulative indent
 
 ### ADVANCED FEATURES:
 

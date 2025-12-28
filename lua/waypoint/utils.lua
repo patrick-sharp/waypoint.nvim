@@ -100,6 +100,8 @@ end
 
 -- length of the string as actually appears on screen.
 -- takes tabs and unicode into account
+---@param str string
+---@return integer
 function M.vislen(str)
   local num_tabs = 0
   for k = 1, #str do
