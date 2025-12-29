@@ -94,13 +94,16 @@ describe('Ring buffer', function()
   tu.assert_eq(6, res)
   tu.assert_eq(true, ok)
 
-  -- pop twice and push new values
+  -- pop twice, push once, try to repush, push again
+
   ring_buffer.pop(rb)
   ring_buffer.pop(rb)
   ring_buffer.push(rb, 7)
   res, ok = ring_buffer.peek(rb)
   tu.assert_eq(7, res)
   tu.assert_eq(true, ok)
+  ok = ring_buffer.repush(rb)
+  tu.assert_eq(false, ok)
   ring_buffer.push(rb, 8)
   res, ok = ring_buffer.peek(rb)
   tu.assert_eq(8, res)

@@ -77,8 +77,8 @@ end
 
 ---@param this waypoint.RingBuffer
 function M.clear(this)
-  this.start_idx = 0
-  this.end_idx = 0
+  this.start_idx = -1
+  this.end_idx = -1
   this.array = {}
   this.size = 0
 end

@@ -7,6 +7,7 @@ local constants = require("waypoint.constants")
 local state = require("waypoint.state")
 local u = require("waypoint.utils")
 local message = require("waypoint.message")
+local undo = require("waypoint.undo")
 
 ---@param a waypoint.Waypoint
 ---@param b waypoint.Waypoint
@@ -154,12 +155,20 @@ function M.move_waypoint_up()
   end
   if should_return then return end
 
+  local old_wpi = state.wpi
+
   for _=1, vim.v.count1 do
     local temp = state.waypoints[state.wpi - 1]
     state.waypoints[state.wpi - 1] = state.waypoints[state.wpi]
     state.waypoints[state.wpi] = temp
     state.wpi = state.wpi - 1
   end
+
+  local undo_msg = "Moved waypoint " .. tostring(state.wpi) .. " to position " .. old_wpi
+  local redo_msg = "Moved waypoint " .. tostring(old_wpi) .. " to position " .. state.wpi
+
+  undo.save_state(undo_msg, redo_msg)
+  M.make_sorted_waypoints()
 end
 
 function M.move_waypoint_down()
@@ -173,12 +182,20 @@ function M.move_waypoint_down()
   end
   if should_return then return end
 
+  local old_wpi = state.wpi
+
   for _=1, vim.v.count1 do
     local temp = state.waypoints[state.wpi + 1]
     state.waypoints[state.wpi + 1] = state.waypoints[state.wpi]
     state.waypoints[state.wpi] = temp
     state.wpi = state.wpi + 1
   end
+
+  local undo_msg = "Moved waypoint " .. tostring(state.wpi) .. " to position " .. old_wpi
+  local redo_msg = "Moved waypoint " .. tostring(old_wpi) .. " to position " .. state.wpi
+
+  undo.save_state(undo_msg, redo_msg)
+  M.make_sorted_waypoints()
 end
 
 function M.move_waypoint_to_top()

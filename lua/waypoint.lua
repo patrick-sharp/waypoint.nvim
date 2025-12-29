@@ -11,7 +11,7 @@ local config = require("waypoint.config")
 local filter = require("waypoint.filter")
 local test = require("waypoint.test")
 local global_keybindings = require("waypoint.global_keybindings")
-
+local undo = require("waypoint.undo")
 
 --- @param opts waypoint.ConfigOverride
 function M.setup(opts)
@@ -109,6 +109,8 @@ function M.setup(opts)
     floating_window.move_waypoints_to_file_command,
     {nargs = 1}
   )
+
+  undo.save_state("", "")
 end
 
 return M

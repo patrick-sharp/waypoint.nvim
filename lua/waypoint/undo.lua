@@ -4,42 +4,74 @@ local config = require"waypoint.config"
 local message = require"waypoint.message"
 local ring_buffer = require"waypoint.ring_buffer"
 local state = require"waypoint.state"
-local waypoint_crud = require"waypoint.waypoint_crud"
+local u = require"waypoint.utils"
 
----@class waypoint.Action
+---@class waypoint.UndoNode
 ---@field waypoints waypoint.Waypoint[]
----@field window_action waypoint.window_actions
+---@field wpi integer | nil
 ---@field undo_msg string
 ---@field redo_msg string
 
-M.actions = ring_buffer.new(config.max_msg_history)
+-- we will always keep at least one state in this ring buffer.
+-- when you undo, load the previous state and previous wpi.
+-- when you just loaded the first state in the ring buffer, there is no 
+-- previous state. Having zero states in the ring buffer is an unrepresentable
+-- null state that would mean not only having no previous state, but no current
+-- state either.
+-- when you redo, load the next state. if you're at the latest state, there is
+-- no next state
+M.states = ring_buffer.new(config.max_msg_history)
 
----@param action waypoint.Action
-function M.take_action(action)
-  ring_buffer.push(M.messages, action)
+---@param undo_msg string
+---@param redo_msg string
+function M.save_state(undo_msg, redo_msg)
+  message.notify(redo_msg, vim.log.levels.INFO)
+
+  ---@type waypoint.UndoNode
+  local undo_node = {
+    waypoints = u.deep_copy(state.waypoints),
+    wpi = state.wpi,
+    undo_msg = undo_msg,
+    redo_msg = redo_msg,
+  }
+
+  ring_buffer.push(M.states, undo_node)
 end
 
+---@return boolean
 function M.undo()
-  local action, ok = ring_buffer.pop(M.actions)
-  if not ok then
+  if M.states.size == 1 then
     message.notify("At end of undo history", vim.log.levels.INFO)
-    return
+    return false
   end
-  state.waypoints = action.waypoints
-  waypoint_crud.make_sorted_waypoints()
-  message.notify(action.undo_msg, vim.log.levels.INFO)
+
+  local curr_state, prev_state, ok
+
+  curr_state, ok = ring_buffer.peek(M.states)
+  assert(ok)
+  _, ok = ring_buffer.pop(M.states)
+  assert(ok)
+  prev_state, ok = ring_buffer.peek(M.states)
+  assert(ok)
+
+  state.waypoints = u.deep_copy(prev_state.waypoints)
+  state.wpi = prev_state.wpi
+  message.notify(curr_state.undo_msg .. " (from undo)", vim.log.levels.INFO)
+  return true
 end
 
+---@return boolean
 function M.redo()
-  local ok = ring_buffer.repush(M.actions)
+  local ok = ring_buffer.repush(M.states)
   if not ok then
     message.notify("At latest change", vim.log.levels.INFO)
-    return
+    return false
   end
-  local action, _ = ring_buffer.peek(ring_buffer)
-  state.waypoints = action.waypoints
-  waypoint_crud.make_sorted_waypoints()
-  message.notify(action.redo_msg, vim.log.levels.INFO)
+  local next_state, _ = ring_buffer.peek(M.states)
+  state.waypoints = u.deep_copy(next_state.waypoints)
+  state.wpi = next_state.wpi
+  message.notify(next_state.redo_msg .. " (from redo)", vim.log.levels.INFO)
+  return true
 end
 
 return M
