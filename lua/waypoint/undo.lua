@@ -41,7 +41,7 @@ end
 ---@return boolean
 function M.undo()
   if M.states.size == 1 then
-    message.notify("At end of undo history", vim.log.levels.INFO)
+    message.notify("At earliest change", vim.log.levels.INFO)
     return false
   end
 

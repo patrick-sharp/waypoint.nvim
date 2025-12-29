@@ -865,43 +865,49 @@ end
 function M.indent()
   crud.indent(1)
   draw_waypoint_window()
+  vim.cmd.normal("m.")
 end
 
 function M.unindent()
   crud.indent(-1)
   draw_waypoint_window()
+  vim.cmd.normal("m.")
 end
 
 function M.move_waypoint_up()
   crud.move_waypoint_up()
   draw_waypoint_window(M.WINDOW_ACTIONS.swap)
+  vim.cmd.normal("m.")
 end
 
 function M.move_waypoint_down()
   crud.move_waypoint_down()
   draw_waypoint_window(M.WINDOW_ACTIONS.swap)
+  vim.cmd.normal("m.")
 end
 
 function M.move_waypoint_to_top()
   crud.move_waypoint_to_top()
   draw_waypoint_window(M.WINDOW_ACTIONS.swap)
+  vim.cmd.normal("m.")
 end
 
 function M.move_waypoint_to_bottom()
   crud.move_waypoint_to_bottom()
   draw_waypoint_window(M.WINDOW_ACTIONS.swap)
+  vim.cmd.normal("m.")
 end
 
 function M.undo()
-  -- TODO: also take window action
   undo.undo()
   draw_waypoint_window()
+  vim.cmd.normal("m.")
 end
 
 function M.redo()
-  -- TODO: also take window action
   undo.redo()
   draw_waypoint_window()
+  vim.cmd.normal("m.")
 end
 
 function M.next_waypoint()
@@ -1158,11 +1164,13 @@ end
 function M.reset_current_indent()
   crud.reset_current_indent()
   draw_waypoint_window()
+  vim.cmd.normal("m.")
 end
 
 function M.reset_all_indent()
   crud.reset_all_indent()
   draw_waypoint_window()
+  vim.cmd.normal("m.")
 end
 
 function M.move_to_first_waypoint()
@@ -1420,6 +1428,7 @@ end
 function M.delete_current_waypoint()
   crud.delete_current_waypoint()
   draw_waypoint_window()
+  vim.cmd.normal("m.")
 end
 
 function M.set_quickfix_list()
