@@ -12,6 +12,7 @@ local u = require("waypoint.utils")
 local uw = require("waypoint.utils_waypoint")
 local waypoint_crud = require "waypoint.waypoint_crud"
 local message = require "waypoint.message"
+local undo = require "waypoint.undo"
 
 -- like waypoint.Waypoint, but only a subset of properties that are persisted to a file
 ---@class waypoint.SavedWaypoint
@@ -237,18 +238,20 @@ end
 
 -- all waypoints are assumed to be in the same file.
 -- mutates the waypoint objects to put them in the new file
----@param filepath string
+---@param src_filepath string
+---@param dest_filepath string
 ---@param waypoints (waypoint.SavedWaypoint | waypoint.Waypoint)[]
-function M.locate_waypoints_in_file(filepath, waypoints)
-  local bufnr = vim.fn.bufnr(filepath)
+---@param change_wpi integer | nil
+function M.locate_waypoints_in_file(src_filepath, dest_filepath, waypoints, change_wpi)
+  local bufnr = vim.fn.bufnr(dest_filepath)
   ---@type boolean
   if bufnr == -1 then
-    local does_file_exist = vim.fn.filereadable(filepath) ~= 0
+    local does_file_exist = vim.fn.filereadable(dest_filepath) ~= 0
     if does_file_exist then
-      bufnr = vim.fn.bufadd(filepath)
+      bufnr = vim.fn.bufadd(dest_filepath)
       buffer_init(bufnr)
     else
-      message.notify("Error: " .. filepath .. " does not exist")
+      message.notify("Error: " .. dest_filepath .. " does not exist")
       for _, waypoint in ipairs(waypoints) do
         waypoint.extmark_id = -1
         waypoint.bufnr      = -1
@@ -274,10 +277,10 @@ function M.locate_waypoints_in_file(filepath, waypoints)
       end
       waypoint.linenr = waypoint.linenr
       waypoint.bufnr = bufnr
-      waypoint.filepath = filepath
+      waypoint.filepath = dest_filepath
     else
       local new_linenr = levenshtein.find_best_match(waypoint, lines)
-      waypoint.filepath = filepath
+      waypoint.filepath = dest_filepath
       if new_linenr == -1 then
         waypoint.error = constants.no_matching_waypoint_error
       else
@@ -288,6 +291,13 @@ function M.locate_waypoints_in_file(filepath, waypoints)
       end
     end
   end
+
+  state.wpi = change_wpi
+
+  local undo_msg = message.moved_waypoints_to_file(#waypoints, dest_filepath, src_filepath)
+  local redo_msg = message.moved_waypoints_to_file(#waypoints, src_filepath, dest_filepath)
+
+  undo.save_state(undo_msg, redo_msg)
 end
 
 return M

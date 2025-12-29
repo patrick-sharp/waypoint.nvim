@@ -1330,8 +1330,13 @@ function M.move_waypoints_to_file(source_file_path, dest_file_path)
   ---@type waypoint.Waypoint[]
   local waypoints_in_file = {}
   source_file_path = vim.fs.normalize(source_file_path)
-  for _,waypoint in pairs(state.waypoints) do
+  ---@type integer | nil
+  local change_wpi = nil
+  for i,waypoint in pairs(state.waypoints) do
     if waypoint.filepath == source_file_path then
+      if not change_wpi then
+        change_wpi = i
+      end
       table.insert(waypoints_in_file, waypoint)
     end
   end
@@ -1340,10 +1345,11 @@ function M.move_waypoints_to_file(source_file_path, dest_file_path)
     return false
   end
 
-  file.locate_waypoints_in_file(dest_file_path, waypoints_in_file)
+  file.locate_waypoints_in_file(source_file_path, dest_file_path, waypoints_in_file, change_wpi)
   message.notify(message.moved_waypoints_to_file(#waypoints_in_file, source_file_path, dest_file_path), vim.log.levels.INFO)
 
   draw_waypoint_window()
+  vim.cmd.normal('m.')
   return true
 end
 
