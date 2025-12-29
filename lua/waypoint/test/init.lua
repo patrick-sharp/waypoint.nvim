@@ -7,7 +7,9 @@ local state = require'waypoint.state'
 
 -- these files call test_list.describe, which adds tests to the list
 local _ = require'waypoint.test.tests.context'
+local _ = require'waypoint.test.tests.delete'
 local _ = require'waypoint.test.tests.help'
+local _ = require'waypoint.test.tests.indent'
 local _ = require'waypoint.test.tests.levenshtein'
 local _ = require'waypoint.test.tests.missing_file'
 local _ = require'waypoint.test.tests.missing_file_complex'
@@ -18,7 +20,6 @@ local _ = require'waypoint.test.tests.ring_buffer'
 local _ = require'waypoint.test.tests.scroll'
 local _ = require'waypoint.test.tests.sort'
 local _ = require'waypoint.test.tests.toggles'
-local _ = require'waypoint.test.tests.delete'
 -- other tests to write
 -- * deleting waypoints
 -- * loading from files

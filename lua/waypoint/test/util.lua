@@ -8,6 +8,30 @@ local u = require("waypoint.utils")
 
 ---strings returned by thins function are trimmed to make testing more legible and not depend on screen size
 ---@return string[][]
+function M.get_waypoint_buffer_lines()
+  if not floating_window.is_open() then
+    error("Cannot get waypoint buffer lines while waypoint window is closed")
+  end
+  local pattern = ' ' .. constants.table_separator .. ' '
+  local bufnr = floating_window.get_bufnr()
+  local line_count = vim.api.nvim_buf_line_count(bufnr)
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, line_count, true)
+
+  ---@type string[]
+  local result = {}
+
+  for i = 1, line_count do
+    local split = u.split(lines[i], pattern)
+    for k,v in ipairs(split) do
+      split[k] = v
+    end
+    table.insert(result, split)
+  end
+  return result
+end
+
+---strings returned by thins function are trimmed to make testing more legible and not depend on screen size
+---@return string[][]
 function M.get_waypoint_buffer_lines_trimmed()
   if not floating_window.is_open() then
     error("Cannot get waypoint buffer lines while waypoint window is closed")

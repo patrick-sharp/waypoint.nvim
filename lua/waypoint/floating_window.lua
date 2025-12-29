@@ -545,8 +545,8 @@ local function set_waypoint_keybinds()
     return
   end
 
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "indent",                  M.indent_line)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "unindent",                M.unindent_line)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "indent",                  M.indent)
+  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "unindent",                M.unindent)
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "reset_waypoint_indent",   M.reset_current_indent)
   bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "reset_all_indent",        M.reset_all_indent)
 
@@ -862,12 +862,14 @@ local function open_help()
   highlight.highlight_custom_groups()
 end
 
-function M.indent_line()
-  crud.indent_line(1)
+function M.indent()
+  crud.indent(1)
+  draw_waypoint_window()
 end
 
-function M.unindent_line()
-  crud.indent_line(-1)
+function M.unindent()
+  crud.indent(-1)
+  draw_waypoint_window()
 end
 
 function M.move_waypoint_up()

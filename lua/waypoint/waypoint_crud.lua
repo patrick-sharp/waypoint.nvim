@@ -220,7 +220,7 @@ function M.move_waypoint_to_bottom()
 end
 
 -- Function to indent or unindent the current line by 2 spaces
-function M.indent_line(increment)
+function M.indent(increment)
   if state.wpi == nil then return end
   local waypoints
   if state.sort_by_file_and_line then
