@@ -127,6 +127,9 @@ I frequently use the following abbreviations in this codebase:
 - [x] figure out how to make choosing a file to move waypoints to a good experience (telescope, fzf, etc)
 - [x] fix bug where toggles don't change in help mode
 - [x] fix bug where if you go to waypoint without extmark it prints a cryptic error
+- [x] decide once and for all what I want to do about annotations
+    - [x] annotations should be displayed instead of file text
+- [x] add ability to add waypoint with annotation
 - [ ] increase the performance of highlights and draw calls in general
 - [ ] think about persisting waypoints on every waypoint state change. maybe every time the waypoint window closes
 - [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
@@ -144,16 +147,13 @@ I frequently use the following abbreviations in this codebase:
     - [ ] if highlighting fails for some reason, just show an error message and turn off highlighting
 - [ ] implement some kind of thing to handle errors and rollback state if you encounter them
 - [ ] increase ability to recover from erroneous state (grep for <TBD>)
-- [ ] decide once and for all what I want to do about annotations
-    - [ ] annotations should be displayed instead of file text
 - [ ] remove all asserts from the code
 - [ ] when you change directory, reload waypoints from file (DirChanged autocmd)
 - [ ] see if you can fix the markdown header treesitter highlight bug
 - [ ] get rid of the rest of the global lua functions in floating_window, replacing them with module-scoped functions
-- [ ] add ability to add waypoint with annotation
 - [ ] add ability to add waypoint inserted after the current waypoint, not just at the end
 - [ ] delete the toggle waypoint function
-- [ ] add cumulative indent
+- [ ] add cumulative indent (in visual mode)
 
 ### ADVANCED FEATURES:
 
@@ -175,7 +175,13 @@ I frequently use the following abbreviations in this codebase:
     - [ ] move selection of waypoints around
 - [ ] add ability to save and load waypoints to different files
 - [ ] save waypoints parallel directory structure like swap files so they don't clutter the repo (use vim.fn.mkdir(path, 'p'))
-- [ ] add ability to undo deleting waypoints with u
+- [ ] add ability to undo changing waypoints with u
+    - [x] moving up and down
+    - [x] moving waypoints to different files
+    - [ ] deleting
+    - [ ] creating
+    - [ ] indenting and unindenting
+    - [ ] moving waypoints to the top and bottom
 
 
 still got some weird treesitter behavior
@@ -239,3 +245,10 @@ require('jit.p').start('f', '/tmp/nvim_profile.txt')
 -- Stop the session and write the profile
 require('jit.p').stop()
 
+for undo:
+if you undo a change and the extmark doesn't exist, recreate it at its old line number.
+if it does exist, just point at that extmark. 
+this could easily be stale, but I think that's fine. I don't want to disorient
+with use of the levenshtein match finder on simple actions like undo, and I
+think it's fine if the extmark is gone for the line number to be stale
+otherwise, would have to always keep phantom extmarks for every state in the undo history. not reasonable.

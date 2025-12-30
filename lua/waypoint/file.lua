@@ -68,6 +68,7 @@ local function encode()
       waypoint_to_encode.indent = waypoint.indent
       waypoint_to_encode.filepath = waypoint.filepath
       waypoint_to_encode.linenr = extmark[1] + 1
+      waypoint_to_encode.annotation = waypoint.annotation
     end
     table.insert(state_to_encode.waypoints, waypoint_to_encode)
   end

@@ -310,12 +310,22 @@ local function draw_waypoint_window(action)
 
       -- line number
       if state.show_line_num then
-        if j >= file_start_idx and j < file_end_idx then
-          table.insert(row, tostring(context_start_linenr + j - file_start_idx))
+        if waypoint.annotation then
+          if j == extmark_line + 1 then
+            table.insert(row, tostring(waypoint.linenr))
+            table.insert(line_hlranges, constants.hl_linenr)
+          else
+            table.insert(row, "")
+            table.insert(line_hlranges, {})
+          end
         else
-          table.insert(row, "")
+          if j >= file_start_idx and j < file_end_idx then
+            table.insert(row, tostring(context_start_linenr + j - file_start_idx))
+          else
+            table.insert(row, "")
+          end
+          table.insert(line_hlranges, constants.hl_linenr)
         end
-        table.insert(line_hlranges, constants.hl_linenr)
       end
 
       -- file text

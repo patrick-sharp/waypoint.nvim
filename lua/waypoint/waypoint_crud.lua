@@ -61,8 +61,84 @@ end
 ---@param line_nr    integer one-indexed line number
 ---@param annotation string | nil
 function M.insert_waypoint(filepath, line_nr, annotation)
-  -- TODO
+  if not u.is_file_buffer() then return end
+  local bufnr = vim.fn.bufnr(filepath)
+  local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, line_nr - 1, -1, {
+    id = line_nr,
+    sign_text = config.mark_char,
+    priority = 1,
+    sign_hl_group = constants.hl_sign,
+  })
+
+  ---@type waypoint.Waypoint
+  local waypoint = {
+    extmark_id = extmark_id,
+    filepath = filepath,
+    indent = 0,
+    annotation = annotation,
+    linenr = line_nr,
+    bufnr = bufnr,
+    text = vim.api.nvim_buf_get_lines(bufnr, line_nr - 1, line_nr, true)[1],
+    error = nil,
+  }
+
+  if not state.wpi then
+    state.waypoints = {waypoint}
+    state.wpi = 1
+  elseif state.wpi == #state.waypoints then
+    state.wpi = state.wpi + 1
+    state.waypoints[state.wpi] = waypoint
+  else
+    ---@type waypoint.Waypoint[]
+    local new_waypoints = {}
+    state.wpi = state.wpi + 1
+    for i = 1,state.wpi do
+      new_waypoints[i] = state.waypoints[i]
+    end
+    new_waypoints[state.wpi] = waypoint
+    for i = state.wpi+1,#state.waypoints do
+      new_waypoints[i] = state.waypoints[i]
+    end
+    state.waypoints = new_waypoints
+  end
+
+  local undo_msg = "Inserted waypoint at position " .. tostring(state.wpi)
+  local redo_msg = "Removed waypoint at position" .. tostring(state.wpi)
+
+  undo.save_state(undo_msg, redo_msg)
+  M.make_sorted_waypoints()
 end
+
+function M.append_waypoint_wrapper()
+  if not u.is_file_buffer() then return end
+  local filepath = vim.fn.expand("%")
+  local cur_line_nr = vim.api.nvim_win_get_cursor(0)[1] -- Get current line number (one-indexed)
+  M.append_waypoint(filepath, cur_line_nr, nil)
+end
+
+function M.insert_waypoint_wrapper()
+  if not u.is_file_buffer() then return end
+  local filepath = vim.fn.expand("%")
+  local cur_line_nr = vim.api.nvim_win_get_cursor(0)[1] -- Get current line number (one-indexed)
+  M.insert_waypoint(filepath, cur_line_nr, nil)
+end
+
+function M.append_annotated_waypoint()
+  if not u.is_file_buffer() then return end
+  local filepath = vim.fn.expand("%")
+  local cur_line_nr = vim.api.nvim_win_get_cursor(0)[1] -- Get current line number (one-indexed)
+  local annotation = vim.fn.input("Enter annotation for waypoint: ")
+  M.append_waypoint(filepath, cur_line_nr, annotation)
+end
+
+function M.insert_annotated_waypoint()
+  if not u.is_file_buffer() then return end
+  local filepath = vim.fn.expand("%")
+  local cur_line_nr = vim.api.nvim_win_get_cursor(0)[1] -- Get current line number (one-indexed)
+  local annotation = vim.fn.input("Enter annotation for waypoint: ")
+  M.insert_waypoint(filepath, cur_line_nr, annotation)
+end
+
 
 function M.reset_current_indent()
   if state.wpi then
@@ -254,14 +330,6 @@ function M.indent(increment)
 end
 
 function M.delete_waypoint()
-  -- TODO
-end
-
-function M.insert_annotated_waypoint()
-  -- TODO
-end
-
-function M.append_annotated_waypoint()
   -- TODO
 end
 

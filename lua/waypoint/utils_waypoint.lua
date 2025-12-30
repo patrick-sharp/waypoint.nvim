@@ -92,14 +92,28 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
 
   local marked_line_idx = extmark_line_nr - start_line_nr -- zero-indexed
   -- this function takes zero indexed-parameters, inclusive lower bound, exclusive upper bound
-  local lines = vim.api.nvim_buf_get_lines(bufnr, start_line_nr - 1, end_line_nr - 1, false)
+  ---@type string[]
+  local lines
+  if waypoint.annotation then
+    lines = {}
+    for _=start_line_nr, extmark_line_nr-1 do
+      table.insert(lines, "")
+    end
+    table.insert(lines, waypoint.annotation)
+    for _=extmark_line_nr+1,end_line_nr-1 do
+      table.insert(lines, "")
+    end
+  else
+    lines = vim.api.nvim_buf_get_lines(bufnr, start_line_nr - 1, end_line_nr - 1, false)
+  end
 
   -- figure out how each line is highlighted
   --- @type waypoint.HighlightRange[][]
   local hlranges = {}
   local no_active_highlights = false
 
-  if constants.highlights_on then
+  if constants.highlights_on and not waypoint.annotation then
+  -- if constants.highlights_on then
     local file_uses_treesitter = vim.treesitter.highlighter.active[bufnr]
     if not config.enable_highlight then
       no_active_highlights = true
@@ -111,6 +125,9 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
       no_active_highlights = true
     end
   else
+    for i=1,#lines do
+      hlranges[i] = {}
+    end
     no_active_highlights = true
   end
 
