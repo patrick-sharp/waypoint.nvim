@@ -52,6 +52,11 @@ function M.append_waypoint(filepath, line_nr, annotation)
   }
 
   table.insert(state.waypoints, waypoint)
+
+  local redo_msg = "Appended waypoint at position " .. tostring(#state.waypoints)
+  local undo_msg = "Removed waypoint at position " .. tostring(#state.waypoints)
+
+  undo.save_state(undo_msg, redo_msg)
   M.make_sorted_waypoints()
 
   state.wpi = state.wpi or 1
@@ -96,14 +101,14 @@ function M.insert_waypoint(filepath, line_nr, annotation)
       new_waypoints[i] = state.waypoints[i]
     end
     new_waypoints[state.wpi] = waypoint
-    for i = state.wpi+1,#state.waypoints do
-      new_waypoints[i] = state.waypoints[i]
+    for i = state.wpi,#state.waypoints do
+      new_waypoints[i+1] = state.waypoints[i]
     end
     state.waypoints = new_waypoints
   end
 
-  local undo_msg = "Inserted waypoint at position " .. tostring(state.wpi)
-  local redo_msg = "Removed waypoint at position" .. tostring(state.wpi)
+  local redo_msg = "Inserted waypoint at position " .. tostring(state.wpi)
+  local undo_msg = "Removed waypoint at position " .. tostring(state.wpi)
 
   undo.save_state(undo_msg, redo_msg)
   M.make_sorted_waypoints()

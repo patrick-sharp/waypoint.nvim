@@ -188,8 +188,11 @@ local function load_decoded_state_into_state(decoded)
   waypoint_crud.make_sorted_waypoints()
 end
 
+-- this is only called on startup. we want the first entry in the undo history
+-- (the earliest state) to be the loaded state, so we call save_state as well here.
 function M.load()
   M.load_from_file(config.file)
+  undo.save_state("", "")
 end
 
 ---@param file string relative path config file.

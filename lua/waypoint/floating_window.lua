@@ -910,13 +910,13 @@ end
 
 function M.undo()
   undo.undo()
-  draw_waypoint_window()
+  draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
   vim.cmd.normal("m.")
 end
 
 function M.redo()
   undo.redo()
-  draw_waypoint_window()
+  draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
   vim.cmd.normal("m.")
 end
 

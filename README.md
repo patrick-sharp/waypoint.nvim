@@ -178,10 +178,11 @@ I frequently use the following abbreviations in this codebase:
 - [ ] add ability to undo changing waypoints with u
     - [x] moving up and down
     - [x] moving waypoints to different files
+    - [x] creating
     - [ ] deleting
-    - [ ] creating
     - [ ] indenting and unindenting
     - [ ] moving waypoints to the top and bottom
+    - [ ] make the cursor behave better at undo (i.e. move to last change even if change didn't affect the wpi)
 
 
 still got some weird treesitter behavior
