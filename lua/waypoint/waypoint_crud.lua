@@ -175,6 +175,8 @@ function M.find_waypoint(filepath, linenr)
   return -1
 end
 
+---@param existing_waypoint_i integer
+---@param filepath string
 function M.remove_waypoint(existing_waypoint_i, filepath)
   local bufnr = vim.fn.bufnr(filepath)
 
@@ -198,6 +200,10 @@ function M.remove_waypoint(existing_waypoint_i, filepath)
   end
   state.waypoints = waypoints_new
 
+  local redo_msg = "Deleted waypoint at position " .. tostring(existing_waypoint_i)
+  local undo_msg = "Restored waypoint at position " .. tostring(existing_waypoint_i)
+
+  undo.save_state(undo_msg, redo_msg, existing_waypoint_i)
   M.make_sorted_waypoints()
 end
 
@@ -285,12 +291,20 @@ function M.move_waypoint_to_top()
   end
   if should_return then return end
 
+  local old_wpi = state.wpi
+
   local temp = state.waypoints[state.wpi]
   for i=state.wpi, 2, -1 do
     state.waypoints[i] = state.waypoints[i-1]
   end
   state.waypoints[1] = temp
   state.wpi = 1
+
+  local redo_msg = "Moved waypoint at position " .. tostring(old_wpi) .. " to position " .. tostring(state.wpi)
+  local undo_msg = "Moved waypoint at position " .. tostring(state.wpi) .. " to position " .. tostring(old_wpi)
+
+  undo.save_state(undo_msg, redo_msg)
+  M.make_sorted_waypoints()
 end
 
 function M.move_waypoint_to_bottom()
@@ -304,15 +318,22 @@ function M.move_waypoint_to_bottom()
   end
   if should_return then return end
 
+  local old_wpi = state.wpi
+
   local temp = state.waypoints[state.wpi]
   for i=state.wpi, #state.waypoints - 1 do
     state.waypoints[i] = state.waypoints[i+1]
   end
   state.waypoints[#state.waypoints] = temp
   state.wpi = #state.waypoints
+
+  local redo_msg = "Moved waypoint at position " .. tostring(old_wpi) .. " to position " .. tostring(state.wpi)
+  local undo_msg = "Moved waypoint at position " .. tostring(state.wpi) .. " to position " .. tostring(old_wpi)
+
+  undo.save_state(undo_msg, redo_msg)
+  M.make_sorted_waypoints()
 end
 
--- Function to indent or unindent the current line by 2 spaces
 function M.indent(increment)
   if state.wpi == nil then return end
   local waypoints
@@ -327,6 +348,12 @@ function M.indent(increment)
       indent, 0, constants.max_indent
     )
   end
+
+  local redo_msg = "Indented waypoint at position " .. tostring(state.wpi)
+  local undo_msg = "Unindented waypoint at position " .. tostring(state.wpi)
+
+  undo.save_state(undo_msg, redo_msg)
+  M.make_sorted_waypoints()
 end
 
 function M.delete_waypoint()
@@ -337,29 +364,16 @@ function M.delete_waypoint()
   if existing_waypoint_i == -1 then return end
 
   M.remove_waypoint(existing_waypoint_i, state.waypoints[existing_waypoint_i].filepath)
-
-  local redo_msg = "Deleted waypoint at position " .. tostring(existing_waypoint_i)
-  local undo_msg = "Restored waypoint at position " .. tostring(existing_waypoint_i)
-
-  undo.save_state(undo_msg, redo_msg, existing_waypoint_i)
-  M.make_sorted_waypoints()
 end
 
 function M.delete_current_waypoint()
   if #state.waypoints == 0 then return end
   M.remove_waypoint(state.wpi, state.waypoints[state.wpi].filepath)
-  local old_wpi = state.wpi
   if #state.waypoints == 0 then
     state.wpi = nil
   else
     state.wpi = u.clamp(state.wpi, 1, #state.waypoints)
   end
-
-  local redo_msg = "Deleted waypoint at position " .. tostring(old_wpi)
-  local undo_msg = "Restored waypoint at position " .. tostring(old_wpi)
-
-  undo.save_state(undo_msg, redo_msg)
-  M.make_sorted_waypoints()
 end
 
 return M

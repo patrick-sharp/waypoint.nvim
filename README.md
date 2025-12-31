@@ -171,18 +171,20 @@ I frequently use the following abbreviations in this codebase:
     - [x] keybind: ts to toggle sort 
 - [x] add option for relative waypoint numbers
 - [x] allow for fixing of waypoints for missing files, allowing user to switch all waypoints to a different file
-- [ ] add visual mode
-    - [ ] move selection of waypoints around
-- [ ] add ability to save and load waypoints to different files
-- [ ] save waypoints parallel directory structure like swap files so they don't clutter the repo (use vim.fn.mkdir(path, 'p'))
 - [ ] add ability to undo changing waypoints with u
     - [x] moving up and down
     - [x] moving waypoints to different files
     - [x] creating
-    - [ ] deleting
-    - [ ] indenting and unindenting
-    - [ ] moving waypoints to the top and bottom
-    - [ ] make the cursor behave better at undo (i.e. move to last change even if change didn't affect the wpi)
+    - [x] deleting
+    - [x] indenting and unindenting
+    - [x] moving waypoints to the top and bottom
+    - [x] make the cursor behave better at undo (i.e. move to last change even if change didn't affect the wpi)
+    - [ ] fix bugs with undo
+        - [ ] what if waypoint buffer no longer exists when it's recreated (run sort test, delete, undo)
+- [ ] add visual mode
+    - [ ] move selection of waypoints around
+- [ ] add ability to save and load waypoints to different files
+- [ ] save waypoints parallel directory structure like swap files so they don't clutter the repo (use vim.fn.mkdir(path, 'p'))
 
 
 still got some weird treesitter behavior

@@ -11,7 +11,6 @@ local config = require("waypoint.config")
 local filter = require("waypoint.filter")
 local test = require("waypoint.test")
 local global_keybindings = require("waypoint.global_keybindings")
-local undo = require("waypoint.undo")
 
 --- @param opts waypoint.ConfigOverride
 function M.setup(opts)

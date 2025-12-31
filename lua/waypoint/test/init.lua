@@ -2,8 +2,10 @@ local M = {}
 
 local constants = require'waypoint.constants'
 local floating_window = require'waypoint.floating_window'
-local test_list = require'waypoint.test.test_list'
+local message = require'waypoint.message'
 local state = require'waypoint.state'
+local test_list = require'waypoint.test.test_list'
+local u = require'waypoint.utils'
 
 -- these files call test_list.describe, which adds tests to the list
 local _ = require'waypoint.test.tests.context'
@@ -102,7 +104,21 @@ local function clear_buffers()
   end
 end
 
+---@return boolean
+local function cwd_is_repo_root()
+  local result = u.file_exists("./lua/waypoint.lua")
+  if not result then
+    message.notify(
+      "Are you sure you're running this from the waypoint.nvim repo root folder?\n./lua/waypoint.lua is not a file\ncwd: " .. vim.fn.getcwd(),
+      vim.log.levels.ERROR
+    )
+  end
+  return result
+end
+
 function M.run_tests()
+  if not cwd_is_repo_root() then return end
+
   state.should_notify = false
   for _,test in ipairs(test_list.tests) do
     floating_window.clear_state_and_close()
@@ -120,6 +136,8 @@ end
 
 ---@param opts vim.api.keyset.create_user_command.command_args
 function M.run_test(opts)
+  if not cwd_is_repo_root() then return end
+
   local test_name = opts.args
   local matches = false
 
@@ -128,12 +146,18 @@ function M.run_test(opts)
       matches = true
       clear_buffers()
       floating_window.clear_state_and_close()
-      test.fn()
+      local _, err = xpcall(test.fn, debug.traceback)
+      if not err then
+        message.notify("TEST PASSED", vim.log.levels.INFO)
+      else
+        message.notify("TEST FAILED", vim.log.levels.ERROR)
+        message.notify("Traceback:\n" .. err)
+      end
       break
     end
   end
   if not matches then
-    vim.notify('No test named ' .. test_name, vim.log.levels.ERROR)
+    message.notify('No test named ' .. test_name, vim.log.levels.ERROR)
   end
 end
 
