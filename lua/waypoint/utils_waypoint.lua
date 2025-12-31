@@ -6,23 +6,22 @@ local highlight_treesitter = require("waypoint.highlight_treesitter")
 local highlight_vanilla = require("waypoint.highlight_vanilla")
 local state = require("waypoint.state")
 local u = require("waypoint.utils")
+local message = require("waypoint.message")
 
 --- @param waypoint waypoint.Waypoint
 --- @return { [1]: integer, [2]: integer } | nil
 function M.extmark_for_waypoint(waypoint)
-  if waypoint.extmark_id then
-    local bufnr = vim.fn.bufnr(waypoint.filepath)
-    --- @type { [1]: integer, [2]: integer }
-    local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {})
-    return extmark
+  local bufnr = vim.fn.bufnr(waypoint.filepath)
+  if bufnr == -1 or waypoint.extmark_id == -1 then
+    return nil
   end
-  return nil
+  --- @type table | { [1]: integer, [2]: integer }
+  local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {})
+  if #extmark == 0 then
+    return nil
+  end
+  return extmark
 end
-
-local missing_file_err_msg_table = {constants.file_dne_error, ". Press "}
-local move_waypoints_to_file = config.keybindings.waypoint_window_keybindings.move_waypoints_to_file
-u.add_stringifed_keybindings_to_table(missing_file_err_msg_table, move_waypoints_to_file)
-local missing_file_err_msg = table.concat(missing_file_err_msg_table)
 
 --- @class waypoint.WaypointFileText
 --- @field extmark              { [1]: integer, [2]: integer } the zero-indexed row,col coordinates of the extmark corresponding to this waypoint
@@ -52,7 +51,18 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
   local bufnr = vim.fn.bufnr(waypoint.filepath)
   --local bufnr = waypoint.bufnr
 
-  if waypoint.extmark_id == -1 then
+  --- @type nil | { [1]: integer, [2]: integer }
+  local maybe_extmark = nil
+  if waypoint.extmark_id ~= -1 and bufnr ~= -1 then
+    --- @type table | { [1]: integer, [2]: integer }
+    local maybe_extmark_ = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {})
+    if #maybe_extmark_ ~= 0 then
+      maybe_extmark = maybe_extmark_
+    end
+  end
+
+
+  if not maybe_extmark then
     --- @type string[]
     local lines = {}
     --- @type waypoint.HighlightRange[][]
@@ -63,9 +73,8 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
     end
     if waypoint.error then
       table.insert(lines, waypoint.error)
-    elseif waypoint.bufnr == -1 then
-
-      table.insert(lines, missing_file_err_msg)
+    elseif bufnr == -1 or 0 == vim.fn.bufloaded(bufnr) then
+      table.insert(lines, message.missing_file_err_msg)
     else
       table.insert(lines, constants.line_oob_error)
     end
@@ -89,14 +98,6 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
       highlight_ranges = hlranges,
     }
   end
-
-  local maybe_extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {})
-
-  assert(
-    #maybe_extmark ~= 0,
-    ("Extmark in buffer " .. tostring(bufnr) .. " in namespace " .. constants.ns
-      .. " with id " .. waypoint.extmark_id .. " does not exist")
-  )
 
   --- @type { [1]: integer, [2]: integer }
   local extmark = maybe_extmark

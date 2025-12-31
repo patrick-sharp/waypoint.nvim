@@ -63,8 +63,7 @@ function M.fix_waypoint_positions()
   local running_hunk_length_diff = 0
 
   for _, waypoint in ipairs(buf_waypoints) do
-    -- convert line number from zero-indexed to one-ondexed
-    local waypoint_line = waypoint.linenr + 1
+    local waypoint_line = waypoint.linenr
 
     if #diff < hunk_i then
       waypoint.linenr = waypoint.linenr + running_hunk_length_diff

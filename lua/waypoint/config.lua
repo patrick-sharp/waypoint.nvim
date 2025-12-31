@@ -41,7 +41,6 @@
 ---@field outer_waypoint            waypoint.Keybinding
 ---@field inner_waypoint            waypoint.Keybinding
 ---@field open_waypoint_window      waypoint.Keybinding
----@field toggle_waypoint           waypoint.Keybinding
 ---@field append_waypoint           waypoint.Keybinding
 ---@field insert_waypoint           waypoint.Keybinding
 ---@field append_annotated_waypoint waypoint.Keybinding
@@ -140,7 +139,6 @@
 ---@field outer_waypoint            nil | waypoint.Keybinding
 ---@field inner_waypoint            nil | waypoint.Keybinding
 ---@field open_waypoint_window      nil | waypoint.Keybinding
----@field toggle_waypoint           nil | waypoint.Keybinding
 ---@field append_waypoint           nil | waypoint.Keybinding
 ---@field insert_waypoint           nil | waypoint.Keybinding
 ---@field append_annotated_waypoint nil | waypoint.Keybinding
@@ -229,9 +227,6 @@ local M = {
       next_top_level_waypoint   = "m}",
       outer_waypoint            = "mo",
       inner_waypoint            = "mi",
-
-      toggle_waypoint           = "mt",
-
       append_waypoint           = "ma",
       insert_waypoint           = "mi",
       append_annotated_waypoint = "mA",
@@ -286,8 +281,8 @@ local M = {
       exit_help = {"q", "<esc>", "g?"}
     },
   },
-  max_undo_history = 32,
-  max_msg_history = 32,
+  max_undo_history = 100,
+  max_msg_history = 100,
 }
 
 return M

@@ -47,24 +47,6 @@ end
 function M.set_extmarks_for_state()
   ---@type table<integer,waypoint.Waypoint[]>
   local bufnr_to_waypoints = {}
-  -- for _,wp in ipairs(state.waypoints) do
-  --   local waypoints = bufnr_to_waypoints[wp.bufnr] or {}
-  --   bufnr_to_waypoints[wp.bufnr] = waypoints
-  --   waypoints[#waypoints+1] = wp
-  -- end
-  -- for bufnr,waypoints in pairs(bufnr_to_waypoints) do
-  --   for _,waypoint in ipairs(waypoints) do
-  --     local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {})
-  --     if #extmark == 0 then
-  --       uw.set_extmark(waypoint)
-  --     elseif extmark[1] + 1 ~= waypoint.linenr then
-  --       uw.set_extmark(waypoint)
-  --     end
-  --   end
-  --   ---@type table<integer, boolean>
-  --   local extmark_ids = {}
-  --   local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, constants.ns, 0, -1, {})
-  -- end
   for _,wp in ipairs(state.waypoints) do
     local waypoints = bufnr_to_waypoints[wp.bufnr] or {}
     bufnr_to_waypoints[wp.bufnr] = waypoints
@@ -85,7 +67,7 @@ end
 ---@return boolean
 function M.undo()
   if M.states.size == 1 then
-    message.notify("At earliest change", vim.log.levels.INFO)
+    message.notify(constants.msg_at_earliest_change, vim.log.levels.INFO)
     return false
   end
 

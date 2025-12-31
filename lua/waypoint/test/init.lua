@@ -8,6 +8,7 @@ local test_list = require'waypoint.test.test_list'
 local u = require'waypoint.utils'
 
 -- these files call test_list.describe, which adds tests to the list
+local _ = require'waypoint.test.tests.annotation'
 local _ = require'waypoint.test.tests.context'
 local _ = require'waypoint.test.tests.delete'
 local _ = require'waypoint.test.tests.help'
@@ -22,6 +23,7 @@ local _ = require'waypoint.test.tests.ring_buffer'
 local _ = require'waypoint.test.tests.scroll'
 local _ = require'waypoint.test.tests.sort'
 local _ = require'waypoint.test.tests.toggles'
+local _ = require'waypoint.test.tests.undo_crud'
 -- other tests to write
 -- * advanced navigations (outer/inner/neighbor/top/bottom)
 -- * navigations outside the waypoint window (next/previous etc.)

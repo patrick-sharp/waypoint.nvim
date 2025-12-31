@@ -207,25 +207,6 @@ function M.remove_waypoint(existing_waypoint_i, filepath)
   M.make_sorted_waypoints()
 end
 
-function M.toggle_waypoint()
-  if not u.is_file_buffer() then return end
-
-  --- @type string
-  local filepath = vim.fn.expand("%")
-
-  --- @type integer
-  local cur_line_nr = vim.api.nvim_win_get_cursor(0)[1] -- Get current line number (one-indexed)
-
-  --- @type integer
-  local existing_waypoint_i = M.find_waypoint(filepath, cur_line_nr)
-
-  if existing_waypoint_i == -1 then
-    M.append_waypoint(filepath, cur_line_nr)
-  else
-    M.remove_waypoint(existing_waypoint_i, filepath)
-  end
-end
-
 function M.move_waypoint_up()
   local should_return = (
     #state.waypoints <= 1

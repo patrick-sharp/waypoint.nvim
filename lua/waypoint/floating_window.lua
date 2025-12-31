@@ -589,7 +589,6 @@ local function set_waypoint_keybinds()
 end
 
 M.global_keybindings_description = {
-  {"toggle_waypoint"          ,  "Toggle a waypoint on the cursor's current line"}                                                     ,
   {"append_waypoint"          ,  "Create a waypoint on the current line, and add it to end of the waypoint list"}                      ,
   {"insert_waypoint"          ,  "Create a waypoint on the current line, and add it immediately after the current waypoint"}           ,
   {"append_annotated_waypoint",  "Create an annotated waypoint on the current line, and add it to end of the waypoint list"}           ,
@@ -960,14 +959,16 @@ function M.go_to_current_waypoint()
     waypoint = state.waypoints[state.wpi]
   end
   assert(waypoint)
-  if waypoint.bufnr == -1 then
+  if waypoint.bufnr == -1 or 0 == vim.fn.bufloaded(waypoint.bufnr) then
     message.notify(message.missing_file_err_msg, vim.log.levels.ERROR)
     return
-  elseif waypoint.extmark_id == -1 then
+  end
+
+  local extmark = uw.extmark_for_waypoint(waypoint)
+  if not extmark then
     message.notify(constants.line_oob_error, vim.log.levels.ERROR)
     return
   end
-  local extmark = uw.extmark_for_waypoint(waypoint)
 
   if extmark == nil then
     return
