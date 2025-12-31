@@ -21,16 +21,12 @@ local _ = require'waypoint.test.tests.scroll'
 local _ = require'waypoint.test.tests.sort'
 local _ = require'waypoint.test.tests.toggles'
 -- other tests to write
--- * deleting waypoints
--- * loading from files
--- * toggling off different parts of the file
--- * moving waypoints around
 -- * advanced navigations (outer/inner/neighbor/top/bottom)
 -- * navigations outside the waypoint window (next/previous etc.)
--- * indentation
 -- * doing normal crud operations with waypoints in missing files or outside file range
 -- * multiple waypoints getting moved onto the same line by a filter
 -- * rename file and make sure waypoints in that file are updated
+-- * waypoints being moved after a filter
 
 local border = "\n================================================================\n"
 local PASS = "✓ PASS"

@@ -4,6 +4,7 @@ local constants = require("waypoint.constants")
 local config = require("waypoint.config")
 local highlight_treesitter = require("waypoint.highlight_treesitter")
 local highlight_vanilla = require("waypoint.highlight_vanilla")
+local state = require("waypoint.state")
 local u = require("waypoint.utils")
 
 --- @param waypoint waypoint.Waypoint
@@ -31,6 +32,17 @@ local missing_file_err_msg = table.concat(missing_file_err_msg_table)
 --- @field highlight_ranges     waypoint.HighlightRange[][] the syntax highlights for each line in lines. This table will have the same number of elements as lines.
 --- @field file_start_idx       integer index within lines where the start of the file is, or 1 if the file starts before the context
 --- @field file_end_idx         integer index within lines where the end of the file is, or #lines + 1 if the file ends after the context
+
+---@param waypoint waypoint.Waypoint
+function M.set_extmark(waypoint)
+  local bufnr = waypoint.bufnr
+  vim.api.nvim_buf_set_extmark(bufnr, constants.ns, waypoint.linenr - 1, -1, {
+    id = waypoint.extmark_id,
+    sign_text = config.mark_char,
+    priority = 1,
+    sign_hl_group = constants.hl_sign,
+  })
+end
 
 --- @param waypoint waypoint.Waypoint
 --- @param num_lines_before integer
@@ -78,8 +90,16 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
     }
   end
 
+  local maybe_extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {})
+
+  assert(
+    #maybe_extmark ~= 0,
+    ("Extmark in buffer " .. tostring(bufnr) .. " in namespace " .. constants.ns
+      .. " with id " .. waypoint.extmark_id .. " does not exist")
+  )
+
   --- @type { [1]: integer, [2]: integer }
-  local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {})
+  local extmark = maybe_extmark
 
   -- one-indexed line number
   local extmark_line_nr = extmark[1] + 1
@@ -303,6 +323,22 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
   return result
 end
 
+---@param a waypoint.Waypoint
+---@param b waypoint.Waypoint
+local function waypoint_compare(a, b)
+  if a.filepath == b.filepath then
+    return a.linenr < b.linenr
+  end
+  return a.filepath < b.filepath
+end
+
+function M.make_sorted_waypoints()
+  state.sorted_waypoints = {}
+  for _, waypoint in ipairs(state.waypoints) do
+    table.insert(state.sorted_waypoints, waypoint)
+  end
+  table.sort(state.sorted_waypoints, waypoint_compare)
+end
 
 
 return M

@@ -7,8 +7,7 @@
 local M = {}
 
 local state = require("waypoint.state")
-local constants = require("waypoint.constants")
-local config = require("waypoint.config")
+local uw = require("waypoint.utils_waypoint")
 
 -- before the filter, we save the file contents as a string so we can diff them with the new file contents
 ---@type string[] | nil
@@ -26,21 +25,6 @@ end
 
 function M.save_file_contents()
   pre_filter_buf_lines = get_current_buffer_lines()
-end
-
-local function set_extmark(waypoint)
-  local bufnr = vim.fn.bufnr()
-
-  vim.schedule(
-    function()
-      vim.api.nvim_buf_set_extmark(bufnr, constants.ns, waypoint.linenr, -1, {
-        id = waypoint.extmark_id,
-        sign_text = config.mark_char,
-        priority = 1,
-        sign_hl_group = constants.hl_sign,
-      })
-    end
-  )
 end
 
 -- fix the position of waypoint extmarks.
@@ -84,7 +68,7 @@ function M.fix_waypoint_positions()
 
     if #diff < hunk_i then
       waypoint.linenr = waypoint.linenr + running_hunk_length_diff
-      set_extmark(waypoint)
+      uw.set_extmark(waypoint)
     else
       local old_end_line = 0
       local new_end_line = 0
@@ -92,7 +76,7 @@ function M.fix_waypoint_positions()
       while old_end_line < waypoint_line do
         if hunk_i > #diff then
           waypoint.linenr = waypoint.linenr + running_hunk_length_diff
-          set_extmark(waypoint)
+          uw.set_extmark(waypoint)
           break
         end
         local hunk = diff[hunk_i]
@@ -113,7 +97,7 @@ function M.fix_waypoint_positions()
         local should_break = false
         if before_start then
           waypoint.linenr = waypoint.linenr + running_hunk_length_diff
-          vim.api.set_extmark(waypoint)
+          uw.set_extmark(waypoint)
           should_break = true
         elseif after_start and before_end then
           local num_matches_in_old = 0
@@ -148,7 +132,7 @@ function M.fix_waypoint_positions()
 
           -- convert from one-indexed to zero-indexed
           waypoint.linenr = new_line - 1
-          vim.api.set_extmark(waypoint)
+          uw.set_extmark(waypoint)
           should_break = true
         end
 
