@@ -1,12 +1,12 @@
 local M = {}
 
-local constants = require("waypoint.constants")
 local config = require("waypoint.config")
+local constants = require("waypoint.constants")
 local highlight_treesitter = require("waypoint.highlight_treesitter")
 local highlight_vanilla = require("waypoint.highlight_vanilla")
+local message = require("waypoint.message")
 local state = require("waypoint.state")
 local u = require("waypoint.utils")
-local message = require("waypoint.message")
 
 --- @param waypoint waypoint.Waypoint
 --- @return { [1]: integer, [2]: integer } | nil

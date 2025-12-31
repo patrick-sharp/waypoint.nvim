@@ -190,15 +190,18 @@ end
 
 -- this is only called on startup. we want the first entry in the undo history
 -- (the earliest state) to be the loaded state, so we call save_state as well here.
-function M.load()
+function M.load_wrapper()
   M.load_from_file(config.file)
-  undo.save_state("", "")
 end
 
 ---@param file string relative path config file.
 function M.load_from_file(file)
   local data = read_file(file)
-  if data == nil then return end
+  if data == nil then
+    -- if no waypoints file, then make the first state the empty state
+    undo.save_state("", "")
+    return
+  end
   local decoded = vim.json.decode(data)
   local is_valid, k, v, expected = u.validate(decoded, file_schema, false)
   if not is_valid then
@@ -218,6 +221,7 @@ function M.load_from_file(file)
   end
 
   load_decoded_state_into_state(decoded)
+  undo.save_state("Restored waypoints to before load from file", "Loaded waypoints from " .. file)
 end
 
 
@@ -225,11 +229,11 @@ end
 ---@param waypoint waypoint.Waypoint | waypoint.SavedWaypoint
 ---@param linenr integer | nil overrides waypoint linenr if non-nil
 local function create_extmark_for_waypoint(bufnr, waypoint, linenr)
+  -- one-indexed line number
   local extmark_linenr = linenr or waypoint.linenr
   local extmark_id = vim.api.nvim_buf_set_extmark(
     bufnr, constants.ns, extmark_linenr - 1, -1,
     {
-      id = extmark_linenr,
       sign_text = config.mark_char,
       priority = 1,
       sign_hl_group = constants.hl_sign,

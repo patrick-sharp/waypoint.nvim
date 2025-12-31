@@ -180,7 +180,8 @@ I frequently use the following abbreviations in this codebase:
     - [x] moving waypoints to the top and bottom
     - [x] make the cursor behave better at undo (i.e. move to last change even if change didn't affect the wpi)
     - [ ] fix bugs with undo
-        - [ ] what if waypoint buffer no longer exists when it's recreated (run sort test, delete, undo)
+        - [x] bug when you run sort test, delete, undo
+        - [ ] bug when you run missing file test, delete a buffer, undo
 - [ ] add visual mode
     - [ ] move selection of waypoints around
 - [ ] add ability to save and load waypoints to different files

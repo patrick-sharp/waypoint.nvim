@@ -1414,7 +1414,6 @@ function M.move_waypoints_to_file_wrapper()
       end,
     })
   end
-
 end
 
 local function set_waypoint_for_cursor()

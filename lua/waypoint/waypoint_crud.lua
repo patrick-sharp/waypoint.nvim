@@ -349,7 +349,14 @@ end
 
 function M.delete_current_waypoint()
   if #state.waypoints == 0 then return end
-  M.remove_waypoint(state.wpi, state.waypoints[state.wpi].filepath)
+  ---@type waypoint.Waypoint[]
+  local waypoints
+  if state.sort_by_file_and_line then
+    waypoints = state.sorted_waypoints
+  else
+    waypoints = state.waypoints
+  end
+  M.remove_waypoint(state.wpi, waypoints[state.wpi].filepath)
   if #state.waypoints == 0 then
     state.wpi = nil
   else

@@ -49,7 +49,7 @@ function M.setup(opts)
 
   vim.api.nvim_create_autocmd("VimEnter", {
     group = constants.augroup,
-    callback = file.load,
+    callback = file.load_wrapper,
     once = true,
   })
   vim.api.nvim_create_autocmd("VimLeavePre", {

@@ -48,9 +48,13 @@ function M.set_extmarks_for_state()
   ---@type table<integer,waypoint.Waypoint[]>
   local bufnr_to_waypoints = {}
   for _,wp in ipairs(state.waypoints) do
-    local waypoints = bufnr_to_waypoints[wp.bufnr] or {}
-    bufnr_to_waypoints[wp.bufnr] = waypoints
-    waypoints[#waypoints+1] = wp
+    if wp.bufnr ~= -1 and 0 ~= vim.fn.bufloaded(wp.bufnr) then
+      local waypoints = bufnr_to_waypoints[wp.bufnr] or {}
+      bufnr_to_waypoints[wp.bufnr] = waypoints
+      waypoints[#waypoints+1] = wp
+    else
+      -- wp.bufnr = -1
+    end
   end
   for bufnr,waypoints in pairs(bufnr_to_waypoints) do
     local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, constants.ns, 0, -1, {})
