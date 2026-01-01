@@ -334,12 +334,6 @@ local function draw_waypoint_window(action)
         table.insert(line_hlranges, line_extmark_hlranges)
       end
 
-      for _,v in pairs(row) do
-        if v == nil then
-          u.log(row)
-        end
-      end
-
       table.insert(rows, row)
       table.insert(hlranges, line_hlranges)
     end

@@ -233,9 +233,9 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
     local width_override = u.get_in(opts, {"width_override", i})
     local width = width_override or max_width
     if width_override then
-      assert(max_width <= width, "Max width of column " .. widest_column .. "(" .. tostring(max_width) ..  ") is greater than width override of " .. tostring(width_override))
+      assert(max_width <= width, "Max width of column " .. tostring(widest_column) .. "(" .. tostring(max_width) ..  ") is greater than width override of " .. tostring(width_override))
     else
-      assert(max_width <= width, "Max width of column " .. widest_column .. "(" .. tostring(max_width) ..  ") is greater than column width of " .. tostring(width))
+      assert(max_width <= width, "Max width of column " .. tostring(widest_column) .. "(" .. tostring(max_width) ..  ") is greater than column width of " .. tostring(width))
     end
     table.insert(widths, width)
   end

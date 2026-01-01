@@ -154,6 +154,11 @@ I frequently use the following abbreviations in this codebase:
 - [ ] add ability to add waypoint inserted after the current waypoint, not just at the end
 - [ ] delete the toggle waypoint function
 - [ ] add cumulative indent (in visual mode)
+- [ ] write a representational invariant verifier (in visual mode)
+    - line number should match extmark
+    - text should match line number
+    - extmark id should not get stale
+    - extmarks without waypoints should not exist
 
 ### ADVANCED FEATURES:
 

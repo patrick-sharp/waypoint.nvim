@@ -53,7 +53,7 @@ function M.set_extmarks_for_state()
       bufnr_to_waypoints[wp.bufnr] = waypoints
       waypoints[#waypoints+1] = wp
     else
-      -- wp.bufnr = -1
+      wp.bufnr = -1
     end
   end
   for bufnr,waypoints in pairs(bufnr_to_waypoints) do
