@@ -92,8 +92,8 @@ function M.insert_waypoint(filepath, line_nr, annotation)
     state.waypoints = new_waypoints
   end
 
-  local redo_msg = "Inserted waypoint at position " .. tostring(state.wpi)
-  local undo_msg = "Removed waypoint at position " .. tostring(state.wpi)
+  local redo_msg = message.insert_waypoint(state.wpi)
+  local undo_msg = message.remove_waypoint(state.wpi)
 
   undo.save_state(undo_msg, redo_msg)
   M.make_sorted_waypoints()
@@ -233,8 +233,8 @@ function M.move_waypoint_up()
     state.wpi = state.wpi - 1
   end
 
-  local undo_msg = "Moved waypoint " .. tostring(state.wpi) .. " to position " .. old_wpi
-  local redo_msg = "Moved waypoint " .. tostring(old_wpi) .. " to position " .. state.wpi
+  local redo_msg = message.move_waypoint(old_wpi, state.wpi)
+  local undo_msg = message.move_waypoint(state.wpi, old_wpi)
 
   undo.save_state(undo_msg, redo_msg)
   M.make_sorted_waypoints()
@@ -260,8 +260,8 @@ function M.move_waypoint_down()
     state.wpi = state.wpi + 1
   end
 
-  local undo_msg = "Moved waypoint " .. tostring(state.wpi) .. " to position " .. old_wpi
-  local redo_msg = "Moved waypoint " .. tostring(old_wpi) .. " to position " .. state.wpi
+  local redo_msg = message.move_waypoint(old_wpi, state.wpi)
+  local undo_msg = message.move_waypoint(state.wpi, old_wpi)
 
   undo.save_state(undo_msg, redo_msg)
   M.make_sorted_waypoints()
@@ -287,8 +287,8 @@ function M.move_waypoint_to_top()
   state.waypoints[1] = temp
   state.wpi = 1
 
-  local redo_msg = "Moved waypoint at position " .. tostring(old_wpi) .. " to position " .. tostring(state.wpi)
-  local undo_msg = "Moved waypoint at position " .. tostring(state.wpi) .. " to position " .. tostring(old_wpi)
+  local redo_msg = message.move_waypoint(old_wpi, state.wpi)
+  local undo_msg = message.move_waypoint(state.wpi, old_wpi)
 
   undo.save_state(undo_msg, redo_msg)
   M.make_sorted_waypoints()
@@ -314,8 +314,8 @@ function M.move_waypoint_to_bottom()
   state.waypoints[#state.waypoints] = temp
   state.wpi = #state.waypoints
 
-  local redo_msg = "Moved waypoint at position " .. tostring(old_wpi) .. " to position " .. tostring(state.wpi)
-  local undo_msg = "Moved waypoint at position " .. tostring(state.wpi) .. " to position " .. tostring(old_wpi)
+  local redo_msg = message.move_waypoint(old_wpi, state.wpi)
+  local undo_msg = message.move_waypoint(state.wpi, old_wpi)
 
   undo.save_state(undo_msg, redo_msg)
   M.make_sorted_waypoints()

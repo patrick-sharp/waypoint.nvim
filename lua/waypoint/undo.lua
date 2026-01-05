@@ -96,7 +96,7 @@ end
 function M.redo()
   local ok = ring_buffer.repush(M.states)
   if not ok then
-    message.notify("At latest change", vim.log.levels.INFO)
+    message.notify(message.at_latest_change, vim.log.levels.INFO)
     return false
   end
   local next_state, _ = ring_buffer.peek(M.states)

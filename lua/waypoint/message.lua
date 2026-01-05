@@ -23,6 +23,7 @@ table.insert(missing_file_err_msg_table, " to move this file's waypoint's to a n
 M.missing_file_err_msg = table.concat(missing_file_err_msg_table)
 
 M.at_earliest_change = "At earliest change"
+M.at_latest_change = "At latest change"
 
 ---@param file string | nil
 function M.restored_before_load(file)
@@ -83,7 +84,13 @@ end
 
 ---@param position integer
 function M.remove_waypoint(position)
-  return "Appended waypoint at position " .. tostring(position)
+  return "Removed waypoint at position " .. tostring(position)
+end
+
+---@param position_1 integer | nil
+---@param position_2 integer | nil
+function M.move_waypoint(position_1, position_2)
+  return "Moved waypoint at position " .. tostring(position_1 or "_") .. " to position " .. tostring(position_2 or "_")
 end
 
 ---@param msg string

@@ -23,7 +23,10 @@ local _ = require'waypoint.test.tests.ring_buffer'
 local _ = require'waypoint.test.tests.scroll'
 local _ = require'waypoint.test.tests.sort'
 local _ = require'waypoint.test.tests.toggles'
-local _ = require'waypoint.test.tests.undo_crud'
+local _ = require'waypoint.test.tests.undo_append'
+local _ = require'waypoint.test.tests.undo_insert'
+local _ = require'waypoint.test.tests.undo_move'
+local _ = require'waypoint.test.tests.undo_delete'
 -- other tests to write
 -- * advanced navigations (outer/inner/neighbor/top/bottom)
 -- * navigations outside the waypoint window (next/previous etc.)
