@@ -176,10 +176,6 @@ local function get_bg_win_opts(win_opts)
   return bg_win_opts
 end
 
-local function repair_state()
-
-end
-
 ---@param action waypoint.window_actions | nil
 local function draw_waypoint_window(action)
   set_modifiable(wp_bufnr, true)
@@ -192,14 +188,6 @@ local function draw_waypoint_window(action)
     set_modifiable(wp_bufnr, false)
     return
   end
-
-  -- this is the only thing we do in this function that mutates state.
-  -- In general, I want draw_waypoint_window to be a pure function of state that draws the contents of the window.
-  -- However, sometimes data in state can get stale.
-  -- Examples: 
-  --   a file gets renamed, so the waypoint filepath is no longer correct.
-  --   a file gets closed, so the waypoint buffer number and extmark id are no longer correct.
-  repair_state()
 
   vim.api.nvim_buf_clear_namespace(wp_bufnr, constants.ns, 0, -1)
   local rows = {}
@@ -958,7 +946,7 @@ function M.go_to_current_waypoint()
     return
   end
 
-  local extmark = uw.extmark_for_waypoint(waypoint)
+  local extmark = uw.extmark_from_waypoint(waypoint)
   if not extmark then
     message.notify(constants.line_oob_error, vim.log.levels.ERROR)
     return
@@ -1592,6 +1580,7 @@ function M.clear_state_and_close()
     M.close()
   end
   M.clear_state()
+  undo.clear()
 end
 
 function M.clear_state_and_keep_open()

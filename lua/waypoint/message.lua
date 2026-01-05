@@ -22,6 +22,18 @@ table.insert(missing_file_err_msg_table, " to move this file's waypoint's to a n
 
 M.missing_file_err_msg = table.concat(missing_file_err_msg_table)
 
+M.at_earliest_change = "At earliest change"
+
+---@param file string | nil
+function M.restored_before_load(file)
+  return "Restored waypoints to before load from file " .. (file or config.file)
+end
+
+---@param file string
+function M.loaded_file(file)
+  return "Loaded waypoints from " .. (file or config.file)
+end
+
 ---@param path string
 ---@return string
 function M.files_same(path)
@@ -48,6 +60,31 @@ function M.moved_waypoints_to_file(num_waypoints, src, dst)
   return "Moved " .. tostring(num_waypoints) .. " waypoints from " .. src .. " to " .. dst
 end
 
+
+---@param msg string
+function M.from_undo(msg)
+  return msg .. " (from undo)"
+end
+
+---@param msg string
+function M.from_redo(msg)
+  return msg .. " (from redo)"
+end
+
+---@param position integer
+function M.append_waypoint(position)
+  return "Appended waypoint at position " .. tostring(position)
+end
+
+---@param position integer
+function M.insert_waypoint(position)
+  return "Inserted waypoint at position " .. tostring(position)
+end
+
+---@param position integer
+function M.remove_waypoint(position)
+  return "Appended waypoint at position " .. tostring(position)
+end
 
 ---@param msg string
 ---@param level integer | nil

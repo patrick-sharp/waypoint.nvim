@@ -85,4 +85,10 @@ function M.assert_neq(unexpected, actual)
   assert(unexpected ~= actual, "\n\nShould not equal:\nUnexpected: " .. vim.inspect(unexpected) .. "\nActual:   " .. vim.inspect(actual) .. "\n")
 end
 
+-- jump to linenr in current buffer. The extra <C-c> is to reset vim.v.count
+---@param linenr integer one-indexed line number
+function M.goto_line(linenr)
+  vim.cmd.normal({args = {tostring(linenr) .. "G<C-c>"}, bang=true})
+end
+
 return M

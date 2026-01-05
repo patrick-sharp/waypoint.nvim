@@ -11,6 +11,7 @@ local config = require("waypoint.config")
 local filter = require("waypoint.filter")
 local test = require("waypoint.test")
 local global_keybindings = require("waypoint.global_keybindings")
+local repair = require("waypoint.repair")
 
 --- @param opts waypoint.ConfigOverride
 function M.setup(opts)
@@ -66,6 +67,28 @@ function M.setup(opts)
     group = constants.augroup,
     callback = filter.fix_waypoint_positions,
   })
+  -- vim.api.nvim_create_autocmd("FileChangedShell", {
+  --   group = constants.augroup,
+  --   callback = function() end
+  -- })
+  -- TODO: maybe get rid of these entirely if possible
+  -- vim.api.nvim_create_autocmd("TextChanged", {
+  --   group = constants.augroup,
+  --   callback = repair.text_changed_callback,
+  -- })
+  -- vim.api.nvim_create_autocmd("TextChangedI", {
+  --   group = constants.augroup,
+  --   callback = repair.text_changed_callback,
+  -- })
+  -- vim.api.nvim_create_autocmd("TextChangedP", {
+  --   group = constants.augroup,
+  --   callback = repair.text_changed_callback,
+  -- })
+  -- vim.api.nvim_create_autocmd("TextChangedT", {
+  --   group = constants.augroup,
+  --   callback = repair.text_changed_callback,
+  -- })
+
 
   global_keybindings.bind_key(config.keybindings.global_keybindings, "current_waypoint",          floating_window.go_to_current_waypoint)
   global_keybindings.bind_key(config.keybindings.global_keybindings, "prev_waypoint",             floating_window.GoToPrevWaypoint)

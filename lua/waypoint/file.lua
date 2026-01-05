@@ -62,7 +62,7 @@ local function encode()
   }
   for _, waypoint in pairs(state.waypoints) do
     local waypoint_to_encode = {}
-    local extmark = uw.extmark_for_waypoint(waypoint)
+    local extmark = uw.extmark_from_waypoint(waypoint)
     if extmark then
       waypoint_to_encode.text = waypoint.text
       waypoint_to_encode.indent = waypoint.indent
@@ -202,6 +202,7 @@ function M.load_from_file(file)
     undo.save_state("", "")
     return
   end
+
   local decoded = vim.json.decode(data)
   local is_valid, k, v, expected = u.validate(decoded, file_schema, false)
   if not is_valid then
@@ -221,14 +222,14 @@ function M.load_from_file(file)
   end
 
   load_decoded_state_into_state(decoded)
-  undo.save_state("Restored waypoints to before load from file", "Loaded waypoints from " .. file)
+  undo.save_state(message.restored_before_load(file), message.loaded_file(file))
 end
 
 
 ---@param bufnr integer
 ---@param waypoint waypoint.Waypoint | waypoint.SavedWaypoint
 ---@param linenr integer | nil overrides waypoint linenr if non-nil
-local function create_extmark_for_waypoint(bufnr, waypoint, linenr)
+local function create_extmark(bufnr, waypoint, linenr)
   -- one-indexed line number
   local extmark_linenr = linenr or waypoint.linenr
   local extmark_id = vim.api.nvim_buf_set_extmark(
@@ -281,7 +282,7 @@ function M.locate_waypoints_in_file(src_filepath, dest_filepath, waypoints, chan
     waypoint.bufnr      = -1
     if waypoint.text == lines[linenr] then
       if linenr < line_count then
-        waypoint.extmark_id = create_extmark_for_waypoint(bufnr, waypoint)
+        waypoint.extmark_id = create_extmark(bufnr, waypoint)
       end
       waypoint.linenr = waypoint.linenr
       waypoint.bufnr = bufnr
@@ -295,7 +296,7 @@ function M.locate_waypoints_in_file(src_filepath, dest_filepath, waypoints, chan
         waypoint.linenr = new_linenr
         waypoint.bufnr = bufnr
         waypoint.text = lines[new_linenr]
-        waypoint.extmark_id = create_extmark_for_waypoint(bufnr, waypoint)
+        waypoint.extmark_id = create_extmark(bufnr, waypoint)
       end
     end
   end

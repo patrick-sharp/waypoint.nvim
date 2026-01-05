@@ -71,7 +71,7 @@ end
 ---@return boolean
 function M.undo()
   if M.states.size == 1 then
-    message.notify(constants.msg_at_earliest_change, vim.log.levels.INFO)
+    message.notify(message.at_earliest_change, vim.log.levels.INFO)
     return false
   end
 
@@ -88,7 +88,7 @@ function M.undo()
   state.wpi = prev_state.wpi
   uw.make_sorted_waypoints()
   M.set_extmarks_for_state()
-  message.notify(curr_state.undo_msg .. " (from undo)", vim.log.levels.INFO)
+  message.notify(message.from_undo(curr_state.undo_msg), vim.log.levels.INFO)
   return true
 end
 
@@ -104,8 +104,16 @@ function M.redo()
   state.wpi = next_state.wpi
   uw.make_sorted_waypoints()
   M.set_extmarks_for_state()
-  message.notify(next_state.redo_msg .. " (from redo)", vim.log.levels.INFO)
+  message.notify(message.from_redo(next_state.redo_msg), vim.log.levels.INFO)
   return true
+end
+
+-- clears the undo history.
+-- note that generally I make the assumption that the undo buffer always has at
+-- least one element in it at all time, so I call save_state here to ensure that.
+function M.clear()
+  ring_buffer.clear(M.states)
+  M.save_state("", "")
 end
 
 return M

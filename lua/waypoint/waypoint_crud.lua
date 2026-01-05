@@ -38,8 +38,8 @@ function M.append_waypoint(filepath, line_nr, annotation)
 
   table.insert(state.waypoints, waypoint)
 
-  local redo_msg = "Appended waypoint at position " .. tostring(#state.waypoints)
-  local undo_msg = "Removed waypoint at position " .. tostring(#state.waypoints)
+  local redo_msg = message.append_waypoint(#state.waypoints)
+  local undo_msg = message.remove_waypoint(#state.waypoints)
 
   undo.save_state(undo_msg, redo_msg, #state.waypoints)
   M.make_sorted_waypoints()
@@ -113,19 +113,25 @@ function M.insert_waypoint_wrapper()
   M.insert_waypoint(filepath, cur_line_nr, nil)
 end
 
-function M.append_annotated_waypoint()
+---@param annotation string | nil
+function M.append_annotated_waypoint(annotation)
   if not u.is_file_buffer() then return end
   local filepath = vim.fn.expand("%")
   local cur_line_nr = vim.api.nvim_win_get_cursor(0)[1] -- Get current line number (one-indexed)
-  local annotation = vim.fn.input("Enter annotation for waypoint: ")
+  if not annotation then
+    annotation = vim.fn.input("Enter annotation for waypoint: ")
+  end
   M.append_waypoint(filepath, cur_line_nr, annotation)
 end
 
-function M.insert_annotated_waypoint()
+---@param annotation string | nil
+function M.insert_annotated_waypoint(annotation)
   if not u.is_file_buffer() then return end
   local filepath = vim.fn.expand("%")
   local cur_line_nr = vim.api.nvim_win_get_cursor(0)[1] -- Get current line number (one-indexed)
-  local annotation = vim.fn.input("Enter annotation for waypoint: ")
+  if not annotation then
+    annotation = vim.fn.input("Enter annotation for waypoint: ")
+  end
   M.insert_waypoint(filepath, cur_line_nr, annotation)
 end
 

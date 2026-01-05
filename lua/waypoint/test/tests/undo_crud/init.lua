@@ -8,14 +8,13 @@ local wp_2_text = test_list.wp_2_text
 local wp_3_text = test_list.wp_3_text
 
 local crud = require("waypoint.waypoint_crud")
-local constants = require('waypoint.constants')
 local floating_window = require("waypoint.floating_window")
+local message = require'waypoint.message'
 local state = require("waypoint.state")
-local file = require'waypoint.file'
 local u = require("waypoint.utils")
 local tu = require'waypoint.test.util'
 
-describe('Undo crud', function()
+describe('Undo create', function()
   assert(u.file_exists(file_0))
   assert(u.file_exists(file_1))
 
@@ -23,10 +22,10 @@ describe('Undo crud', function()
   floating_window.undo()
   floating_window.close()
 
-  tu.assert_eq(constants.msg_at_earliest_change, tu.get_last_message())
+  tu.assert_eq(message.at_earliest_change, tu.get_last_message())
 
   vim.cmd.edit({args = {file_0}, bang=true})
-  vim.cmd.normal({args = {"7G"}, bang=true})
+  tu.goto_line(7)
   crud.append_waypoint_wrapper()
 
   tu.assert_eq(1, #state.waypoints)
@@ -34,16 +33,12 @@ describe('Undo crud', function()
 
   floating_window.open()
   floating_window.undo()
-  floating_window.close()
+  local undo_msg
+  undo_msg = message.from_undo(message.append_waypoint(1))
+  tu.assert_eq(undo_msg, tu.get_last_message())
+  tu.assert_eq(0, #state.waypoints)
+  tu.assert_eq(nil, state.wpi)
 
-  vim.cmd.edit({args = {file_1}, bang=true})
-  vim.cmd.normal({args = {"8G"}, bang=true})
-  crud.append_waypoint_wrapper()
-  vim.cmd.normal({args = {"5G"}, bang=true})
-  crud.append_waypoint_wrapper()
-  vim.cmd.edit({args = {file_0}, bang=true})
-  vim.cmd.normal({args = {"3G"}, bang=true})
-  crud.append_waypoint_wrapper()
-  vim.cmd.normal({args = {"17G"}, bang=true})
-  crud.append_waypoint_wrapper()
+  floating_window.undo()
+  tu.assert_eq(message.at_earliest_change, tu.get_last_message())
 end)

@@ -10,7 +10,7 @@ local u = require("waypoint.utils")
 
 --- @param waypoint waypoint.Waypoint
 --- @return { [1]: integer, [2]: integer } | nil
-function M.extmark_for_waypoint(waypoint)
+function M.extmark_from_waypoint(waypoint)
   local bufnr = vim.fn.bufnr(waypoint.filepath)
   if bufnr == -1 or waypoint.extmark_id == -1 then
     return nil
@@ -21,6 +21,14 @@ function M.extmark_for_waypoint(waypoint)
     return nil
   end
   return extmark
+end
+
+---@param waypoint waypoint.Waypoint
+---@return integer | nil the one-indexed line number a waypoint's extmark is on, or nil if it doesn't have one
+function M.linenr_from_waypoint(waypoint)
+  local extmark = M.extmark_from_waypoint(waypoint)
+  if not extmark then return nil end
+  return extmark[1] + 1 -- convert from zero-indexed to one-indexed
 end
 
 --- @class waypoint.WaypointFileText
