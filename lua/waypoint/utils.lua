@@ -228,4 +228,13 @@ function M.len(t)
   return count
 end
 
+-- checks for truthy values in table
+---@param t table
+function M.any(t)
+  for _,v in ipairs(t) do
+    if v then return v end
+  end
+  return false
+end
+
 return M

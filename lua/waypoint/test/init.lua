@@ -11,6 +11,7 @@ local u = require'waypoint.utils'
 local _ = require'waypoint.test.tests.annotation'
 local _ = require'waypoint.test.tests.context'
 local _ = require'waypoint.test.tests.delete'
+local _ = require'waypoint.test.tests.filter'
 local _ = require'waypoint.test.tests.help'
 local _ = require'waypoint.test.tests.indent'
 local _ = require'waypoint.test.tests.levenshtein'
@@ -24,9 +25,9 @@ local _ = require'waypoint.test.tests.scroll'
 local _ = require'waypoint.test.tests.sort'
 local _ = require'waypoint.test.tests.toggles'
 local _ = require'waypoint.test.tests.undo_append'
+local _ = require'waypoint.test.tests.undo_delete'
 local _ = require'waypoint.test.tests.undo_insert'
 local _ = require'waypoint.test.tests.undo_move'
-local _ = require'waypoint.test.tests.undo_delete'
 -- other tests to write
 -- * advanced navigations (outer/inner/neighbor/top/bottom)
 -- * navigations outside the waypoint window (next/previous etc.)
@@ -34,6 +35,8 @@ local _ = require'waypoint.test.tests.undo_delete'
 -- * multiple waypoints getting moved onto the same line by a filter
 -- * rename file and make sure waypoints in that file are updated
 -- * waypoints being moved after a filter
+-- * filter breaking and vomiting garbage into the buffer
+-- * filter on only part of the buffer
 
 local border = "\n================================================================\n"
 local PASS = "✓ PASS"

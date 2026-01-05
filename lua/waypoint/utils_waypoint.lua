@@ -43,12 +43,21 @@ end
 ---@param waypoint waypoint.Waypoint
 function M.set_extmark(waypoint)
   local bufnr = waypoint.bufnr
-  vim.api.nvim_buf_set_extmark(bufnr, constants.ns, waypoint.linenr - 1, -1, {
-    id = waypoint.extmark_id,
+
+  -- does nothing if extmark id is invalid
+  vim.api.nvim_buf_del_extmark(bufnr, constants.ns, waypoint.extmark_id)
+
+  if waypoint.linenr > vim.api.nvim_buf_line_count(bufnr) then
+    waypoint.extmark_id = -1
+    return false
+  end
+
+  waypoint.extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, waypoint.linenr - 1, -1, {
     sign_text = config.mark_char,
     priority = 1,
     sign_hl_group = constants.hl_sign,
   })
+  return true
 end
 
 --- @param waypoint waypoint.Waypoint
@@ -56,8 +65,7 @@ end
 --- @param num_lines_after integer
 --- @return waypoint.WaypointFileText
 function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
-  local bufnr = vim.fn.bufnr(waypoint.filepath)
-  --local bufnr = waypoint.bufnr
+  local bufnr = waypoint.bufnr
 
   --- @type nil | { [1]: integer, [2]: integer }
   local maybe_extmark = nil
@@ -68,7 +76,6 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
       maybe_extmark = maybe_extmark_
     end
   end
-
 
   if not maybe_extmark then
     --- @type string[]
@@ -96,6 +103,7 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
       table.insert(lines, "")
       table.insert(hlranges, {})
     end
+
     return {
       extmark = nil,
       lines = lines,
@@ -139,28 +147,27 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
   -- figure out how each line is highlighted
   --- @type waypoint.HighlightRange[][]
   local hlranges = {}
-  local no_active_highlights = false
 
-  if constants.highlights_on and not waypoint.annotation then
-  -- if constants.highlights_on then
+  local has_highlights = u.any({
+    constants.highlights_on,
+    config.enable_highlight,
+    waypoint.annotation,
+  })
+
+  if has_highlights then
     local file_uses_treesitter = vim.treesitter.highlighter.active[bufnr]
-    if not config.enable_highlight then
-      no_active_highlights = true
-    elseif file_uses_treesitter then
+    if file_uses_treesitter then
       hlranges = highlight_treesitter.get_treesitter_syntax_highlights(bufnr, lines, start_line_nr - 1, end_line_nr - 1)
     elseif pcall(vim.api.nvim_buf_get_var, bufnr, "current_syntax") then
       hlranges = highlight_vanilla.get_vanilla_syntax_highlights(bufnr, lines, start_line_nr - 1)
     else
-      no_active_highlights = true
+      for i=1,#lines do hlranges[i] = {} end
     end
   else
-    for i=1,#lines do
-      hlranges[i] = {}
-    end
-    no_active_highlights = true
+    for i=1,#lines do hlranges[i] = {} end
   end
 
-  assert(#lines == #hlranges or no_active_highlights, "#lines == " .. #lines ..", #hlranges == " .. #hlranges .. ", but they should be the same" )
+  assert(#lines == #hlranges, "#lines == " .. #lines ..", #hlranges == " .. #hlranges .. ", but they should be the same" )
 
   -- if the waypoint context extends to before the start of the file or after
   -- the end, pad to the length of the context with empty lines
@@ -184,6 +191,8 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
     table.insert(lines_, "")
     table.insert(hlranges_, {})
   end
+
+  assert(#lines_ == #hlranges_)
 
   return {
     extmark = extmark,

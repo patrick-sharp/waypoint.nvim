@@ -211,7 +211,7 @@ function M.load_from_file(file)
       expected, " for key ", tostring(k),
       ", but received ", tostring(v), " (of type ", type(v), ")."
     })
-    print(state.load_error)
+    message.notify(state.load_error)
     return
   end
 

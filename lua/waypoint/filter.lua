@@ -89,18 +89,18 @@ function M.fix_waypoint_positions()
         old_end_line = old_start_line + old_num_lines - 1
         new_end_line = new_start_line + new_num_lines - 1
 
-        local before_start = waypoint_line < old_start_line
-        local after_start = old_start_line <= waypoint_line
-        local before_end = waypoint_line <= old_end_line
+        local is_before_start = waypoint_line < old_start_line
+        local is_after_start = old_start_line <= waypoint_line
+        local is_before_end = waypoint_line <= old_end_line
 
         local should_break = false
-        if before_start then
+        if is_before_start then
           waypoint.linenr = waypoint.linenr + running_hunk_length_diff
           uw.set_extmark(waypoint)
           should_break = true
-        elseif after_start and before_end then
+        elseif is_after_start and is_before_end then
           local num_matches_in_old = 0
-          local word = pre_filter_buf_lines[waypoint_line]:gmatch('[%w]+')[1]
+          local word = pre_filter_buf_lines[waypoint_line]:gmatch('[%w]+')()
 
           local old_line = old_start_line
           while old_line < waypoint_line do
@@ -115,11 +115,14 @@ function M.fix_waypoint_positions()
           num_matches_in_old = num_matches_in_old + 1
 
           local num_matches_in_new = 0
+          -- since the line updates at the beginning of while loop, we need to start one line before.
+          -- we need the line to update at the beginning so we can break out of
+          -- the inner for loop at the end without updating new_line
           local new_line = new_start_line - 1
           while num_matches_in_new < num_matches_in_old and new_line <= new_end_line do
             new_line = new_line + 1
             local new_line_content = post_filter_buf_lines[new_line]
-            for _, new_line_word in new_line_content:gmatch('[%w]+') do
+            for new_line_word in new_line_content:gmatch('[%w]+') do
               if new_line_word == word then
                 num_matches_in_new = num_matches_in_new + 1
               end
@@ -129,8 +132,7 @@ function M.fix_waypoint_positions()
             end
           end
 
-          -- convert from one-indexed to zero-indexed
-          waypoint.linenr = new_line - 1
+          waypoint.linenr = new_line
           uw.set_extmark(waypoint)
           should_break = true
         end
