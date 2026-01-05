@@ -2,11 +2,10 @@ local test_list = require('waypoint.test.test_list')
 local describe = test_list.describe
 
 local crud = require("waypoint.waypoint_crud")
-local floating_window = require("waypoint.floating_window")
-local message = require'waypoint.message'
 local state = require("waypoint.state")
 local filter = require("waypoint.filter")
 local u = require("waypoint.utils")
+local uw = require("waypoint.utils_waypoint")
 local tu = require'waypoint.test.util'
 
 local before = "lua/waypoint/test/tests/filter/before.lua"
@@ -21,7 +20,6 @@ local after = "lua/waypoint/test/tests/filter/after.lua"
 describe('Filter', function()
   assert(u.file_exists(before))
   assert(u.file_exists(after))
-
 
   vim.cmd.edit({args = {before}, bang=true})
   local before_bufnr = vim.fn.bufnr(before)
@@ -76,5 +74,9 @@ describe('Filter', function()
   -- post filter callback
   filter.fix_waypoint_positions()
 
-  -- TODO: finish filter
+  tu.assert_eq(1, uw.linenr_from_waypoint(state.waypoints[1])) -- should still be on same line
+  tu.assert_eq(2, uw.linenr_from_waypoint(state.waypoints[2])) -- should still be on same line
+  tu.assert_eq(3, uw.linenr_from_waypoint(state.waypoints[3])) -- should still be on same line
+  tu.assert_eq(7, uw.linenr_from_waypoint(state.waypoints[4])) -- should have been moved down by the wide table getting split into multiple lines
+  tu.assert_eq(8, uw.linenr_from_waypoint(state.waypoints[5])) -- should have been moved up by the tall table getting concatenated to one line
 end)

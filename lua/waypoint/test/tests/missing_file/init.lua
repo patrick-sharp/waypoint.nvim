@@ -3,12 +3,13 @@ local describe = test_list.describe
 local file_0 = test_list.file_0
 local file_1 = test_list.file_1
 
+local constants = require("waypoint.constants")
 local file = require'waypoint.file'
 local floating_window = require("waypoint.floating_window")
-local state = require("waypoint.state")
-local constants = require("waypoint.constants")
 local message = require("waypoint.message")
+local state = require("waypoint.state")
 local tu = require'waypoint.test.util'
+local uw = require'waypoint.utils_waypoint'
 
 describe('Missing file', function()
   file.load_from_file("lua/waypoint/test/tests/missing_file/waypoints.json")
@@ -66,11 +67,11 @@ describe('Missing file', function()
   tu.assert_neq(-1, file_1_bufnr)
 
   tu.assert_eq(file_1, state.waypoints[2].filepath)
-  tu.assert_eq(8, state.waypoints[2].linenr)
+  tu.assert_eq(8, uw.linenr_from_waypoint(state.waypoints[2]))
   tu.assert_eq(file_1_bufnr, state.waypoints[2].bufnr)
 
   tu.assert_eq(file_1, state.waypoints[3].filepath)
-  tu.assert_eq(9, state.waypoints[3].linenr)
+  tu.assert_eq(9, uw.linenr_from_waypoint(state.waypoints[3]))
   tu.assert_eq(file_1_bufnr, state.waypoints[3].bufnr)
 
   lines = tu.get_waypoint_buffer_lines_trimmed()
