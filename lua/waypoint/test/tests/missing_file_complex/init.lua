@@ -8,6 +8,7 @@ local state = require("waypoint.state")
 local constants = require("waypoint.constants")
 local message = require("waypoint.message")
 local tu = require'waypoint.test.util'
+local uw = require'waypoint.utils_waypoint'
 
 -- This test is more complex than the basic missing_file, as it involves the text of the waypoints being slightly different from the text in the file.
 -- This causes the locate_waypoints_in_file function to use a levenshtein search
@@ -43,11 +44,11 @@ describe('Missing file complex', function()
   tu.assert_neq(-1, file_1_bufnr)
 
   tu.assert_eq(file_1, state.waypoints[1].filepath)
-  tu.assert_eq(14, state.waypoints[1].linenr)
+  tu.assert_eq(14, uw.linenr_from_waypoint(state.waypoints[1]))
   tu.assert_eq(file_1_bufnr, state.waypoints[1].bufnr)
 
   tu.assert_eq(file_1, state.waypoints[2].filepath)
-  tu.assert_eq(18, state.waypoints[2].linenr)
+  tu.assert_eq(18, uw.linenr_from_waypoint(state.waypoints[2]))
   tu.assert_eq(file_1_bufnr, state.waypoints[2].bufnr)
 
   lines = tu.get_waypoint_buffer_lines_trimmed()
