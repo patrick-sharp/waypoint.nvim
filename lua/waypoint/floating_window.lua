@@ -300,7 +300,7 @@ local function draw_waypoint_window(action)
       if state.show_line_num then
         if waypoint.annotation then
           if j == extmark_line + 1 then
-            table.insert(row, tostring(waypoint.linenr))
+            table.insert(row, tostring(extmark_line + 1))
             table.insert(line_hlranges, constants.hl_linenr)
           else
             table.insert(row, "")

@@ -8,6 +8,7 @@ local state = require("waypoint.state")
 local crud = require("waypoint.waypoint_crud")
 local u = require("waypoint.utils")
 local tu = require'waypoint.test.util'
+local uw = require'waypoint.utils_waypoint'
 
 describe('Sort', function()
   assert(u.file_exists(file_0))
@@ -39,11 +40,11 @@ describe('Sort', function()
   assert(state.waypoints[4].filepath == file_0)
   assert(state.waypoints[5].filepath == file_0)
 
-  assert(state.waypoints[1].linenr ==  7)
-  assert(state.waypoints[2].linenr ==  8)
-  assert(state.waypoints[3].linenr ==  5)
-  assert(state.waypoints[4].linenr ==  3)
-  assert(state.waypoints[5].linenr == 17)
+  assert(uw.linenr_from_waypoint(state.waypoints[1]) ==  7)
+  assert(uw.linenr_from_waypoint(state.waypoints[2]) ==  8)
+  assert(uw.linenr_from_waypoint(state.waypoints[3]) ==  5)
+  assert(uw.linenr_from_waypoint(state.waypoints[4]) ==  3)
+  assert(uw.linenr_from_waypoint(state.waypoints[5]) == 17)
 
   local assert_waypoint_locations = function()
     assert(state.sorted_waypoints[1].filepath == file_0)
@@ -52,11 +53,11 @@ describe('Sort', function()
     assert(state.sorted_waypoints[4].filepath == file_1)
     assert(state.sorted_waypoints[5].filepath == file_1)
 
-    assert(state.sorted_waypoints[1].linenr ==  3)
-    assert(state.sorted_waypoints[2].linenr ==  7)
-    assert(state.sorted_waypoints[3].linenr == 17)
-    assert(state.sorted_waypoints[4].linenr ==  5)
-    assert(state.sorted_waypoints[5].linenr ==  8)
+    assert(uw.linenr_from_waypoint(state.sorted_waypoints[1]) ==  3)
+    assert(uw.linenr_from_waypoint(state.sorted_waypoints[2]) ==  7)
+    assert(uw.linenr_from_waypoint(state.sorted_waypoints[3]) == 17)
+    assert(uw.linenr_from_waypoint(state.sorted_waypoints[4]) ==  5)
+    assert(uw.linenr_from_waypoint(state.sorted_waypoints[5]) ==  8)
   end
 
   assert_waypoint_locations()
