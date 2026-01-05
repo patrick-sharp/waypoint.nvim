@@ -8,6 +8,7 @@ local message = require'waypoint.message'
 local state = require("waypoint.state")
 local u = require("waypoint.utils")
 local tu = require'waypoint.test.util'
+local uw = require'waypoint.utils_waypoint'
 
 describe('Undo append', function()
   assert(u.file_exists(file_0))
@@ -29,7 +30,7 @@ describe('Undo append', function()
   crud.append_waypoint_wrapper()
 
   tu.assert_eq(1, #state.waypoints)
-  tu.assert_eq(7, state.waypoints[1].linenr)
+  tu.assert_eq(7, uw.linenr_from_waypoint(state.waypoints[1]))
 
   floating_window.open()
   floating_window.undo()
@@ -44,7 +45,7 @@ describe('Undo append', function()
   floating_window.redo()
   local redo_msg = message.from_redo(message.append_waypoint(1))
   tu.assert_eq(1, #state.waypoints)
-  tu.assert_eq(7, state.waypoints[1].linenr)
+  tu.assert_eq(7, uw.linenr_from_waypoint(state.waypoints[1]))
   tu.assert_eq(1, state.wpi)
   tu.assert_eq(redo_msg, tu.get_last_message())
 end)
