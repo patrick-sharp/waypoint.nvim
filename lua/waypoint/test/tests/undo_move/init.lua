@@ -8,6 +8,7 @@ local message = require'waypoint.message'
 local state = require("waypoint.state")
 local u = require("waypoint.utils")
 local tu = require'waypoint.test.util'
+local uw = require'waypoint.utils_waypoint'
 
 describe('Undo move', function()
   assert(u.file_exists(file_0))
@@ -27,34 +28,34 @@ describe('Undo move', function()
   crud.append_waypoint_wrapper()
 
   tu.assert_eq(3, #state.waypoints)
-  tu.assert_eq(7, state.waypoints[1].linenr)
-  tu.assert_eq(8, state.waypoints[2].linenr)
-  tu.assert_eq(12, state.waypoints[3].linenr)
+  tu.assert_eq( 7, uw.linenr_from_waypoint(state.waypoints[1]))
+  tu.assert_eq( 8, uw.linenr_from_waypoint(state.waypoints[2]))
+  tu.assert_eq(12, uw.linenr_from_waypoint(state.waypoints[3]))
 
   floating_window.open()
   floating_window.move_waypoint_down()
 
-  tu.assert_eq(8, state.waypoints[1].linenr)
-  tu.assert_eq(7, state.waypoints[2].linenr)
-  tu.assert_eq(12, state.waypoints[3].linenr)
+  tu.assert_eq( 8, uw.linenr_from_waypoint(state.waypoints[1]))
+  tu.assert_eq( 7, uw.linenr_from_waypoint(state.waypoints[2]))
+  tu.assert_eq(12, uw.linenr_from_waypoint(state.waypoints[3]))
 
   local undo_msg
   undo_msg = message.from_undo(message.move_waypoint(2, 1))
   floating_window.undo()
   tu.assert_eq(undo_msg, tu.get_last_message())
 
-  tu.assert_eq(7, state.waypoints[1].linenr)
-  tu.assert_eq(8, state.waypoints[2].linenr)
-  tu.assert_eq(12, state.waypoints[3].linenr)
+  tu.assert_eq( 7, uw.linenr_from_waypoint(state.waypoints[1]))
+  tu.assert_eq( 8, uw.linenr_from_waypoint(state.waypoints[2]))
+  tu.assert_eq(12, uw.linenr_from_waypoint(state.waypoints[3]))
 
   local redo_msg
   redo_msg = message.from_redo(message.move_waypoint(1, 2))
   floating_window.redo()
   tu.assert_eq(redo_msg, tu.get_last_message())
 
-  tu.assert_eq(8, state.waypoints[1].linenr)
-  tu.assert_eq(7, state.waypoints[2].linenr)
-  tu.assert_eq(12, state.waypoints[3].linenr)
+  tu.assert_eq( 8, uw.linenr_from_waypoint(state.waypoints[1]))
+  tu.assert_eq( 7, uw.linenr_from_waypoint(state.waypoints[2]))
+  tu.assert_eq(12, uw.linenr_from_waypoint(state.waypoints[3]))
 
   floating_window.open()
   floating_window.next_waypoint()
@@ -62,9 +63,9 @@ describe('Undo move', function()
   floating_window.move_waypoint_up()
   floating_window.move_waypoint_up()
 
-  tu.assert_eq(12, state.waypoints[1].linenr)
-  tu.assert_eq(8, state.waypoints[2].linenr)
-  tu.assert_eq(7, state.waypoints[3].linenr)
+  tu.assert_eq(12, uw.linenr_from_waypoint(state.waypoints[1]))
+  tu.assert_eq( 8, uw.linenr_from_waypoint(state.waypoints[2]))
+  tu.assert_eq( 7, uw.linenr_from_waypoint(state.waypoints[3]))
 
   local redo_msg_1 = message.move_waypoint(3, 2)
   local redo_msg_2 = message.move_waypoint(2, 1)
@@ -79,30 +80,30 @@ describe('Undo move', function()
   floating_window.undo()
   tu.assert_eq(message.from_undo(undo_msg_2), tu.get_last_message())
 
-  tu.assert_eq(8, state.waypoints[1].linenr)
-  tu.assert_eq(12, state.waypoints[2].linenr)
-  tu.assert_eq(7, state.waypoints[3].linenr)
+  tu.assert_eq( 8, uw.linenr_from_waypoint(state.waypoints[1]))
+  tu.assert_eq(12, uw.linenr_from_waypoint(state.waypoints[2]))
+  tu.assert_eq( 7, uw.linenr_from_waypoint(state.waypoints[3]))
 
   floating_window.undo()
   tu.assert_eq(message.from_undo(undo_msg_1), tu.get_last_message())
 
-  tu.assert_eq(8, state.waypoints[1].linenr)
-  tu.assert_eq(7, state.waypoints[2].linenr)
-  tu.assert_eq(12, state.waypoints[3].linenr)
+  tu.assert_eq( 8, uw.linenr_from_waypoint(state.waypoints[1]))
+  tu.assert_eq( 7, uw.linenr_from_waypoint(state.waypoints[2]))
+  tu.assert_eq(12, uw.linenr_from_waypoint(state.waypoints[3]))
 
   floating_window.redo()
   tu.assert_eq(message.from_redo(redo_msg_1), tu.get_last_message())
 
-  tu.assert_eq(8, state.waypoints[1].linenr)
-  tu.assert_eq(12, state.waypoints[2].linenr)
-  tu.assert_eq(7, state.waypoints[3].linenr)
+  tu.assert_eq( 8, uw.linenr_from_waypoint(state.waypoints[1]))
+  tu.assert_eq(12, uw.linenr_from_waypoint(state.waypoints[2]))
+  tu.assert_eq( 7, uw.linenr_from_waypoint(state.waypoints[3]))
 
   floating_window.redo()
   tu.assert_eq(message.from_redo(redo_msg_2), tu.get_last_message())
 
-  tu.assert_eq(12, state.waypoints[1].linenr)
-  tu.assert_eq(8, state.waypoints[2].linenr)
-  tu.assert_eq(7, state.waypoints[3].linenr)
+  tu.assert_eq(12, uw.linenr_from_waypoint(state.waypoints[1]))
+  tu.assert_eq( 8, uw.linenr_from_waypoint(state.waypoints[2]))
+  tu.assert_eq( 7, uw.linenr_from_waypoint(state.waypoints[3]))
 
   floating_window.redo()
   tu.assert_eq(message.at_latest_change, tu.get_last_message())
