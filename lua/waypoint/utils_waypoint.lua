@@ -41,12 +41,14 @@ end
 --- @field file_end_idx         integer index within lines where the end of the file is, or #lines + 1 if the file ends after the context
 
 ---@param waypoint waypoint.Waypoint
-function M.set_extmark(waypoint)
+---@param linenr integer | nil
+function M.set_extmark(waypoint, linenr)
   local bufnr = waypoint.bufnr
 
   -- does nothing if extmark id is invalid
   vim.api.nvim_buf_del_extmark(bufnr, constants.ns, waypoint.extmark_id)
 
+  --if waypoint.linenr > vim.api.nvim_buf_line_count(bufnr) or linenr == nil then
   if waypoint.linenr > vim.api.nvim_buf_line_count(bufnr) then
     waypoint.extmark_id = -1
     return false

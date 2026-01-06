@@ -32,7 +32,7 @@ function M.save_state(undo_msg, redo_msg, change_wpi)
 
   ---@type waypoint.UndoNode
   local undo_node = {
-    waypoints = u.deep_copy(state.waypoints),
+    waypoints = vim.deepcopy(state.waypoints),
     wpi = change_wpi or state.wpi,
     undo_msg = undo_msg,
     redo_msg = redo_msg,
@@ -84,7 +84,7 @@ function M.undo()
   prev_state, ok = ring_buffer.peek(M.states)
   assert(ok)
 
-  state.waypoints = u.deep_copy(prev_state.waypoints)
+  state.waypoints = vim.deepcopy(prev_state.waypoints)
   state.wpi = prev_state.wpi
   uw.make_sorted_waypoints()
   M.set_extmarks_for_state()
@@ -100,7 +100,7 @@ function M.redo()
     return false
   end
   local next_state, _ = ring_buffer.peek(M.states)
-  state.waypoints = u.deep_copy(next_state.waypoints)
+  state.waypoints = vim.deepcopy(next_state.waypoints)
   state.wpi = next_state.wpi
   uw.make_sorted_waypoints()
   M.set_extmarks_for_state()

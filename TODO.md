@@ -124,10 +124,7 @@
     - maybe use vim.schedule to do it async if worried about perf?
 - [ ] fix bugs around closing buffers with waypoints in them (use BufDelete autocmd)
 - [ ] write a test for a file getting renamed while open (use BufFilePost autocmd)
-- [ ] handle the case where the extmark gets deleted
-- [ ] when you expand the context, keep the selected waypoint at the same point in the window rather than centering on it
-- [ ] handle the case where there is a swap file (or any error opening the file)
-- [ ] repair state when draw_waypoint_window is called
+- [ ] handle the case where the extmark gets deleted (hide the waypoint, but allow it to be brought back if they undo the extmark deletion)
 - [ ] add perf logging for each function (use require('jit.p'))
 - [ ] switch to making new state for saving / loading instead of mutating existing state to get there
 - [ ] create better error handling and reporting
@@ -147,18 +144,38 @@
     - waypoint should be deleted
     - undo text change
     - waypoint should be restored
+- [ ] write test for:
+    - have waypoint saved in json file
+    - open vim
+    - error opening file
+    - waypoint should still be in "persisted mode"
+    - waypoint should be restored
 - [ ] think about adding some kind of error handling to draw_waypoint_window that will just display an error if pcall happens, so you don't have to fight through cumulative errors to close the window
 - [ ] write documentation
     - [ ] quickstart workflow
     - [ ] video
 - [ ] write alternatives
     - [ ] vim marks
+        - can't reorder/indent
+        - finite number
+        - can only be per file or global, not per project
+        - can't see context around mark
+        - no syntax highlighting
+        - tons of noise from the automatically populated marks
     - [ ] bookmarks.nvim
+        - can't reorder/indent
+        - state gets stale easily
+        - can't see context around bookmark
+        - no syntax highlighting
     - [ ] harpoon
+        - only supports one mark per file
+        - can't reorder/indent
+        - can't see context around mark
 - [ ] replace some of my homemade stuff with vim builtins
-    - [ ] vim.deepcopy
+    - [x] vim.deepcopy
     - [ ] vim.ringbuf
 - [ ] make it so that waypoints get converted to saved waypoints when the buffer closes, and converted back to regular ones when the buffer is opened
+    - call them BufferWaypoint and BufferlessWaypoint
 
 ### ADVANCED FEATURES:
 
@@ -189,8 +206,6 @@
         - [ ] bug when you run missing file test, delete a buffer, undo
 - [ ] add visual mode
     - [ ] move selection of waypoints around
-- [ ] add ability to save and load waypoints to different files
-- [ ] save waypoints parallel directory structure like swap files so they don't clutter the repo (use vim.fn.mkdir(path, 'p'))
 
 
 still got some weird treesitter behavior

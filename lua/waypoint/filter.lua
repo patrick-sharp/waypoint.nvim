@@ -13,6 +13,10 @@ local uw = require("waypoint.utils_waypoint")
 ---@type string[] | nil
 local pre_filter_buf_lines = nil
 
+-- before the filter, we save the waypoint locations so we can put them back in the right place after the filter
+---@type (integer|nil)[] | nil
+local waypoint_linenrs = nil
+
 ---@param a waypoint.Waypoint
 ---@param b waypoint.Waypoint
 local function waypoint_compare(a, b)
@@ -25,6 +29,10 @@ end
 
 function M.save_file_contents()
   pre_filter_buf_lines = get_current_buffer_lines()
+  waypoint_linenrs = {}
+  for i, waypoint in ipairs(state.waypoints) do
+    waypoint_linenrs[i] = uw.linenr_from_waypoint(waypoint)
+  end
 end
 
 -- fix the position of waypoint extmarks.
@@ -32,6 +40,8 @@ end
 -- This is a callback which will fix their positions after a filter.
 function M.fix_waypoint_positions()
   assert(pre_filter_buf_lines)
+  assert(waypoint_linenrs)
+
   local post_filter_buf_lines = get_current_buffer_lines()
 
   local diff = vim.diff(
@@ -133,7 +143,7 @@ function M.fix_waypoint_positions()
           end
 
           waypoint.linenr = new_line
-          uw.set_extmark(waypoint)
+          uw.set_extmark(waypoint, new_line)
           should_break = true
         end
 
@@ -151,6 +161,7 @@ function M.fix_waypoint_positions()
   end
 
   pre_filter_buf_lines = nil
+  waypoint_linenrs = nil
 end
 
 return M
