@@ -61,16 +61,34 @@ local function encode()
     col = state.view.col
   }
   for _, waypoint in pairs(state.waypoints) do
-    local waypoint_to_encode = {}
-    local extmark = uw.extmark_from_waypoint(waypoint)
-    if extmark then
-      waypoint_to_encode.text = waypoint.text
-      waypoint_to_encode.indent = waypoint.indent
-      waypoint_to_encode.filepath = waypoint.filepath
-      waypoint_to_encode.linenr = extmark[1] + 1
-      waypoint_to_encode.annotation = waypoint.annotation
+    local waypoint_to_encode = nil
+    if waypoint.has_buffer then
+      local filepath = uw.filepath_from_waypoint(waypoint)
+      local linenr = uw.linenr_from_waypoint(waypoint)
+      assert(linenr)
+      local line = vim.api.nvim_buf_get_lines(waypoint.bufnr, linenr - 1, linenr, false)[1]
+      if linenr then
+        waypoint_to_encode = {
+          text = line,
+          filepath = filepath,
+          linenr = linenr,
+          indent = waypoint.indent,
+          annotation = waypoint.annotation,
+        }
+      end
+    else
+      waypoint_to_encode = {
+        text = waypoint.text,
+        filepath = waypoint.filepath,
+        linenr = waypoint.linenr,
+        indent = waypoint.indent,
+        annotation = waypoint.annotation,
+      }
     end
-    table.insert(state_to_encode.waypoints, waypoint_to_encode)
+
+    if waypoint_to_encode then
+      table.insert(state_to_encode.waypoints, waypoint_to_encode)
+    end
   end
 
   local data = pretty(state_to_encode)
@@ -163,7 +181,6 @@ local function load_decoded_state_into_state(decoded)
 
         if linenr <= line_count then
           local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, linenr - 1, -1, {
-            id = linenr,
             sign_text = config.mark_char,
             priority = 1,
             sign_hl_group = constants.hl_sign,

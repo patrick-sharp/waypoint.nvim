@@ -1,13 +1,25 @@
 -- This file keeps track of where all the waypoints are and the state of the floating window
 
+-- waypoints take the "fat struct" approach, which is like a tagged union but where the object has all possible keys and they're all nullable.
+-- I have never done this before, but some people on twitter (Ryan Fleury and Ginger Bill) seem to like it.
+-- I normally go the tagged union route in typescript, but the lua language server doesn't do a great job providing type warnings for tagged unions.
+-- This approach seems less elegant, but I like trying new things.
+--
+-- in thiss scheme, a waypoint with a buffer will be have bufnr and extmark id.
+-- bufferless waypoints will have the file path, linenr, and line text
+-- Bufferless waypoints exist to keep track of a waypoint's location when there's no accompanying buffer (and therefore no extmark)
+-- Bufferless waypoints are the format saved to the waypoint json file.
+-- when a buffer with waypoints is closed, we hook onto the BufUnload autocmd to convert buffer waypoints into bufferless waypoints
+
 ---@class waypoint.Waypoint
----@field extmark_id    integer the id of the extmark within the buffer. Note that these are not unique globally. Can become stale if extmark is deleted for any reason (e.g. the buffer is closed)
----@field bufnr         integer the buffer number the waypoint is in. can become stale if the file is deleted and reopened.
+---@field has_buffer    boolean
+---@field extmark_id    integer | nil the id of the extmark within the buffer. Note that these are not unique globally. Can become stale if extmark is deleted for any reason (e.g. the buffer is closed)
+---@field bufnr         integer | nil the buffer number the waypoint is in. can become stale if the file is deleted and reopened.
 ---@field indent        integer
 ---@field annotation    string | nil
----@field filepath      string relative path to file the waypoint is in. Does NOT start with ./, i.e. a path to ./lua/myfile.lua would be stored as lua/myfile.lua
+---@field filepath      string | nil relative path to file the waypoint is in. Does NOT start with ./, i.e. a path to ./lua/myfile.lua would be stored as lua/myfile.lua
 ---@field text          string | nil
----@field linenr        integer the one-indexed line number the waypoint is on. Can become stale if a buffer edit causes the extmark to move.
+---@field linenr        integer | nil the one-indexed line number the waypoint is on. Can become stale if a buffer edit causes the extmark to move.
 ---@field error         string | nil
 
 ---@class waypoint.View

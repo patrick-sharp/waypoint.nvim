@@ -3,14 +3,13 @@ local highlighter = vim.treesitter.highlighter
 local constants = require("waypoint.constants")
 local u = require("waypoint.utils")
 
-
--- resolve hl links
---- @param hl_group string
-local function resolve_hl(hl_group)
-  local hlid = vim.api.nvim_get_hl_id_by_name(hl_group)
-  local name = vim.fn.synIDattr(vim.fn.synIDtrans(hlid), 'name')
-  return name
-end
+-- -- resolve hl links
+-- ---@param hl_group string
+-- local function resolve_hl(hl_group)
+--   local hlid = vim.api.nvim_get_hl_id_by_name(hl_group)
+--   local name = vim.fn.synIDattr(vim.fn.synIDtrans(hlid), 'name')
+--   return name
+-- end
 
 --- @class waypoint.TreesitterHighlight
 --- @field hl_id   integer
@@ -19,7 +18,7 @@ end
 --- is 0 indexed. nvim_buf_add_extmark expects 1-indexed, so we adjust it when 
 --- we actually return highlight ranges. we don't adjust the column because 0 
 --- indexed exclusive is the same 1 indexed inclusive, except when the col is 0
---- @field range   { [1]: integer, [2]: integer, [3]: integer, [4]: integer }
+--- @field range { [1]: integer, [2]: integer, [3]: integer, [4]: integer }
 
 --- @param start_line integer zero-indexed, inclusive
 --- @param end_line   integer zero-indexed, exclusive

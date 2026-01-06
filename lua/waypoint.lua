@@ -11,6 +11,7 @@ local config = require("waypoint.config")
 local filter = require("waypoint.filter")
 local test = require("waypoint.test")
 local global_keybindings = require("waypoint.global_keybindings")
+local buffer_callbacks = require("waypoint.buffer_callbacks")
 
 --- @param opts waypoint.ConfigOverride
 function M.setup(opts)
@@ -70,24 +71,14 @@ function M.setup(opts)
   --   group = constants.augroup,
   --   callback = function() end
   -- })
-  -- TODO: maybe get rid of these entirely if possible
-  -- vim.api.nvim_create_autocmd("TextChanged", {
-  --   group = constants.augroup,
-  --   callback = repair.text_changed_callback,
-  -- })
-  -- vim.api.nvim_create_autocmd("TextChangedI", {
-  --   group = constants.augroup,
-  --   callback = repair.text_changed_callback,
-  -- })
-  -- vim.api.nvim_create_autocmd("TextChangedP", {
-  --   group = constants.augroup,
-  --   callback = repair.text_changed_callback,
-  -- })
-  -- vim.api.nvim_create_autocmd("TextChangedT", {
-  --   group = constants.augroup,
-  --   callback = repair.text_changed_callback,
-  -- })
-
+  vim.api.nvim_create_autocmd("BufAdd", {
+    group = constants.augroup,
+    callback = buffer_callbacks.convert_bufferless_waypoints_to_buffer,
+  })
+  vim.api.nvim_create_autocmd("BufDelete", {
+    group = constants.augroup,
+    callback = buffer_callbacks.convert_buffer_waypoints_to_bufferless,
+  })
 
   global_keybindings.bind_key(config.keybindings.global_keybindings, "current_waypoint",          floating_window.go_to_current_waypoint)
   global_keybindings.bind_key(config.keybindings.global_keybindings, "prev_waypoint",             floating_window.GoToPrevWaypoint)

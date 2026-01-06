@@ -218,18 +218,9 @@ file changes
 
 There isn't an autommand for all file changes. here's a list of ones you should cover:
 
-repair linenr (based on new extmark location) for all these
-    TextChanged      change made in normal mode
-    TextChangedI     change made in insert mode
-    TextChangedP     change made in insert mode with popup menu visible
-    TextChangedT     change made in terminal mode (idk if this applies)
-
 FileChangedShell file changed by something besides vim
     locate_waypoints_in_file as if new load
     covers delete and external rename case
-
-how does Neoformat replace buffer contents but without scrubbing marks and extmarks?
-    it uses an internal api to replace the buffer. this doesn't remove marks. the api for replacing buffer with shell output doesn't use the one neoformat uses.
 
 redundancy?
 store extmark id, text, line number
@@ -237,25 +228,6 @@ when extmark updates, update text and line number too
 what to do if buffer update causes two extmarks to be on the same line?
 what to do if buffer updates and location can't be found?
 what to do if file changes name or is deleted?
-
-add
-    with annotation
-        insert
-        append
-    without
-        insert
-        append
-toggle
-    with annotation
-        insert
-        append
-    without
-        insert
-        append
-
-waypoint order
-    by file and by line
-    by manual order
 
 how to use luajit profiler
 https://luajit.org/ext_profiler.html

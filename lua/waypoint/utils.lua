@@ -221,4 +221,19 @@ function M.any(t)
   return false
 end
 
+-- checks for falsy values in table
+---@param t table
+function M.all(t)
+  for _,v in ipairs(t) do
+    if not v then return v end
+  end
+  return true
+end
+
+---@param bufnr integer
+---@return boolean
+function M.is_buffer_valid(bufnr)
+  return vim.fn.bufloaded(bufnr) ~= 0
+end
+
 return M

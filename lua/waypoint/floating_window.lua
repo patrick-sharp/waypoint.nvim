@@ -227,7 +227,7 @@ local function draw_waypoint_window(action)
   end
 
   for i, waypoint in ipairs(waypoints) do
-    --- @type waypoint.WaypointFileText
+    --- @type waypoint.WaypointContext
     local waypoint_file_text = uw.get_waypoint_context(
       waypoint,
       num_lines_before,

@@ -26,6 +26,7 @@ function M.append_waypoint(filepath, line_nr, annotation)
 
   ---@type waypoint.Waypoint
   local waypoint = {
+    has_buffer = true,
     extmark_id = extmark_id,
     filepath = filepath,
     indent = 0,
@@ -54,7 +55,6 @@ function M.insert_waypoint(filepath, line_nr, annotation)
   if not u.is_file_buffer() then return end
   local bufnr = vim.fn.bufnr(filepath)
   local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, line_nr - 1, -1, {
-    id = line_nr,
     sign_text = config.mark_char,
     priority = 1,
     sign_hl_group = constants.hl_sign,
@@ -62,6 +62,7 @@ function M.insert_waypoint(filepath, line_nr, annotation)
 
   ---@type waypoint.Waypoint
   local waypoint = {
+    has_buffer = true,
     extmark_id = extmark_id,
     filepath = filepath,
     indent = 0,

@@ -8,19 +8,37 @@ local message = require("waypoint.message")
 local state = require("waypoint.state")
 local u = require("waypoint.utils")
 
---- @param waypoint waypoint.Waypoint
---- @return { [1]: integer, [2]: integer } | nil
+---@param waypoint waypoint.Waypoint
+---@return integer, boolean
+function M.bufnr_from_waypoint(waypoint)
+  local bufnr = waypoint.bufnr or vim.fn.bufnr(waypoint.filepath)
+  return bufnr, u.is_buffer_valid(bufnr)
+end
+
+-- also returns values from bufnr_from_waypoint to avoid redundancy
+---@param waypoint waypoint.Waypoint
+---@return vim.api.keyset.get_extmark_item_by_id | nil
 function M.extmark_from_waypoint(waypoint)
-  local bufnr = vim.fn.bufnr(waypoint.filepath)
-  if bufnr == -1 or waypoint.extmark_id == -1 then
+  local bufnr, ok = M.bufnr_from_waypoint(waypoint)
+  if not ok or waypoint.extmark_id == -1 then
     return nil
   end
-  --- @type table | { [1]: integer, [2]: integer }
+  --- @type vim.api.keyset.get_extmark_item_by_id
   local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {})
   if #extmark == 0 then
     return nil
   end
   return extmark
+end
+
+---@param waypoint waypoint.Waypoint
+---@return string
+function M.filepath_from_waypoint(waypoint)
+  if waypoint.has_buffer and waypoint.filepath then
+    return waypoint.filepath
+  end
+  assert(u.is_buffer_valid(waypoint.bufnr))
+  return vim.api.nvim_buf_get_name(waypoint.bufnr)
 end
 
 ---@param waypoint waypoint.Waypoint
@@ -31,24 +49,16 @@ function M.linenr_from_waypoint(waypoint)
   return extmark[1] + 1 -- convert from zero-indexed to one-indexed
 end
 
---- @class waypoint.WaypointFileText
---- @field extmark              { [1]: integer, [2]: integer } the zero-indexed row,col coordinates of the extmark corresponding to this waypoint
---- @field lines                string[] the lines of text from the file the waypoint is in. Includes the line the waypoint is on and the lines in the context around the waypoint.
---- @field waypoint_linenr      integer the zero-indexed line number the waypoint is on within the file.
---- @field context_start_linenr integer the zero-indexed line number within the file of the first line of the context
---- @field highlight_ranges     waypoint.HighlightRange[][] the syntax highlights for each line in lines. This table will have the same number of elements as lines.
---- @field file_start_idx       integer index within lines where the start of the file is, or 1 if the file starts before the context
---- @field file_end_idx         integer index within lines where the end of the file is, or #lines + 1 if the file ends after the context
-
 ---@param waypoint waypoint.Waypoint
 ---@param linenr integer | nil
 function M.set_extmark(waypoint, linenr)
-  local bufnr = waypoint.bufnr
+  assert(waypoint.linenr or linenr, "Either waypoint.linenr or linenr must not be nil, but both were")
+  local bufnr, ok = M.bufnr_from_waypoint(waypoint)
+  assert(ok)
 
   -- does nothing if extmark id is invalid
   vim.api.nvim_buf_del_extmark(bufnr, constants.ns, waypoint.extmark_id)
 
-  --if waypoint.linenr > vim.api.nvim_buf_line_count(bufnr) or linenr == nil then
   if waypoint.linenr > vim.api.nvim_buf_line_count(bufnr) then
     waypoint.extmark_id = -1
     return false
@@ -62,35 +72,37 @@ function M.set_extmark(waypoint, linenr)
   return true
 end
 
+--- @class waypoint.WaypointContext
+--- @field extmark              vim.api.keyset.get_extmark_item_by_id the zero-indexed row,col coordinates of the extmark corresponding to this waypoint
+--- @field lines                string[] the lines of text from the file the waypoint is in. Includes the line the waypoint is on and the lines in the context around the waypoint.
+--- @field waypoint_linenr      integer the zero-indexed line number the waypoint is on within the file.
+--- @field context_start_linenr integer the zero-indexed line number within the file of the first line of the context
+--- @field highlight_ranges     waypoint.HighlightRange[][] the syntax highlights for each line in lines. This table will have the same number of elements as lines.
+--- @field file_start_idx       integer index within lines where the start of the file is, or 1 if the file starts before the context
+--- @field file_end_idx         integer index within lines where the end of the file is, or #lines + 1 if the file ends after the context
+
 --- @param waypoint waypoint.Waypoint
 --- @param num_lines_before integer
 --- @param num_lines_after integer
---- @return waypoint.WaypointFileText
+--- @return waypoint.WaypointContext
 function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
-  local bufnr = waypoint.bufnr
-
-  --- @type nil | { [1]: integer, [2]: integer }
-  local maybe_extmark = nil
-  if waypoint.extmark_id ~= -1 and bufnr ~= -1 then
-    --- @type table | { [1]: integer, [2]: integer }
-    local maybe_extmark_ = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {})
-    if #maybe_extmark_ ~= 0 then
-      maybe_extmark = maybe_extmark_
-    end
-  end
+  local bufnr, ok = M.bufnr_from_waypoint(waypoint)
+  local maybe_extmark = M.extmark_from_waypoint(waypoint)
 
   if not maybe_extmark then
     --- @type string[]
     local lines = {}
     --- @type waypoint.HighlightRange[][]
     local hlranges = {}
+
     for _=1, num_lines_before do
       table.insert(lines, "")
       table.insert(hlranges, {})
     end
+
     if waypoint.error then
       table.insert(lines, waypoint.error)
-    elseif bufnr == -1 or 0 == vim.fn.bufloaded(bufnr) then
+    elseif not ok then
       table.insert(lines, message.missing_file_err_msg)
     else
       table.insert(lines, constants.line_oob_error)
@@ -101,6 +113,7 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
       col_start = 1,
       col_end = #lines[#lines],
     }})
+
     for _=1, num_lines_after do
       table.insert(lines, "")
       table.insert(hlranges, {})
@@ -117,7 +130,7 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
     }
   end
 
-  --- @type { [1]: integer, [2]: integer }
+  --- @type vim.api.keyset.get_extmark_item_by_id
   local extmark = maybe_extmark
 
   -- one-indexed line number

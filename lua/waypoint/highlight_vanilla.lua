@@ -1,5 +1,3 @@
-local p = require("waypoint.print")
-
 local M = {}
 
 --- @param bufnr integer
@@ -11,7 +9,7 @@ local function get_highlight_id_at_pos(bufnr, line, col)
   local synid
 
   vim.api.nvim_buf_call(bufnr, function()
-    synid = vim.fn.synID(line, col, true)
+    synid = vim.fn.synID(line, col, 1)
   end)
 
   --- @type integer
