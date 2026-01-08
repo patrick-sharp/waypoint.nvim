@@ -236,4 +236,16 @@ function M.is_buffer_valid(bufnr)
   return vim.fn.bufloaded(bufnr) ~= 0
 end
 
+---@param absolute_path string
+---@return string
+function M.relative_path(absolute_path)
+  return vim.fn.fnamemodify(absolute_path, ":.")
+end
+
+---@param bufnr integer
+---@return string
+function M.buf_path(bufnr)
+  local path = vim.api.nvim_buf_get_name(bufnr)
+  return vim.fn.fnamemodify(path, ":.")
+end
 return M

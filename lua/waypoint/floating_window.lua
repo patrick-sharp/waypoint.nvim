@@ -281,11 +281,11 @@ local function draw_waypoint_window(action)
           -- if this is line the waypoint is on
           if state.show_full_path then
             -- if we're showing the full path
-            table.insert(row, waypoint.filepath)
+            table.insert(row, uw.filepath_from_waypoint(waypoint))
             table.insert(line_hlranges, constants.hl_directory)
           else
             -- if we're just showing the filename
-            local filename = vim.fn.fnamemodify(waypoint.filepath, ":t")
+            local filename = vim.fn.fnamemodify(uw.filepath_from_waypoint(waypoint), ":t")
             table.insert(row, filename)
             table.insert(line_hlranges, constants.hl_directory)
           end
@@ -958,7 +958,7 @@ function M.go_to_current_waypoint()
 
   if wp_bufnr then M.leave() end
 
-  local waypoint_bufnr = vim.fn.bufnr(waypoint.filepath)
+  local waypoint_bufnr = uw.bufnr_from_waypoint(waypoint)
   vim.api.nvim_win_set_buf(0, waypoint_bufnr)
   vim.api.nvim_win_set_cursor(0, { extmark[1] + 1, 0 })
   vim.api.nvim_command("normal! zz")
@@ -1326,7 +1326,7 @@ function M.move_waypoints_to_file(source_file_path, dest_file_path)
   ---@type integer | nil
   local change_wpi = nil
   for i,waypoint in pairs(state.waypoints) do
-    if waypoint.filepath == source_file_path then
+    if uw.filepath_from_waypoint(waypoint) == source_file_path then
       if not change_wpi then
         change_wpi = i
       end
@@ -1354,7 +1354,7 @@ function M.move_waypoints_to_file_command(opts)
     message.notify("No current waypoint")
     return
   end
-  M.move_waypoints_to_file(waypoint.filepath, new_file)
+  M.move_waypoints_to_file(uw.filepath_from_waypoint(waypoint), new_file)
 end
 
 function M.move_waypoints_to_file_wrapper()
@@ -1381,15 +1381,17 @@ function M.move_waypoints_to_file_wrapper()
           local selected_file = selection.path or selection[1]
           local path = vim.fn.fnamemodify(selected_file, ":.")
 
+          local filepath = uw.filepath_from_waypoint(waypoint)
+
           local choice = vim.fn.confirm(
             "Move waypoints?\nfrom: " ..
-            vim.fs.normalize(waypoint.filepath) ..
+            filepath ..
             "\nto:   " .. path, "&yes\n&no", 2
           )
 
           if choice == 1 then
             M.open()
-            M.move_waypoints_to_file(waypoint.filepath, path)
+            M.move_waypoints_to_file(filepath, path)
           end
         end)
         return true

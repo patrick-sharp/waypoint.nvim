@@ -9,6 +9,7 @@ local u = require'waypoint.utils'
 
 -- these files call test_list.describe, which adds tests to the list
 local _ = require'waypoint.test.tests.annotation'
+local _ = require'waypoint.test.tests.buffer_callbacks'
 local _ = require'waypoint.test.tests.context'
 local _ = require'waypoint.test.tests.delete'
 local _ = require'waypoint.test.tests.filter'

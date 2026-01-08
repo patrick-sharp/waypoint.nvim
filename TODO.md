@@ -175,7 +175,7 @@
     - [x] vim.deepcopy
     - [ ] vim.ringbuf
 - [ ] make it so that waypoints get converted to saved waypoints when the buffer closes, and converted back to regular ones when the buffer is opened
-    - call them BufferWaypoint and BufferlessWaypoint
+    - use ryan fleury's megastruct idea.
 
 ### ADVANCED FEATURES:
 
@@ -206,7 +206,6 @@
         - [ ] bug when you run missing file test, delete a buffer, undo
 - [ ] add visual mode
     - [ ] move selection of waypoints around
-
 
 still got some weird treesitter behavior
 it seems like in the skhd repo I'm using, it will only properly highlight some highlights if the highlight is onscreen or close to it

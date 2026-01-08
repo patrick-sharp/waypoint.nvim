@@ -20,7 +20,7 @@ end
 ---@return vim.api.keyset.get_extmark_item_by_id | nil
 function M.extmark_from_waypoint(waypoint)
   local bufnr, ok = M.bufnr_from_waypoint(waypoint)
-  if not ok or waypoint.extmark_id == -1 then
+  if not ok or waypoint.extmark_id == -1 or waypoint.extmark_id == nil then
     return nil
   end
   --- @type vim.api.keyset.get_extmark_item_by_id
@@ -38,7 +38,7 @@ function M.filepath_from_waypoint(waypoint)
     return waypoint.filepath
   end
   assert(u.is_buffer_valid(waypoint.bufnr))
-  return vim.api.nvim_buf_get_name(waypoint.bufnr)
+  return u.buf_path(waypoint.bufnr)
 end
 
 ---@param waypoint waypoint.Waypoint
@@ -56,8 +56,9 @@ function M.set_extmark(waypoint, linenr)
   local bufnr, ok = M.bufnr_from_waypoint(waypoint)
   assert(ok)
 
-  -- does nothing if extmark id is invalid
-  vim.api.nvim_buf_del_extmark(bufnr, constants.ns, waypoint.extmark_id)
+  if waypoint.extmark_id then
+    vim.api.nvim_buf_del_extmark(bufnr, constants.ns, waypoint.extmark_id)
+  end
 
   if waypoint.linenr > vim.api.nvim_buf_line_count(bufnr) then
     waypoint.extmark_id = -1

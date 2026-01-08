@@ -71,7 +71,7 @@ function M.setup(opts)
   --   group = constants.augroup,
   --   callback = function() end
   -- })
-  vim.api.nvim_create_autocmd("BufAdd", {
+  vim.api.nvim_create_autocmd("BufReadPost", {
     group = constants.augroup,
     callback = buffer_callbacks.convert_bufferless_waypoints_to_buffer,
   })
