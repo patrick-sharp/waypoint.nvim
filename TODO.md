@@ -174,7 +174,7 @@
 - [ ] replace some of my homemade stuff with vim builtins
     - [x] vim.deepcopy
     - [ ] vim.ringbuf
-- [ ] make it so that waypoints get converted to saved waypoints when the buffer closes, and converted back to regular ones when the buffer is opened
+- [x] make it so that waypoints get converted to saved waypoints when the buffer closes, and converted back to regular ones when the buffer is opened
     - use ryan fleury's megastruct idea.
 
 ### ADVANCED FEATURES:
@@ -247,3 +247,32 @@ this could easily be stale, but I think that's fine. I don't want to disorient
 with use of the levenshtein match finder on simple actions like undo, and I
 think it's fine if the extmark is gone for the line number to be stale
 otherwise, would have to always keep phantom extmarks for every state in the undo history. not reasonable.
+
+extmark recap:
+extmark id of nil means bufferless waypoint
+extmark id of -1 means out of bounds
+extmark id that should be valid but has no extmark = don't show the waypoint, its mark was deleted.
+
+normal file undo test
+make 3 waypoints
+delete one extmark by editing file
+should not show in window
+undo file edit
+should show in window again
+
+weird file undo test
+make 3 waypoints
+delete one waypoint in waypoint window
+edit file, erasing the line where the waypoint was
+undo deletion of waypoint in waypoint window
+should show as error: can't locate file with text \<text\>
+    should try to locate un-deleted waypoint with nonexistent extmark same way as in loaded file
+
+weird file undo test #2
+make 3 waypoints
+delete waypoint #1 in waypoint window
+delete waypoint #2 by erasing its extmark
+edit file, erasing the line where waypoint #1 was
+undo deletion of waypoint in waypoint window
+how to disambiguate between intentional delete/undo vs just waypoint with stale extmark?
+    have to retain some state somewhere I guess
