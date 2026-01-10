@@ -476,9 +476,10 @@ M.bound_keys = {}
 
 -- binds the keybinding (or keybindings) to the given action 
 --- @param keybindings table<string, waypoint.Keybinding>
+--- @param modes string[]
 --- @param action string
 --- @param fn string | function the vim mapping string that this keybind should perform
-local function bind_key(bufnr, keybindings, action, fn)
+local function bind_key(bufnr, modes, keybindings, action, fn)
   if not keybindings[action] then
     error(action .. " is not a key in the provided keybindings table")
   end
@@ -490,7 +491,7 @@ local function bind_key(bufnr, keybindings, action, fn)
       if type(v) ~= "string" then
         error("Type of element " .. i .. " of keybinding should be string, but was " .. type(v) .. ".")
       end
-      vim.keymap.set('n', v, fn, keymap_opts(bufnr))
+      vim.keymap.set(modes, v, fn, keymap_opts(bufnr))
     end
   else
     error("Type of param keybinding should be string or table, but was " .. type(keybinding) .. ".")
@@ -501,73 +502,73 @@ end
 
 -- shared between the help buffer and the waypoint buffer
 local function set_shared_keybinds(bufnr)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "exit_waypoint_window",    M.leave)
+  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "exit_waypoint_window",    M.leave)
 
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "increase_context",        M.increase_context)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "decrease_context",        M.decrease_context)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "increase_before_context", M.increase_before_context)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "decrease_before_context", M.decrease_before_context)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "increase_after_context",  M.increase_after_context)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "decrease_after_context",  M.decrease_after_context)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "reset_context",           M.reset_context)
+  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "increase_context",        M.increase_context)
+  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "decrease_context",        M.decrease_context)
+  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "increase_before_context", M.increase_before_context)
+  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "decrease_before_context", M.decrease_before_context)
+  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "increase_after_context",  M.increase_after_context)
+  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "decrease_after_context",  M.decrease_after_context)
+  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "reset_context",           M.reset_context)
 
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "toggle_path",             M.toggle_path)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "toggle_full_path",        M.toggle_full_path)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "toggle_line_num",         M.toggle_line_number)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "toggle_file_text",        M.toggle_text)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "toggle_context",          M.toggle_context)
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "toggle_sort",             M.toggle_sort)
+  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "toggle_path",             M.toggle_path)
+  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "toggle_full_path",        M.toggle_full_path)
+  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "toggle_line_num",         M.toggle_line_number)
+  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "toggle_file_text",        M.toggle_text)
+  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "toggle_context",          M.toggle_context)
+  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "toggle_sort",             M.toggle_sort)
 
-  bind_key(bufnr, config.keybindings.waypoint_window_keybindings, "set_quickfix_list",       M.set_quickfix_list)
+  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "set_quickfix_list",       M.set_quickfix_list)
 end
 
 local function set_help_keybinds()
   set_shared_keybinds(help_bufnr)
-  bind_key(help_bufnr, config.keybindings.help_keybindings, "exit_help", M.toggle_help)
+  bind_key(help_bufnr, { 'n' }, config.keybindings.help_keybindings, "exit_help", M.toggle_help)
 end
 
 local function set_waypoint_keybinds()
   set_shared_keybinds(wp_bufnr)
 
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "show_help",            M.toggle_help)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "exit_waypoint_window", M.leave)
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "show_help",            M.toggle_help)
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "exit_waypoint_window", M.leave)
 
   if state.load_error then
     vim.keymap.set('n', '<CR>', M.clear_state, keymap_opts(wp_bufnr))
     return
   end
 
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "indent",                  M.indent)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "unindent",                M.unindent)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "reset_waypoint_indent",   M.reset_current_indent)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "reset_all_indent",        M.reset_all_indent)
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "indent",                  M.indent)
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "unindent",                M.unindent)
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "reset_waypoint_indent",   M.reset_current_indent)
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "reset_all_indent",        M.reset_all_indent)
 
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "scroll_left",             M.scroll_left)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "scroll_right",            M.scroll_right)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "reset_horizontal_scroll", M.reset_scroll)
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "scroll_left",             M.scroll_left)
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "scroll_right",            M.scroll_right)
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "reset_horizontal_scroll", M.reset_scroll)
 
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "prev_waypoint",           M.prev_waypoint)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "next_waypoint",           M.next_waypoint)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "first_waypoint",          M.move_to_first_waypoint)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "last_waypoint",           M.move_to_last_waypoint)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "prev_neighbor_waypoint",  ":<C-u>lua MoveToPrevNeighborWaypoint(true)<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "next_neighbor_waypoint",  ":<C-u>lua MoveToNextNeighborWaypoint(true)<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "prev_top_level_waypoint", ":<C-u>lua MoveToPrevTopLevelWaypoint(true)<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "next_top_level_waypoint", ":<C-u>lua MoveToNextTopLevelWaypoint(true)<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "outer_waypoint",          ":<C-u>lua MoveToOuterWaypoint(true)<CR>")
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "inner_waypoint",          ":<C-u>lua MoveToInnerWaypoint(true)<CR>")
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "prev_waypoint",           M.prev_waypoint)
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "next_waypoint",           M.next_waypoint)
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "first_waypoint",          M.move_to_first_waypoint)
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "last_waypoint",           M.move_to_last_waypoint)
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "prev_neighbor_waypoint",  ":<C-u>lua MoveToPrevNeighborWaypoint(true)<CR>")
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "next_neighbor_waypoint",  ":<C-u>lua MoveToNextNeighborWaypoint(true)<CR>")
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "prev_top_level_waypoint", ":<C-u>lua MoveToPrevTopLevelWaypoint(true)<CR>")
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "next_top_level_waypoint", ":<C-u>lua MoveToNextTopLevelWaypoint(true)<CR>")
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "outer_waypoint",          ":<C-u>lua MoveToOuterWaypoint(true)<CR>")
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "inner_waypoint",          ":<C-u>lua MoveToInnerWaypoint(true)<CR>")
 
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "move_waypoint_up",        M.move_waypoint_up)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "move_waypoint_down",      M.move_waypoint_down)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "current_waypoint",        M.go_to_current_waypoint)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_top",    M.move_waypoint_to_top)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_bottom", M.move_waypoint_to_bottom)
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_up",        M.move_waypoint_up)
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_down",      M.move_waypoint_down)
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "current_waypoint",        M.go_to_current_waypoint)
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_top",    M.move_waypoint_to_top)
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_bottom", M.move_waypoint_to_bottom)
 
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "delete_waypoint",         M.delete_current_waypoint)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "move_waypoints_to_file",  M.move_waypoints_to_file_wrapper)
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "delete_waypoint",         M.delete_current_waypoint)
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "move_waypoints_to_file",  M.move_waypoints_to_file_wrapper)
 
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "undo",                    M.undo)
-  bind_key(wp_bufnr, config.keybindings.waypoint_window_keybindings, "redo",                    M.redo)
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "undo",                    M.undo)
+  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "redo",                    M.redo)
 end
 
 M.global_keybindings_description = {

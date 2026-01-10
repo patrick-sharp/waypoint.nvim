@@ -159,7 +159,8 @@ local function load_decoded_state_into_state(decoded)
         wp_expected, " for key ", tostring(wpk),
         ", but received ", tostring(wpv), "."
       })
-      waypoint.extmark_id = -1
+      waypoint.has_buffer = false
+      waypoint.extmark_id = nil
       waypoint.linenr = waypoint.linenr or -1
       waypoint.bufnr = -1
       waypoint.filepath = waypoint.filepath or ""
@@ -173,6 +174,7 @@ local function load_decoded_state_into_state(decoded)
       waypoint.bufnr = bufnr
       if bufnr ~= -1 then
         buffer_init(bufnr)
+        waypoint.has_buffer = true
         -- one-indexed line number
         local linenr = waypoint.linenr
         local virt_text = nil
@@ -192,7 +194,8 @@ local function load_decoded_state_into_state(decoded)
           waypoint.extmark_id = -1
         end
       else
-        waypoint.extmark_id = -1
+        waypoint.has_buffer = false
+        waypoint.extmark_id = nil
       end
     end
   end
@@ -279,6 +282,7 @@ function M.locate_waypoints_in_file(src_filepath, dest_filepath, waypoints, chan
     else
       message.notify("Error: " .. dest_filepath .. " does not exist")
       for _, waypoint in ipairs(waypoints) do
+        waypoint.has_buffer = false
         waypoint.extmark_id = -1
         waypoint.bufnr      = -1
       end
@@ -295,12 +299,14 @@ function M.locate_waypoints_in_file(src_filepath, dest_filepath, waypoints, chan
   -- if a match can't be found for a waypoint, it will have a bufnr of -1 and its original filepath
   for _, waypoint in ipairs(waypoints) do
     local linenr = waypoint.linenr
+    waypoint.has_buffer = false
     waypoint.extmark_id = -1
     waypoint.bufnr      = -1
     if waypoint.text == lines[linenr] then
       if linenr < line_count then
         waypoint.extmark_id = create_extmark(bufnr, waypoint)
       end
+      waypoint.has_buffer = true
       waypoint.linenr = waypoint.linenr
       waypoint.bufnr = bufnr
       waypoint.filepath = dest_filepath
@@ -310,6 +316,7 @@ function M.locate_waypoints_in_file(src_filepath, dest_filepath, waypoints, chan
       if new_linenr == -1 then
         waypoint.error = constants.no_matching_waypoint_error
       else
+        waypoint.has_buffer = true
         waypoint.linenr = new_linenr
         waypoint.bufnr = bufnr
         waypoint.text = lines[new_linenr]

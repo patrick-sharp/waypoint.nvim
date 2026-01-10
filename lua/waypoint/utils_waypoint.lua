@@ -34,10 +34,10 @@ end
 ---@param waypoint waypoint.Waypoint
 ---@return string
 function M.filepath_from_waypoint(waypoint)
-  if waypoint.has_buffer and waypoint.filepath then
+  if not waypoint.has_buffer and waypoint.filepath then
     return waypoint.filepath
   end
-  assert(u.is_buffer_valid(waypoint.bufnr))
+  assert(u.is_buffer_valid(waypoint.bufnr), "bufnr of " .. tostring(waypoint.bufnr) .. " is invalid")
   return u.buf_path(waypoint.bufnr)
 end
 

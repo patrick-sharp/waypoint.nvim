@@ -204,7 +204,7 @@
     - [ ] fix bugs with undo
         - [x] bug when you run sort test, delete, undo
         - [ ] bug when you run missing file test, delete a buffer, undo
-- [ ] add visual mode
+- [ ] add visual mode (use ModeChanged command)
     - [ ] move selection of waypoints around
 
 still got some weird treesitter behavior
