@@ -29,9 +29,10 @@
 
 ---@class waypoint.State
 ---@field load_error            string | nil if there was an error loading the file. if so, we show it in the waypoint window
----@field wpi                   integer | nil   the index of the currently selected waypoint.
+---@field wpi                   integer | nil the index of the currently selected waypoint.
+---@field vis_wpi               integer | nil the index of the other side of the visual selection. to deal with "o" (i.e. moving to the other end of highlighted text), it can check where the cursor is on the CursorMoved callback and update wpi/vis_wpi accordingly.
 ---@field waypoints             waypoint.Waypoint[] all the waypoints in this session.
----@field sorted_waypoints      waypoint.Waypoint[] all the waypoints in this session, sorted by file and line number.
+---@field sorted_waypoints      waypoint.Waypoint[] all the waypoints in this session, sorted by file and line number. tables in this array are pointers to the same tables in state.waypoints, just in a different order
 ---@field context               integer the number of lines above and below the waypoint that will also appear in the waypoint window. adds with before_context and after_context.
 ---@field before_context        integer the number of lines above the waypoint that will also appear in the waypoint window. adds with context and after_context.
 ---@field after_context         integer the number of lines below the waypoint that will also appear in the waypoint window. adds with context and before_context.

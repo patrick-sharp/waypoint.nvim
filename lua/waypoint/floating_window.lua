@@ -171,6 +171,7 @@ local function get_bg_win_opts(win_opts)
     sep, a, sep, b, sep, c, sep, wpi, sep,
     path, num, text, sep, full_path, context, sort,
     { " ", 'FloatBorder'},
+    sep, { " " .. tostring(state.wpi) .. " " .. tostring(state.vis_wpi) .. " ", constants.hl_selected}, { " ", 'FloatBorder'},
   }
   bg_win_opts.title_pos = "center"
   return bg_win_opts
@@ -199,8 +200,10 @@ local function draw_waypoint_window(action)
   local waypoint_topline
   local waypoint_bottomline
 
-  local highlight_start
-  local highlight_end
+  local curr_waypoint_context_start_line
+  local curr_waypoint_context_end_line
+  local vis_waypoint_context_start_line
+  local vis_waypoint_context_end_line
 
   --- @type (string | waypoint.HighlightRange[])[][]
   --- first index is the line number, second is the column index. each column 
@@ -242,10 +245,13 @@ local function draw_waypoint_window(action)
     assert(extmark_lines)
 
     if i == state.wpi then
-      highlight_start = #rows
+      curr_waypoint_context_start_line = #rows
       waypoint_topline = #rows + 1
       waypoint_bottomline = #rows + #extmark_lines
       cursor_line = #rows + extmark_line
+    end
+    if i == state.vis_wpi then
+      vis_waypoint_context_start_line = #rows
     end
 
     for j, line_text in ipairs(extmark_lines) do
@@ -326,7 +332,10 @@ local function draw_waypoint_window(action)
       table.insert(hlranges, line_hlranges)
     end
     if i == state.wpi then
-      highlight_end = #rows
+      curr_waypoint_context_end_line = #rows
+    end
+    if i == state.vis_wpi then
+      vis_waypoint_context_end_line = #rows
     end
     local has_context = state.before_context ~= 0
     has_context = has_context or state.context ~= 0
@@ -412,7 +421,13 @@ local function draw_waypoint_window(action)
       end
     end
   end
-  if state.wpi and highlight_start and highlight_end and cursor_line then
+  local condition = u.all({
+    state.wpi,
+    curr_waypoint_context_start_line,
+    curr_waypoint_context_end_line,
+    cursor_line,
+  })
+  if condition then
     -- for certain actions, we need to move the cursor to where the state view says it is
     local should_move_cursor = (
       action == "move_to_waypoint"
@@ -450,9 +465,26 @@ local function draw_waypoint_window(action)
       vim.fn.winrestview(view)
     end
 
-
-    for i=highlight_start,highlight_end-1 do
-      vim.hl.range(wp_bufnr, constants.ns, constants.hl_selected, {i, 0}, {i, -1})
+    -- if we're in visual mode, highlight visual selection.
+    -- otherwise, highlight current waypoint with constants.hl_selected
+    if state.vis_wpi then
+      local highlight_start = math.min(
+        curr_waypoint_context_start_line,
+        vis_waypoint_context_start_line
+      )
+      local highlight_end = math.max(
+        curr_waypoint_context_end_line,
+        vis_waypoint_context_end_line
+      )
+      -- highlight visual selection
+      for i=highlight_start,highlight_end-1 do
+        vim.hl.range(wp_bufnr, constants.ns, "Visual", {i, 0}, {i, -1})
+      end
+    else
+      -- highlight current waypoint
+      for i=curr_waypoint_context_start_line,curr_waypoint_context_end_line-1 do
+        vim.hl.range(wp_bufnr, constants.ns, constants.hl_selected, {i, 0}, {i, -1})
+      end
     end
   end
 
@@ -466,7 +498,7 @@ local function draw_waypoint_window(action)
   if action == "center" or action == "context" then
     vim.api.nvim_command("normal! zz")
   end
-  if action ~= "set_waypoint_for_cursor" then
+  if action ~= M.WINDOW_ACTIONS.set_waypoint_for_cursor then
     ignore_next_cursormoved = true
   end
 end
@@ -485,7 +517,7 @@ local function bind_key(bufnr, modes, keybindings, action, fn)
   end
   local keybinding = keybindings[action]
   if type(keybinding) == "string" then
-    vim.keymap.set('n', keybinding, fn, keymap_opts(bufnr))
+    vim.keymap.set(modes, keybinding, fn, keymap_opts(bufnr))
   elseif type(keybinding) == "table" then
     for i, v in ipairs(keybinding) do
       if type(v) ~= "string" then
@@ -504,22 +536,22 @@ end
 local function set_shared_keybinds(bufnr)
   bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "exit_waypoint_window",    M.leave)
 
-  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "increase_context",        M.increase_context)
-  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "decrease_context",        M.decrease_context)
-  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "increase_before_context", M.increase_before_context)
-  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "decrease_before_context", M.decrease_before_context)
-  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "increase_after_context",  M.increase_after_context)
-  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "decrease_after_context",  M.decrease_after_context)
-  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "reset_context",           M.reset_context)
+  bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "increase_context",        M.increase_context)
+  bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "decrease_context",        M.decrease_context)
+  bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "increase_before_context", M.increase_before_context)
+  bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "decrease_before_context", M.decrease_before_context)
+  bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "increase_after_context",  M.increase_after_context)
+  bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "decrease_after_context",  M.decrease_after_context)
+  bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "reset_context",           M.reset_context)
 
-  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "toggle_path",             M.toggle_path)
-  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "toggle_full_path",        M.toggle_full_path)
-  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "toggle_line_num",         M.toggle_line_number)
-  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "toggle_file_text",        M.toggle_text)
-  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "toggle_context",          M.toggle_context)
-  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "toggle_sort",             M.toggle_sort)
+  bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "toggle_path",             M.toggle_path)
+  bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "toggle_full_path",        M.toggle_full_path)
+  bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "toggle_line_num",         M.toggle_line_number)
+  bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "toggle_file_text",        M.toggle_text)
+  bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "toggle_context",          M.toggle_context)
+  bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "toggle_sort",             M.toggle_sort)
 
-  bind_key(bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "set_quickfix_list",       M.set_quickfix_list)
+  bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "set_quickfix_list",       M.set_quickfix_list)
 end
 
 local function set_help_keybinds()
@@ -538,37 +570,37 @@ local function set_waypoint_keybinds()
     return
   end
 
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "indent",                  M.indent)
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "unindent",                M.unindent)
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "reset_waypoint_indent",   M.reset_current_indent)
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "reset_all_indent",        M.reset_all_indent)
+  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "indent",                  M.indent)
+  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "unindent",                M.unindent)
+  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "reset_waypoint_indent",   M.reset_current_indent)
+  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "reset_all_indent",        M.reset_all_indent)
 
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "scroll_left",             M.scroll_left)
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "scroll_right",            M.scroll_right)
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "reset_horizontal_scroll", M.reset_scroll)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "scroll_left",             M.scroll_left)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "scroll_right",            M.scroll_right)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "reset_horizontal_scroll", M.reset_scroll)
 
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "prev_waypoint",           M.prev_waypoint)
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "next_waypoint",           M.next_waypoint)
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "first_waypoint",          M.move_to_first_waypoint)
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "last_waypoint",           M.move_to_last_waypoint)
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "prev_neighbor_waypoint",  ":<C-u>lua MoveToPrevNeighborWaypoint(true)<CR>")
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "next_neighbor_waypoint",  ":<C-u>lua MoveToNextNeighborWaypoint(true)<CR>")
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "prev_top_level_waypoint", ":<C-u>lua MoveToPrevTopLevelWaypoint(true)<CR>")
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "next_top_level_waypoint", ":<C-u>lua MoveToNextTopLevelWaypoint(true)<CR>")
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "outer_waypoint",          ":<C-u>lua MoveToOuterWaypoint(true)<CR>")
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "inner_waypoint",          ":<C-u>lua MoveToInnerWaypoint(true)<CR>")
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "prev_waypoint",           M.prev_waypoint)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "next_waypoint",           M.next_waypoint)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "first_waypoint",          M.move_to_first_waypoint)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "last_waypoint",           M.move_to_last_waypoint)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "prev_neighbor_waypoint",  ":<C-u>lua MoveToPrevNeighborWaypoint(true)<CR>")
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "next_neighbor_waypoint",  ":<C-u>lua MoveToNextNeighborWaypoint(true)<CR>")
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "prev_top_level_waypoint", ":<C-u>lua MoveToPrevTopLevelWaypoint(true)<CR>")
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "next_top_level_waypoint", ":<C-u>lua MoveToNextTopLevelWaypoint(true)<CR>")
+  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "outer_waypoint",          ":<C-u>lua MoveToOuterWaypoint(true)<CR>")
+  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "inner_waypoint",          ":<C-u>lua MoveToInnerWaypoint(true)<CR>")
 
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_up",        M.move_waypoint_up)
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_down",      M.move_waypoint_down)
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "current_waypoint",        M.go_to_current_waypoint)
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_top",    M.move_waypoint_to_top)
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_bottom", M.move_waypoint_to_bottom)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_up",        M.move_waypoint_up)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_down",      M.move_waypoint_down)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "current_waypoint",        M.go_to_current_waypoint)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_top",    M.move_waypoint_to_top)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_bottom", M.move_waypoint_to_bottom)
 
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "delete_waypoint",         M.delete_current_waypoint)
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "move_waypoints_to_file",  M.move_waypoints_to_file_wrapper)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "delete_waypoint",         M.delete_current_waypoint)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoints_to_file",  M.move_waypoints_to_file_wrapper)
 
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "undo",                    M.undo)
-  bind_key(wp_bufnr, { 'n' }, config.keybindings.waypoint_window_keybindings, "redo",                    M.redo)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "undo",                    M.undo)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "redo",                    M.redo)
 end
 
 M.global_keybindings_description = {
@@ -1401,6 +1433,15 @@ function M.move_waypoints_to_file_wrapper()
   end
 end
 
+---@param mode string
+local function is_visual(mode)
+  return u.any({
+    mode == 'v',
+    mode == 'V',
+    mode == '',
+  })
+end
+
 local function set_waypoint_for_cursor()
   if ignore_next_cursormoved then
     ignore_next_cursormoved = false
@@ -1410,16 +1451,29 @@ local function set_waypoint_for_cursor()
   if not line_to_waypoint then return end
   -- use getcursorcharpos to avoid issues with unicode
   local cursor_pos = vim.fn.getcursorcharpos()
-  state.view.lnum = cursor_pos[2]
-  state.view.col = cursor_pos[3] - 1
+  state.view.lnum = cursor_pos[2] -- one-indexed
+  state.view.col = cursor_pos[3] - 1 -- zero-indexed
 
   local view = vim.fn.winsaveview()
   state.view.leftcol = view.leftcol
-  state.wpi = line_to_waypoint[state.view.lnum]
-  draw_waypoint_window("set_waypoint_for_cursor")
+  local cursor_wpi = line_to_waypoint[state.view.lnum]
+  if state.vis_wpi then
+      -- covers the case when the user switches to the other end of the visual selection with "o".
+    local vis_lnum = vim.fn.getpos("v")[2]
+    local vis_wpi = line_to_waypoint[vis_lnum]
+    local should_swap_wpi = u.all{
+      cursor_wpi ~= vis_wpi,
+      (state.wpi < state.vis_wpi) ~= (state.view.lnum < vis_lnum),
+    }
+    if should_swap_wpi then
+      state.vis_wpi = state.wpi
+    end
+  end
+  state.wpi = cursor_wpi
+  draw_waypoint_window(M.WINDOW_ACTIONS.set_waypoint_for_cursor)
 end
 
-function Resize()
+function M.resize()
   local win_opts = get_win_opts()
   local bg_win_opts = get_bg_win_opts(win_opts)
   vim.api.nvim_win_set_config(winnr, win_opts)
@@ -1458,6 +1512,21 @@ function M.toggle_help()
   else
     open_help()
   end
+end
+
+function M.on_mode_change(arg)
+  local modes = vim.split(arg.match, ":")
+  assert(#modes == 2)
+  local old_mode = modes[1]
+  local new_mode = modes[2]
+  local old_is_visual = is_visual(old_mode)
+  local new_is_visual = is_visual(new_mode)
+  if old_is_visual and not new_is_visual then
+    state.vis_wpi = nil
+  elseif not old_is_visual and new_is_visual then
+    state.vis_wpi = state.wpi
+  end
+  draw_waypoint_window()
 end
 
 
@@ -1500,7 +1569,12 @@ function M.open()
 
   vim.api.nvim_create_autocmd("VimResized", {
     group = constants.window_augroup,
-    callback = Resize,
+    callback = M.resize,
+  })
+
+  vim.api.nvim_create_autocmd("ModeChanged", {
+    group = constants.window_augroup,
+    callback = M.on_mode_change,
   })
 
   local win_opts = get_win_opts()
