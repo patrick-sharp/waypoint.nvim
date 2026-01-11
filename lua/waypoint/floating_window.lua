@@ -171,7 +171,6 @@ local function get_bg_win_opts(win_opts)
     sep, a, sep, b, sep, c, sep, wpi, sep,
     path, num, text, sep, full_path, context, sort,
     { " ", 'FloatBorder'},
-    sep, { " " .. tostring(state.wpi) .. " " .. tostring(state.vis_wpi) .. " ", constants.hl_selected}, { " ", 'FloatBorder'},
   }
   bg_win_opts.title_pos = "center"
   return bg_win_opts
