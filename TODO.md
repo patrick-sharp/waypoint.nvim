@@ -176,6 +176,8 @@
     - [ ] vim.ringbuf
 - [x] make it so that waypoints get converted to saved waypoints when the buffer closes, and converted back to regular ones when the buffer is opened
     - use ryan fleury's megastruct idea.
+- [ ] fix visual mode issue (highlight 4-8/11, o, expand context 10 times, reset context)
+    - [ ] there are a shitton
 
 ### ADVANCED FEATURES:
 
@@ -205,7 +207,11 @@
         - [x] bug when you run sort test, delete, undo
         - [ ] bug when you run missing file test, delete a buffer, undo
 - [ ] add visual mode (use ModeChanged command and vim.api.nvim_get_mode().mode)
+    - [x] stub visual mode
+    - [x] make visual mode work correctly with context
+    - [ ] make gv work properly
     - [ ] move selection of waypoints around
+    - [ ] delete selection of waypoints
 
 still got some weird treesitter behavior
 it seems like in the skhd repo I'm using, it will only properly highlight some highlights if the highlight is onscreen or close to it

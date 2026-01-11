@@ -44,6 +44,17 @@ M.WINDOW_ACTIONS = {
 -- I use this to avoid drawing twice when the cursor moves.
 -- I have no idea how nvim orders events and event handlers so hopefully this 
 -- isn't a catastrophe waiting to happen
+--
+-- some more stuff I've learned:
+-- autocmds don't seem to be multithreaded, but they're not triggered immediately either.
+-- When you do something in a lua function (e.g. change the mode), an autocmd
+-- event will be put in the queue. when vim gets control back (which will be
+-- after you lua function finishes), your callback will be called twice in
+-- series with both autocmd events. If you wanted to do something that
+-- triggered two autocmds, but ignored both, you would have to do something
+-- like this but with an integer flag, and subtract one from the "events to
+-- ignore" count. you would subtrack one from the count and early return unless
+-- the count is 0.
 local ignore_next_cursormoved
 
 local function set_modifiable(bufnr, is_modifiable)
@@ -97,6 +108,15 @@ local function get_win_opts()
     style = "minimal",
   }
   return win_opts
+end
+
+---@param mode string
+local function is_visual(mode)
+  return u.any({
+    mode == 'v',
+    mode == 'V',
+    mode == '',
+  })
 end
 
 ---@return waypoint.Waypoint | nil
@@ -388,14 +408,14 @@ local function draw_waypoint_window(action)
   vim.api.nvim_buf_set_lines(wp_bufnr, 0, -1, true, aligned)
 
   -- highlight the text in the buffer
-  for lnum,line_hlranges in pairs(hlranges) do
+  for linenr,line_hlranges in pairs(hlranges) do
     for _,col_highlights in pairs(line_hlranges) do
       if type(col_highlights) == "string" then
         assert(false, "This should not happen, align_waypoint_table should change all column-wide highlights to a HighlightRange")
       else
         for i,hlrange in pairs(col_highlights) do
-          vim.api.nvim_buf_set_extmark(wp_bufnr, constants.ns, lnum - 1, hlrange.col_start + indents[lnum], {
-            end_col = hlrange.col_end + indents[lnum], -- 0-based exclusive column upper bound is the same as 1 based inclusive
+          vim.api.nvim_buf_set_extmark(wp_bufnr, constants.ns, linenr - 1, hlrange.col_start + indents[linenr], {
+            end_col = hlrange.col_end + indents[linenr], -- 0-based exclusive column upper bound is the same as 1 based inclusive
             hl_group = hlrange.hl_group,               -- Highlight group to apply
             -- need to set priority here because extmarks don't override each
             -- other. I had a bug where the color of a highlighted range would
@@ -417,7 +437,7 @@ local function draw_waypoint_window(action)
           --   bufnr,
           --   hlrange.nsid,
           --   hlrange.hl_group,
-          --   lnum - 1,
+          --   linenr - 1,
           --   hlrange.col_start,
           --   hlrange.col_end
           -- )
@@ -458,18 +478,23 @@ local function draw_waypoint_window(action)
         vis_waypoint_context_end_line
       ) - num_lines_after
 
-      local cursor = vim.api.nvim_win_get_cursor(0)
-
-      if state.wpi < state.vis_wpi then
+      do
+        local vis_cursor_line
+        local wpi_cursor_line
+        if state.wpi < state.vis_wpi then
+          wpi_cursor_line = cursor_start_line
+          vis_cursor_line = cursor_end_line
+        else
+          wpi_cursor_line = cursor_end_line
+          vis_cursor_line = cursor_start_line
+        end
+        local cursor
         vim.cmd.normal("o")
-        vim.api.nvim_win_set_cursor(0, { cursor_end_line, 0 })
+        cursor = vim.api.nvim_win_get_cursor(0)
+        vim.api.nvim_win_set_cursor(0, { vis_cursor_line, cursor[2] })
         vim.cmd.normal("o")
-        vim.api.nvim_win_set_cursor(0, cursor)
-      else
-        vim.cmd.normal("o")
-        vim.api.nvim_win_set_cursor(0, { cursor_start_line, 0 })
-        vim.cmd.normal("o")
-        vim.api.nvim_win_set_cursor(0, cursor)
+        cursor = vim.api.nvim_win_get_cursor(0)
+        vim.api.nvim_win_set_cursor(0, { wpi_cursor_line, cursor[2] })
       end
     end
 
@@ -1119,6 +1144,7 @@ function M.reset_context()
   state.context = 0
   state.before_context = 0
   state.after_context = 0
+  state.view.lnum = nil
   draw_waypoint_window(M.WINDOW_ACTIONS.context)
 end
 
@@ -1465,15 +1491,6 @@ function M.move_waypoints_to_file_wrapper()
       end,
     })
   end
-end
-
----@param mode string
-local function is_visual(mode)
-  return u.any({
-    mode == 'v',
-    mode == 'V',
-    mode == '',
-  })
 end
 
 local function set_waypoint_for_cursor()
