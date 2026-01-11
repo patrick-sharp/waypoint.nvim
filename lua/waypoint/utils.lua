@@ -221,9 +221,11 @@ function M.any(t)
   return false
 end
 
--- checks for falsy values in table
+-- checks for falsy values in table.
+-- return false for empty table, because a table full of nils is considered empty.
 ---@param t table
 function M.all(t)
+  if #t == 0 then return false end
   for _,v in ipairs(t) do
     if not v then return v end
   end

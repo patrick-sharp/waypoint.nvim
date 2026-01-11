@@ -162,8 +162,12 @@ local function get_bg_win_opts(win_opts)
   local wpi
   if state.wpi == nil then
     wpi = {"No waypoints", constants.hl_footer_waypoint_nr}
-  else
+  elseif state.vis_wpi == nil then
     wpi = {state.wpi .. '/' .. #state.waypoints, constants.hl_footer_waypoint_nr }
+  else
+    local lower = math.min(state.wpi, state.vis_wpi)
+    local higher = math.max(state.wpi, state.vis_wpi)
+    wpi = {lower .. "-" .. higher .. '/' .. #state.waypoints, constants.hl_footer_waypoint_nr }
   end
   bg_win_opts.footer = {
     { "─ ", 'FloatBorder'},
@@ -199,6 +203,7 @@ local function draw_waypoint_window(action)
   local waypoint_topline
   local waypoint_bottomline
 
+  -- all of these are zero-indexed
   local curr_waypoint_context_start_line
   local curr_waypoint_context_end_line
   local vis_waypoint_context_start_line
@@ -436,6 +441,36 @@ local function draw_waypoint_window(action)
 
     if should_move_cursor then
       vim.fn.setcursorcharpos(cursor_line + 1, state.view.col + 1)
+    end
+
+    -- if in visual mode, set the visual range. this is important because
+    -- increasing/decreasing the context while in visual mode causes the visual
+    -- mode to be in the wrong place. We need to do this before calling 
+    -- winrestview so that we don't mess up the view by moving the cursor
+    if state.vis_wpi then
+      local cursor_start_line = math.min(
+        curr_waypoint_context_start_line,
+        vis_waypoint_context_start_line
+      ) + 1 + num_lines_before
+
+      local cursor_end_line = math.max(
+        curr_waypoint_context_end_line,
+        vis_waypoint_context_end_line
+      ) - num_lines_after
+
+      local cursor = vim.api.nvim_win_get_cursor(0)
+
+      if state.wpi < state.vis_wpi then
+        vim.cmd.normal("o")
+        vim.api.nvim_win_set_cursor(0, { cursor_end_line, 0 })
+        vim.cmd.normal("o")
+        vim.api.nvim_win_set_cursor(0, cursor)
+      else
+        vim.cmd.normal("o")
+        vim.api.nvim_win_set_cursor(0, { cursor_start_line, 0 })
+        vim.cmd.normal("o")
+        vim.api.nvim_win_set_cursor(0, cursor)
+      end
     end
 
     if action == M.WINDOW_ACTIONS.scroll or action == M.WINDOW_ACTIONS.context then
