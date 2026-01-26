@@ -39,25 +39,25 @@ describe('Filter', function()
   tu.assert_neq(after_bufnr, vim.fn.bufnr())
 
   -- place a waypoint on a line that will have whitespace removed
-  tu.goto_line(1)
+  u.goto_line(1)
   crud.append_waypoint_wrapper()
 
   -- place a waypoint on a line that will not be moved or changed
-  tu.goto_line(2)
+  u.goto_line(2)
   crud.append_waypoint_wrapper()
 
   -- place a waypoint in the middle of the long line that gets split
-  tu.goto_line(3)
+  u.goto_line(3)
   crud.append_waypoint_wrapper()
 
   -- place a waypoint on a line that will be moved, but not have its text altered
   -- lines that get concatenated
-  tu.goto_line(5)
+  u.goto_line(5)
   crud.append_waypoint_wrapper()
 
   -- place a waypoint in one of the lines in the middle of the group of short
   -- lines that get concatenated
-  tu.goto_line(9)
+  u.goto_line(9)
   crud.append_waypoint_wrapper()
 
   -- pre-filter callback

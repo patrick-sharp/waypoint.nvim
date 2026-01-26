@@ -24,22 +24,22 @@ describe('Annotation', function()
   local annotation_3 = "Annotation #3"
 
   vim.cmd.edit({args = {file_0}, bang=true})
-  tu.goto_line(7)
+  u.goto_line(7)
   crud.append_annotated_waypoint(annotation_1) -- waypoint 1
   vim.cmd.edit({args = {file_1}, bang=true})
-  tu.goto_line(8)
+  u.goto_line(8)
   crud.append_waypoint_wrapper()               -- waypoint 2
-  tu.goto_line(5)
+  u.goto_line(5)
   crud.append_annotated_waypoint(annotation_2) -- waypoint 5
   vim.cmd.edit({args = {file_0}, bang=true})
-  tu.goto_line(3)
+  u.goto_line(3)
   crud.append_waypoint_wrapper()               -- waypoint 6
 
   -- test insert
   floating_window.next_waypoint()
-  tu.goto_line(17)
+  u.goto_line(17)
   crud.insert_annotated_waypoint(annotation_3) -- waypoint 3
-  tu.goto_line(15)
+  u.goto_line(15)
   crud.insert_waypoint_wrapper()               -- waypoint 4
 
   floating_window.open()

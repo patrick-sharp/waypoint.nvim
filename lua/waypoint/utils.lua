@@ -4,8 +4,9 @@ local M = {}
 
 --- @class waypoint.HighlightRange
 --- col_start and col_end values are byte indexed because that's what 
---- nvim_buf_add_highlight uses. That is unlike state.view.col, which is column
---- index (i.e. it accounts for unicode chars being multiple bytes long).
+--- nvim_buf_add_highlight uses. That is unlike vim.fn.virtcol, which is column
+--- index (i.e. it accounts for unicode chars being multiple bytes long and tabs
+--- being multiple columns long).
 --- @field nsid integer
 --- @field hl_group string | integer   if the range comes from treesitter, it will be an id. If it comes from vanilla vim, it will be a name.
 --- @field col_start integer one-indexed inclusive column start for highlight
@@ -133,6 +134,20 @@ function M.hl_background_distance(a, b)
   return distance
 end
 
+---@param types string[]
+---@return function
+function M.union_validator(types)
+  local description = tostring(types)
+  return function(x)
+    for _,type_string in ipairs(types) do
+      if type(x) == type_string then
+        return true, description
+      end
+    end
+    return false, description
+  end
+end
+
 -- NOTE: this does not handle unions (values that can have multiple types) or variable-length tables
 --- @param t                       table
 --- @param schema                  table
@@ -156,6 +171,13 @@ function M.validate(t, schema, forbid_extra_properties)
       local success, k_, v_, expected = M.validate(t[k], v, forbid_extra_properties)
       if not success then
         return false, k_, v_, expected
+      end
+    elseif type(v) == "function" then
+      local matches, description = v(t[k])
+      if matches then
+        return true, nil, nil, ""
+      else
+        return false, k, type(t[k]), description
       end
     else
       return false, nil, nil, ""
@@ -250,4 +272,13 @@ function M.buf_path(bufnr)
   local path = vim.api.nvim_buf_get_name(bufnr)
   return vim.fn.fnamemodify(path, ":.")
 end
+
+-- jump to linenr in current buffer. The extra <C-c> is to reset vim.v.count
+---@param linenr integer one-indexed line number
+function M.goto_line(linenr)
+  vim.cmd.normal({args = {tostring(linenr) .. "G<C-c>"}, bang=true})
+end
+
 return M
+
+

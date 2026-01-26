@@ -22,7 +22,6 @@ local _ = require'waypoint.test.tests.move'
 local _ = require'waypoint.test.tests.navigation_basic'
 local _ = require'waypoint.test.tests.quickfix_list'
 local _ = require'waypoint.test.tests.ring_buffer'
-local _ = require'waypoint.test.tests.scroll'
 local _ = require'waypoint.test.tests.sort'
 local _ = require'waypoint.test.tests.toggles'
 local _ = require'waypoint.test.tests.undo_append'
@@ -135,7 +134,8 @@ function M.run_tests()
     test.pass = not test.err
     floating_window.clear_state_and_close()
     clear_buffers()
-    vim.cmd.normal('<C-c>') -- this resets vim.v.count and vim.v.count1, which can persist between tests otherwise
+    --vim.fn.feedkeys(':MoveWaypointsToFile ', 'n')
+    vim.cmd.normal(vim.api.nvim_replace_termcodes('<C-c>', true, false, true)) -- this resets vim.v.count and vim.v.count1, which can persist between tests otherwise
   end
   state.should_notify = true
 

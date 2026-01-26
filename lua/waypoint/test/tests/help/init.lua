@@ -7,15 +7,18 @@ local config = require("waypoint.config")
 local tu = require("waypoint.test.util")
 local u = require("waypoint.utils")
 
+---@param t table
+---@param s string
+local function find_pair(t, s)
+  for i,v in ipairs(t) do
+    if v[1] == s then
+      return i
+    end
+  end
+  return -1
+end
+
 describe('Help', function()
-  local global_keybindings_len   = u.len(config.keybindings.global_keybindings)
-  local waypoint_keybindings_len = u.len(config.keybindings.waypoint_window_keybindings)
-  local help_keybindings_len     = u.len(config.keybindings.help_keybindings)
-
-  tu.assert_eq(global_keybindings_len,   #floating_window.global_keybindings_description)
-  tu.assert_eq(waypoint_keybindings_len, #floating_window.waypoint_window_keybindings_description)
-  tu.assert_eq(help_keybindings_len,     #floating_window.help_keybindings_description)
-
   floating_window.open()
 
   -- assert global keybindings are set properly
@@ -34,4 +37,23 @@ describe('Help', function()
   for k,_ in pairs(floating_window.bound_keys[wp_bufnr]) do
     assert(config.keybindings.waypoint_window_keybindings[k], k .. " is bound in waypoint window, but does not exist in keybindings table")
   end
+
+  -- assert a description exists for every keybinding
+  for k,_ in pairs(config.keybindings.global_keybindings) do
+    assert(-1 ~= find_pair(floating_window.global_keybindings_description, k), k .. "has no description")
+  end
+  for k,_ in pairs(config.keybindings.waypoint_window_keybindings) do
+    assert(-1 ~= find_pair(floating_window.waypoint_window_keybindings_description, k), k .. "has no description")
+  end
+  for k,_ in pairs(config.keybindings.help_keybindings) do
+    assert(-1 ~= find_pair(floating_window.help_keybindings_description, k), k .. "has no description")
+  end
+
+  local global_keybindings_len   = u.len(config.keybindings.global_keybindings)
+  local waypoint_keybindings_len = u.len(config.keybindings.waypoint_window_keybindings)
+  local help_keybindings_len     = u.len(config.keybindings.help_keybindings)
+
+  tu.assert_eq(global_keybindings_len,   #floating_window.global_keybindings_description)
+  tu.assert_eq(waypoint_keybindings_len, #floating_window.waypoint_window_keybindings_description)
+  tu.assert_eq(help_keybindings_len,     #floating_window.help_keybindings_description)
 end)

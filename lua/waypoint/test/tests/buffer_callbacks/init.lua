@@ -15,13 +15,13 @@ describe('Buffer callbacks', function()
   assert(u.file_exists(file_0))
 
   vim.cmd.edit({args = {file_0}, bang=true})
-  tu.goto_line(7)
+  u.goto_line(7)
   crud.append_waypoint_wrapper()
-  tu.goto_line(8)
+  u.goto_line(8)
   crud.append_waypoint_wrapper()
 
   vim.cmd.edit({args = {file_1}, bang=true})
-  tu.goto_line(11)
+  u.goto_line(11)
   crud.append_waypoint_wrapper()
 
   tu.assert_eq(3, #state.waypoints)

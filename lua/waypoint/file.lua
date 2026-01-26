@@ -56,10 +56,6 @@ local function encode()
   state_to_encode.context = state.context
   state_to_encode.after_context = state.after_context
   state_to_encode.before_context = state.before_context
-  state_to_encode.view = {
-    leftcol = state.view.leftcol,
-    col = state.view.col,
-  }
   for _, waypoint in pairs(state.waypoints) do
     local waypoint_to_encode = nil
     if waypoint.has_buffer then
@@ -127,7 +123,7 @@ end
 
 local file_schema = {
   waypoints = "table",
-  -- wpi = "number",  -- commenting this out because wpi can be nil
+  wpi = u.union_validator({"number", "nil"}),
   show_path = "boolean",
   show_full_path = "boolean",
   show_line_num = "boolean",
@@ -136,11 +132,6 @@ local file_schema = {
   after_context = "number",
   before_context = "number",
   context = "number",
-  view = {
-    -- lnum = "number", -- commenting this out because lnum can be nil
-    col = "number",
-    leftcol = "number",
-  },
 }
 
 local waypoint_schema = {

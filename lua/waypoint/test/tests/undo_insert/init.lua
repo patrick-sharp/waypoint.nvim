@@ -26,7 +26,7 @@ describe('Undo insert', function()
   tu.assert_eq(message.at_latest_change, tu.get_last_message())
 
   vim.cmd.edit({args = {file_0}, bang=true})
-  tu.goto_line(7)
+  u.goto_line(7)
   crud.insert_waypoint_wrapper()
 
   tu.assert_eq(1, #state.waypoints)

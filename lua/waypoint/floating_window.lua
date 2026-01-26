@@ -526,16 +526,7 @@ local function draw_waypoint_window(action)
     assert(cursor_line)
     assert(waypoint_topline)
     assert(waypoint_bottomline)
-    -- for certain actions, we need to move the cursor to where the state view says it is
-    local should_move_cursor = u.any{
-      action == M.WINDOW_ACTIONS.move_to_waypoint,
-      action == M.WINDOW_ACTIONS.context,
-      action == M.WINDOW_ACTIONS.swap,
-    }
-    if should_move_cursor then
-      -- state.view.lnum = cursor_line
-      -- vim.fn.setcursorcharpos(cursor_line + 1, state.view.col + 1)
-    elseif action == M.WINDOW_ACTIONS.reselect_visual then
+    if action == M.WINDOW_ACTIONS.reselect_visual then
       local waypoint_context_lines = (state.before_context + state.context + 1 + state.context + state.after_context)
       local has_spacer = u.any({
         state.before_context > 0,
@@ -600,20 +591,20 @@ local function draw_waypoint_window(action)
     -- update the view (includes cursor row and column, window top/bottom/left/right, virtual offset)
     if action == M.WINDOW_ACTIONS.context then
       -- move to the current waypoint's line and center the screen
-      vim.api.nvim_command("normal! " .. tostring(cursor_line + 1) .. "G")
+      u.goto_line(cursor_line + 1)
       vim.api.nvim_command("normal! zz")
     elseif action == M.WINDOW_ACTIONS.move_to_waypoint then
-      vim.api.nvim_command("normal! " .. tostring(cursor_line + 1) .. "G")
+      u.goto_line(cursor_line + 1)
     elseif action == M.WINDOW_ACTIONS.reselect_visual then
       -- do nothing
     elseif action == M.WINDOW_ACTIONS.resize then
-      vim.api.nvim_command("normal! " .. tostring(cursor_line + 1) .. "G")
+      u.goto_line(cursor_line + 1)
     elseif action == M.WINDOW_ACTIONS.scroll then
       -- do nothing
     elseif action == M.WINDOW_ACTIONS.set_waypoint_for_cursor then
       -- do nothing
     elseif action == M.WINDOW_ACTIONS.swap then
-      vim.api.nvim_command("normal! " .. tostring(cursor_line + 1) .. "G")
+      u.goto_line(cursor_line + 1)
     end
 
     -- if we're in visual mode, highlight visual selection.
@@ -723,10 +714,6 @@ local function set_waypoint_keybinds()
   bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "reset_waypoint_indent",   M.reset_current_indent)
   bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "reset_all_indent",        M.reset_all_indent)
 
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "scroll_left",             M.scroll_left)
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "scroll_right",            M.scroll_right)
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "reset_horizontal_scroll", M.reset_scroll)
-
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "prev_waypoint",           M.prev_waypoint)
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "next_waypoint",           M.next_waypoint)
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "first_waypoint",          M.move_to_first_waypoint)
@@ -800,9 +787,7 @@ M.waypoint_window_keybindings_description = {
   {"unindent"                 , "Decrease the indentation of the current waypoint"}            ,
   {"reset_waypoint_indent"    , "Set the current waypoint's indentation to zero"}              ,
   {"reset_all_indent"         , "Set the indentation of all waypoints to zero"}                ,
-  {"scroll_right"             , "Scroll the waypoint window right"}                            ,
-  {"scroll_left"              , "Scroll the waypoint window left"}                             ,
-  {"reset_horizontal_scroll"  , "Scroll the waypoint window all the way left"}                 ,
+  {"reselect_visual"          , "Re-select the previously selected range of waypoints"}        ,
   {"next_waypoint"            , "Move to the next waypoint in the waypoint window"}            ,
   {"prev_waypoint"            , "Move to the previous waypoint in the waypoint window"}        ,
   {"first_waypoint"           , "Move to the first waypoint in the waypoint window"}           ,
@@ -1119,8 +1104,6 @@ function M.next_waypoint()
       1,
       #state.waypoints
     )
-    -- center on selected waypoint
-    state.view.lnum = nil
   end
   if wp_bufnr then
     draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
@@ -1174,14 +1157,6 @@ function M.go_to_current_waypoint()
   vim.api.nvim_command("normal! zz")
 end
 
-local function clamp_view()
-  local width = vim.api.nvim_get_option_value("columns", {})
-  local win_width = math.ceil(width * config.window_width)
-  local leftcol_max = u.clamp(longest_line_len - win_width, 0)
-  state.view.leftcol = u.clamp(state.view.leftcol, 0, leftcol_max)
-  state.view.col = u.clamp(state.view.col, state.view.leftcol, state.view.leftcol + win_width - 1)
-end
-
 function M.GoToNextWaypoint()
   M.next_waypoint()
   M.go_to_current_waypoint()
@@ -1207,10 +1182,8 @@ end
 local function increase_context(increment)
   for _=1, vim.v.count1 do
     state.context = u.clamp(state.context + increment, 0, config.max_context)
-    state.view.lnum = nil
   end
 
-  clamp_view()
   draw_waypoint_window("context")
 end
 
@@ -1225,10 +1198,8 @@ end
 local function increase_before_context(increment)
   for _=1, vim.v.count1 do
     state.before_context = u.clamp(state.before_context + increment, 0, config.max_context)
-    state.view.lnum = nil
   end
 
-  clamp_view()
   draw_waypoint_window("context")
 end
 
@@ -1243,10 +1214,8 @@ end
 local function increase_after_context(increment)
   for _=1, vim.v.count1 do
     state.after_context = u.clamp(state.after_context + increment, 0, config.max_context)
-    state.view.lnum = nil
   end
 
-  clamp_view()
   draw_waypoint_window(M.WINDOW_ACTIONS.context)
 end
 
@@ -1262,35 +1231,7 @@ function M.reset_context()
   state.context = 0
   state.before_context = 0
   state.after_context = 0
-  state.view.lnum = nil
   draw_waypoint_window(M.WINDOW_ACTIONS.context)
-end
-
-function M.scroll(increment)
-  local width = vim.api.nvim_get_option_value("columns", {})
-  local win_width = math.ceil(width * config.window_width)
-  for _=1, vim.v.count1 do
-    local leftcol_max = u.clamp(longest_line_len - win_width, 0)
-    state.view.leftcol = u.clamp(state.view.leftcol + increment, 0, leftcol_max)
-    state.view.col = u.clamp(state.view.col, state.view.leftcol, state.view.leftcol + win_width - 1)
-    -- todo
-    -- state.view.col = u.clamp(state.view.col, state.view.leftcol, state.view.leftcol + win_width - 1)
-  end
-  draw_waypoint_window(M.WINDOW_ACTIONS.scroll)
-end
-
-function M.scroll_right()
-  M.scroll(1)
-end
-
-function M.scroll_left()
-  M.scroll(-1)
-end
-
-function M.reset_scroll()
-  state.view.col = 0
-  state.view.leftcol = 0
-  draw_waypoint_window(M.WINDOW_ACTIONS.scroll)
 end
 
 function M.toggle_path()
@@ -1620,22 +1561,15 @@ local function set_waypoint_for_cursor()
   end
 
   if not line_to_waypoint then return end
-  -- use getcursorcharpos to avoid issues with unicode
-  local cursor_pos = vim.fn.getcursorcharpos()
-  state.view.lnum = cursor_pos[2]
-  state.view.col  = cursor_pos[3] - 1 -- zero-indexed
-  state.view.col  = cursor_pos[4]
-
-  local view = vim.fn.winsaveview()
-  state.view.leftcol = view.leftcol
-  local cursor_wpi = line_to_waypoint[state.view.lnum]
+  local lnum = vim.fn.getpos(".")[2]
+  local cursor_wpi = line_to_waypoint[lnum]
   if state.vis_wpi then
       -- covers the case when the user switches to the other end of the visual selection with "o".
     local vis_lnum = vim.fn.getpos("v")[2]
     local vis_wpi = line_to_waypoint[vis_lnum]
     local should_swap_wpi = u.all{
       cursor_wpi ~= vis_wpi,
-      (state.wpi < state.vis_wpi) ~= (state.view.lnum < vis_lnum),
+      (state.wpi < state.vis_wpi) ~= (lnum < vis_lnum),
     }
     if should_swap_wpi then
       state.vis_wpi = state.wpi
@@ -1780,7 +1714,6 @@ function M.open()
 
   set_waypoint_keybinds()
 
-  state.view.leftcol = 0
   draw_waypoint_window("move_to_waypoint")
   highlight.highlight_custom_groups()
 end
@@ -1823,12 +1756,6 @@ function M.clear_state()
   state.show_context     = true
 
   state.sort_by_file_and_line = false
-
-  state.view = {
-    lnum     = nil,
-    col      = 0,
-    leftcol  = 0,
-  }
 
   os.remove(config.file)
 end

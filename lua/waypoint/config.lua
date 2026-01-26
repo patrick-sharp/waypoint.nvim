@@ -68,9 +68,6 @@
 ---@field unindent                 waypoint.Keybinding
 ---@field reset_waypoint_indent    waypoint.Keybinding
 ---@field reset_all_indent         waypoint.Keybinding
----@field scroll_right             waypoint.Keybinding
----@field scroll_left              waypoint.Keybinding
----@field reset_horizontal_scroll  waypoint.Keybinding
 ---@field next_waypoint            waypoint.Keybinding
 ---@field prev_waypoint            waypoint.Keybinding
 ---@field first_waypoint           waypoint.Keybinding
@@ -167,9 +164,6 @@
 ---@field unindent                 nil | waypoint.Keybinding
 ---@field reset_waypoint_indent    nil | waypoint.Keybinding
 ---@field reset_all_indent         nil | waypoint.Keybinding
----@field scroll_right             nil | waypoint.Keybinding
----@field scroll_left              nil | waypoint.Keybinding
----@field reset_horizontal_scroll  nil | waypoint.Keybinding
 ---@field next_waypoint            nil | waypoint.Keybinding
 ---@field prev_waypoint            nil | waypoint.Keybinding
 ---@field first_waypoint           nil | waypoint.Keybinding
@@ -256,12 +250,6 @@ local M = {
       unindent                = "<",
       reset_waypoint_indent   = "ri",
       reset_all_indent        = "rI",
-      -- TODO: change this back
-      -- scroll_right            = "zL",
-      -- scroll_left             = "zH",
-      scroll_right            = "sL",
-      scroll_left             = "sH",
-      reset_horizontal_scroll = {"rs"},
       prev_waypoint           = "k",
       next_waypoint           = "j",
       first_waypoint          = "gg",
