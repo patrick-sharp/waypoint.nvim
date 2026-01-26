@@ -90,6 +90,7 @@
 ---@field move_waypoint_to_bottom  waypoint.Keybinding
 ---@field undo                     waypoint.Keybinding
 ---@field redo                     waypoint.Keybinding
+---@field reselect_visual          waypoint.Keybinding
 
 ---@class waypoint.HelpKeybindings
 ---@field exit_help string | string[]
@@ -188,6 +189,7 @@
 ---@field move_waypoint_to_bottom  nil | waypoint.Keybinding
 ---@field undo                     nil | waypoint.Keybinding
 ---@field redo                     nil | waypoint.Keybinding
+---@field reselect_visual          nil | waypoint.Keybinding
 
 ---@class waypoint.HelpKeybindingsOverride
 ---@field exit_help nil | string | string[]
@@ -254,9 +256,12 @@ local M = {
       unindent                = "<",
       reset_waypoint_indent   = "ri",
       reset_all_indent        = "rI",
-      scroll_right            = "zL",
-      scroll_left             = "zH",
-      reset_horizontal_scroll = {"0", "rs"},
+      -- TODO: change this back
+      -- scroll_right            = "zL",
+      -- scroll_left             = "zH",
+      scroll_right            = "sL",
+      scroll_left             = "sH",
+      reset_horizontal_scroll = {"rs"},
       prev_waypoint           = "k",
       next_waypoint           = "j",
       first_waypoint          = "gg",
@@ -276,6 +281,7 @@ local M = {
       move_waypoints_to_file  = "rw",
       undo                    = "u",
       redo                    = "<C-r>",
+      reselect_visual         = "gv",
     },
     help_keybindings = {
       exit_help = {"q", "<esc>", "g?"}

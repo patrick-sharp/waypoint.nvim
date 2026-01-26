@@ -22,9 +22,11 @@
 ---@field linenr        integer | nil the one-indexed line number the waypoint is on. Can become stale if a buffer edit causes the extmark to move.
 ---@field error         string | nil
 
+   -- run :help winsaveview to learn more about this
 ---@class waypoint.View
----@field lnum    integer | nil the line number the cursor is on. if nil, default to the line the waypoint is on.
+---@field lnum    integer | nil the line number the cursor is on (1-indexed). if nil, default to the line the waypoint is on.
 ---@field col     integer the column the cursor is on. zero indexed. keep in mind due to unicode shenanigans I never use this to restore the view. I manipulate the cursor in a unicode save way using getcursorcharpos and setcursorcharpos. never with with winsaveview or winrestview.
+---@field offset  integer the virtual offset of the cursor relative to the current character (i.e. see the "off" documentation in :h getpos)
 ---@field leftcol integer the left column visible on the screen.
 
 ---@class waypoint.State
@@ -42,7 +44,7 @@
 ---@field show_file_text        boolean
 ---@field show_context          boolean whether or not to show the context around the waypoint instead of just the line of text the waypoint is on
 ---@field sort_by_file_and_line boolean whether or not to show the context around the waypoint instead of just the line of text the waypoint is on
----@field view                  waypoint.View
+---@field view                  vim.fn.winsaveview.ret run :help winsaveview to learn more about this
 ---@field should_notify         boolean whether or not to actually print when message.notify is called
 
 ---@type waypoint.State

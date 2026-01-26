@@ -24,6 +24,29 @@ local bg_winnr
 local line_to_waypoint
 local longest_line_len
 
+-- vis_cursor means last position of cursor in visual mode
+-- vis_v means last position of other side of visual selection
+---@type integer | nil
+local vis_cursor_wpi = nil
+---@type integer | nil
+local vis_cursor_col = nil
+---@type integer | nil
+local vis_cursor_offset = nil
+
+---@type integer | nil
+local vis_v_wpi = nil
+---@type integer | nil
+local vis_v_col = nil
+---@type integer | nil
+local vis_v_offset = nil
+
+---@type string | nil
+local last_visual_mode = nil
+
+---@type waypoint.Mark
+local left_vis_mark = vim.api.nvim_buf_get_mark(0, '<')
+local right_vis_mark = vim.api.nvim_buf_get_mark(0, '>')
+
 local function keymap_opts(bufnr)
   return {
     noremap = true,
@@ -34,11 +57,13 @@ local function keymap_opts(bufnr)
 end
  ---@enum waypoint.window_actions
 M.WINDOW_ACTIONS = {
-  swap                    = "swap",
-  move_to_waypoint        = "move_to_waypoint",
   context                 = "context",
+  move_to_waypoint        = "move_to_waypoint",
+  reselect_visual         = "reselect_visual",
+  resize                  = "resize",
+  scroll                  = "scroll",
   set_waypoint_for_cursor = "set_waypoint_for_cursor",
-  scroll                  = "scroll"
+  swap                    = "swap",
 }
 
 -- I use this to avoid drawing twice when the cursor moves.
@@ -55,7 +80,8 @@ M.WINDOW_ACTIONS = {
 -- like this but with an integer flag, and subtract one from the "events to
 -- ignore" count. you would subtrack one from the count and early return unless
 -- the count is 0.
-local ignore_next_cursormoved
+local ignore_next_cursormoved = false
+local ignore_next_modechanged = false
 
 local function set_modifiable(bufnr, is_modifiable)
   if bufnr == nil then error("Should not be called before initializing window") end
@@ -110,7 +136,7 @@ local function get_win_opts()
   return win_opts
 end
 
----@param mode string
+---@param mode string | vim.api.keyset.get_mode
 local function is_visual(mode)
   return u.any({
     mode == 'v',
@@ -219,15 +245,22 @@ local function draw_waypoint_window(action)
   ---@type integer[]
   line_to_waypoint = {}
 
-  local cursor_line
+  ---@type integer | nil
+  local cursor_line -- zero indexed
+  ---@type integer | nil
   local waypoint_topline
+  ---@type integer | nil
   local waypoint_bottomline
 
   -- all of these are zero-indexed
-  local curr_waypoint_context_start_line
-  local curr_waypoint_context_end_line
-  local vis_waypoint_context_start_line
-  local vis_waypoint_context_end_line
+  ---@type integer | nil
+  local ctx_start -- one-indexed start line of current waypoint context start
+  ---@type integer | nil
+  local ctx_end -- one-indexed start line of current waypoint context end
+  ---@type integer | nil
+  local vis_ctx_start -- one-indexed start line of other end of visual selection's waypoint context start
+  ---@type integer | nil
+  local vis_ctx_end  -- one-indexed start line of other end of visual selection's waypoint context end
 
   --- @type (string | waypoint.HighlightRange[])[][]
   --- first index is the line number, second is the column index. each column 
@@ -269,13 +302,13 @@ local function draw_waypoint_window(action)
     assert(extmark_lines)
 
     if i == state.wpi then
-      curr_waypoint_context_start_line = #rows
+      ctx_start = #rows
       waypoint_topline = #rows + 1
       waypoint_bottomline = #rows + #extmark_lines
       cursor_line = #rows + extmark_line
     end
     if i == state.vis_wpi then
-      vis_waypoint_context_start_line = #rows
+      vis_ctx_start = #rows
     end
 
     for j, line_text in ipairs(extmark_lines) do
@@ -356,10 +389,10 @@ local function draw_waypoint_window(action)
       table.insert(hlranges, line_hlranges)
     end
     if i == state.wpi then
-      curr_waypoint_context_end_line = #rows
+      ctx_end = #rows
     end
     if i == state.vis_wpi then
-      vis_waypoint_context_end_line = #rows
+      vis_ctx_end = #rows
     end
     local has_context = state.before_context ~= 0
     has_context = has_context or state.context ~= 0
@@ -404,8 +437,49 @@ local function draw_waypoint_window(action)
     longest_line_len = math.max(longest_line_len, vim.fn.strchars(aligned[i]))
   end
 
+
+  -- save visual mode cursor for use with reselect_visual
+  local mode = vim.api.nvim_get_mode().mode
+  if is_visual(mode) and action ~= M.WINDOW_ACTIONS.reselect_visual then
+    last_visual_mode = mode
+    local dot_pos = vim.fn.getcharpos('.')
+    vis_cursor_wpi    = state.wpi
+    vis_cursor_col    = dot_pos[3]
+    vis_cursor_offset = dot_pos[4]
+
+    local v_pos = vim.fn.getcharpos('v')
+    vis_v_wpi         = state.vis_wpi
+    vis_v_col         = v_pos[3]
+    vis_cursor_offset = v_pos[4]
+  end
+
+  -- before we replace all text in the buffer, save locations of the < and > marks.
+  -- I restore these after replacing the text so that gv still works.
+  -- note that when the mode changes, I also store whether the cursor was at the beginning
+  -- or end of the visual selection.
+  -- local left_vis_mark = vim.api.nvim_buf_get_mark(0, '<')
+  -- local right_vis_mark = vim.api.nvim_buf_get_mark(0, '>')
+  left_vis_mark = vim.api.nvim_buf_get_mark(0, '<')
+  right_vis_mark = vim.api.nvim_buf_get_mark(0, '>')
+
   -- Set text in the buffer
   vim.api.nvim_buf_set_lines(wp_bufnr, 0, -1, true, aligned)
+
+  -- vim does this with visual line < and > marks. it will just set
+  -- cursor to 0 if the col is int_32_max, so I copy that behavior.
+  -- This doesn't actually seem to change the value of the mark when you get it
+  -- with nvim_buf_get_mark, but does affect behavior so idk.
+  local left_vis_col = left_vis_mark[2]
+  if left_vis_mark[2] == constants.int_32_max then
+    left_vis_col[2] = 0
+  end
+  local right_vis_col = right_vis_mark[2]
+  if right_vis_mark[2] == constants.int_32_max then
+    right_vis_col = 0
+  end
+
+  vim.api.nvim_buf_set_mark(0, '<', left_vis_mark[1], left_vis_col, {})
+  vim.api.nvim_buf_set_mark(0, '>', right_vis_mark[1], right_vis_col, {})
 
   -- highlight the text in the buffer
   for linenr,line_hlranges in pairs(hlranges) do
@@ -445,37 +519,54 @@ local function draw_waypoint_window(action)
       end
     end
   end
-  local condition = u.all({
-    state.wpi,
-    curr_waypoint_context_start_line,
-    curr_waypoint_context_end_line,
-    cursor_line,
-  })
-  if condition then
-    -- for certain actions, we need to move the cursor to where the state view says it is
-    local should_move_cursor = (
-      action == "move_to_waypoint"
-      or action == "context"
-      or action == "swap"
-    )
 
+  if (state.wpi) then
+    assert(ctx_start)
+    assert(ctx_end)
+    assert(cursor_line)
+    assert(waypoint_topline)
+    assert(waypoint_bottomline)
+    -- for certain actions, we need to move the cursor to where the state view says it is
+    local should_move_cursor = u.any{
+      action == M.WINDOW_ACTIONS.move_to_waypoint,
+      action == M.WINDOW_ACTIONS.context,
+      action == M.WINDOW_ACTIONS.swap,
+    }
     if should_move_cursor then
-      vim.fn.setcursorcharpos(cursor_line + 1, state.view.col + 1)
+      -- state.view.lnum = cursor_line
+      -- vim.fn.setcursorcharpos(cursor_line + 1, state.view.col + 1)
+    elseif action == M.WINDOW_ACTIONS.reselect_visual then
+      local waypoint_context_lines = (state.before_context + state.context + 1 + state.context + state.after_context)
+      local has_spacer = u.any({
+        state.before_context > 0,
+        state.after_context > 0,
+        state.context > 0,
+      })
+      if has_spacer then
+        waypoint_context_lines = waypoint_context_lines + 1
+      end
+      local vis_v_line      = (waypoint_context_lines) * (state.vis_wpi - 1) + state.before_context + state.context + 1
+      local vis_cursor_line = (waypoint_context_lines) * (state.wpi     - 1) + state.before_context + state.context + 1
+
+      vim.cmd.normal("o")
+      vis_cursor_col = vim.fn.setcharpos('.', { 0, vis_cursor_line, vis_cursor_col, vis_cursor_offset })
+      vim.cmd.normal("o")
+      vis_cursor_col = vim.fn.setcharpos('.', { 0, vis_v_line,      vis_v_col,      vis_v_offset      })
+      vim.cmd.normal("o")
     end
 
     -- if in visual mode, set the visual range. this is important because
     -- increasing/decreasing the context while in visual mode causes the visual
     -- mode to be in the wrong place. We need to do this before calling 
-    -- winrestview so that we don't mess up the view by moving the cursor
     if state.vis_wpi then
       local cursor_start_line = math.min(
-        curr_waypoint_context_start_line,
-        vis_waypoint_context_start_line
+        ctx_start,
+        ctx_end
       ) + 1 + num_lines_before
 
       local cursor_end_line = math.max(
-        curr_waypoint_context_end_line,
-        vis_waypoint_context_end_line
+        ctx_end,
+        vis_ctx_end
       ) - num_lines_after
 
       do
@@ -489,51 +580,52 @@ local function draw_waypoint_window(action)
           vis_cursor_line = cursor_start_line
         end
         local cursor
+        local cursor_col
+        local cursor_offset
+
         vim.cmd.normal("o")
-        cursor = vim.api.nvim_win_get_cursor(0)
-        vim.api.nvim_win_set_cursor(0, { vis_cursor_line, cursor[2] })
+        cursor = vim.fn.getcharpos('.')
+        cursor_col    = cursor[3]
+        cursor_offset = cursor[4]
+        vim.fn.setcharpos('.', { 0, vis_cursor_line, cursor_col, cursor_offset })
+
         vim.cmd.normal("o")
-        cursor = vim.api.nvim_win_get_cursor(0)
-        vim.api.nvim_win_set_cursor(0, { wpi_cursor_line, cursor[2] })
+        cursor = vim.fn.getcharpos('.')
+        cursor_col    = cursor[3]
+        cursor_offset = cursor[4]
+        vim.fn.setcharpos('.', { 0, wpi_cursor_line, cursor_col, cursor_offset })
       end
     end
 
-    if action == M.WINDOW_ACTIONS.scroll or action == M.WINDOW_ACTIONS.context then
-      --- @type integer
-      local lnum
-      if state.view.lnum == nil then
-        lnum = vim.fn.getcursorcharpos()[2]
-      else
-        lnum = state.view.lnum
-      end
-      assert(lnum)
-      vim.fn.setcursorcharpos(lnum, state.view.col + 1)
-      local view = vim.fn.winsaveview()
-      view.leftcol = state.view.leftcol
-      vim.fn.winrestview({leftcol = state.view.leftcol})
-    else
-      local view = vim.fn.winsaveview()
-      local topline = view.topline
-
-      local win_height = M.get_floating_window_height()
-      if waypoint_topline < topline then
-        view.topline = waypoint_topline
-      elseif topline + win_height < waypoint_bottomline then
-        view.topline = waypoint_bottomline - win_height
-      end
-      vim.fn.winrestview(view)
+    -- update the view (includes cursor row and column, window top/bottom/left/right, virtual offset)
+    if action == M.WINDOW_ACTIONS.context then
+      -- move to the current waypoint's line and center the screen
+      vim.api.nvim_command("normal! " .. tostring(cursor_line + 1) .. "G")
+      vim.api.nvim_command("normal! zz")
+    elseif action == M.WINDOW_ACTIONS.move_to_waypoint then
+      vim.api.nvim_command("normal! " .. tostring(cursor_line + 1) .. "G")
+    elseif action == M.WINDOW_ACTIONS.reselect_visual then
+      -- do nothing
+    elseif action == M.WINDOW_ACTIONS.resize then
+      vim.api.nvim_command("normal! " .. tostring(cursor_line + 1) .. "G")
+    elseif action == M.WINDOW_ACTIONS.scroll then
+      -- do nothing
+    elseif action == M.WINDOW_ACTIONS.set_waypoint_for_cursor then
+      -- do nothing
+    elseif action == M.WINDOW_ACTIONS.swap then
+      vim.api.nvim_command("normal! " .. tostring(cursor_line + 1) .. "G")
     end
 
     -- if we're in visual mode, highlight visual selection.
     -- otherwise, highlight current waypoint with constants.hl_selected
     if state.vis_wpi then
       local highlight_start = math.min(
-        curr_waypoint_context_start_line,
-        vis_waypoint_context_start_line
+        ctx_start,
+        vis_ctx_start
       )
       local highlight_end = math.max(
-        curr_waypoint_context_end_line,
-        vis_waypoint_context_end_line
+        ctx_end,
+        vis_ctx_end
       )
       -- highlight visual selection
       for i=highlight_start,highlight_end-1 do
@@ -541,7 +633,7 @@ local function draw_waypoint_window(action)
       end
     else
       -- highlight current waypoint
-      for i=curr_waypoint_context_start_line,curr_waypoint_context_end_line-1 do
+      for i=ctx_start,ctx_end-1 do
         vim.hl.range(wp_bufnr, constants.ns, constants.hl_selected, {i, 0}, {i, -1})
       end
     end
@@ -554,9 +646,6 @@ local function draw_waypoint_window(action)
   vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
 
   set_modifiable(wp_bufnr, false)
-  if action == "center" or action == "context" then
-    vim.api.nvim_command("normal! zz")
-  end
   if action ~= M.WINDOW_ACTIONS.set_waypoint_for_cursor then
     ignore_next_cursormoved = true
   end
@@ -660,6 +749,8 @@ local function set_waypoint_keybinds()
 
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "undo",                    M.undo)
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "redo",                    M.redo)
+
+  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "reselect_visual",         M.reselect_visual)
 end
 
 M.global_keybindings_description = {
@@ -993,6 +1084,33 @@ function M.redo()
   vim.cmd.normal("m.")
 end
 
+function M.reselect_visual()
+  if is_visual(vim.api.nvim_get_mode().mode) then
+    return
+  end
+  if last_visual_mode then
+    assert(vis_cursor_wpi)
+    assert(vis_cursor_col)
+    assert(vis_v_wpi)
+    assert(vis_v_col)
+
+    state.wpi = vis_cursor_wpi
+    state.vis_wpi = vis_v_wpi
+
+    ignore_next_modechanged = true
+    vim.cmd.normal(last_visual_mode)
+
+    draw_waypoint_window(M.WINDOW_ACTIONS.reselect_visual)
+  else
+    state.vis_wpi = state.wpi
+
+    ignore_next_modechanged = true
+    vim.cmd.normal("v")
+
+    draw_waypoint_window()
+  end
+end
+
 function M.next_waypoint()
   if state.wpi == nil or state.wpi == #state.waypoints then return end
   for _=1, vim.v.count1 do
@@ -1005,7 +1123,7 @@ function M.next_waypoint()
     state.view.lnum = nil
   end
   if wp_bufnr then
-    draw_waypoint_window("move_to_waypoint")
+    draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
   end
 end
 
@@ -1019,7 +1137,7 @@ function M.prev_waypoint()
     )
   end
   if wp_bufnr then
-    draw_waypoint_window("move_to_waypoint")
+    draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
   end
 end
 
@@ -1155,6 +1273,8 @@ function M.scroll(increment)
     local leftcol_max = u.clamp(longest_line_len - win_width, 0)
     state.view.leftcol = u.clamp(state.view.leftcol + increment, 0, leftcol_max)
     state.view.col = u.clamp(state.view.col, state.view.leftcol, state.view.leftcol + win_width - 1)
+    -- todo
+    -- state.view.col = u.clamp(state.view.col, state.view.leftcol, state.view.leftcol + win_width - 1)
   end
   draw_waypoint_window(M.WINDOW_ACTIONS.scroll)
 end
@@ -1214,7 +1334,7 @@ function M.toggle_context()
   if help_bufnr then
     draw_help()
   else
-    draw_waypoint_window()
+    draw_waypoint_window(M.WINDOW_ACTIONS.context)
   end
 end
 
@@ -1243,7 +1363,7 @@ function M.toggle_sort()
   if help_bufnr then
     draw_help()
   else
-    draw_waypoint_window("move_to_waypoint")
+    draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
   end
 end
 
@@ -1282,7 +1402,7 @@ function MoveToOuterWaypoint(draw)
     end
   end
   if draw then
-    draw_waypoint_window("move_to_waypoint")
+    draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
   end
 end
 
@@ -1299,7 +1419,7 @@ function MoveToInnerWaypoint(draw)
     end
   end
   if draw then
-    draw_waypoint_window("move_to_waypoint")
+    draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
   end
 end
 
@@ -1327,7 +1447,7 @@ function MoveToPrevNeighborWaypoint(draw)
     end
   end
   if draw then
-    draw_waypoint_window("move_to_waypoint")
+    draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
   end
 end
 
@@ -1502,8 +1622,9 @@ local function set_waypoint_for_cursor()
   if not line_to_waypoint then return end
   -- use getcursorcharpos to avoid issues with unicode
   local cursor_pos = vim.fn.getcursorcharpos()
-  state.view.lnum = cursor_pos[2] -- one-indexed
-  state.view.col = cursor_pos[3] - 1 -- zero-indexed
+  state.view.lnum = cursor_pos[2]
+  state.view.col  = cursor_pos[3] - 1 -- zero-indexed
+  state.view.col  = cursor_pos[4]
 
   local view = vim.fn.winsaveview()
   state.view.leftcol = view.leftcol
@@ -1565,13 +1686,22 @@ function M.toggle_help()
   end
 end
 
+---@alias waypoint.Position { [1]: integer, [2]: integer, [3]: integer, [4]: integer } 
+---@alias waypoint.Mark { [1]: integer, [2]: integer } 
+
 function M.on_mode_change(arg)
+  if ignore_next_modechanged then
+    ignore_next_modechanged = false
+    return
+  end
+  assert(line_to_waypoint)
   local modes = vim.split(arg.match, ":")
   assert(#modes == 2)
   local old_mode = modes[1]
   local new_mode = modes[2]
   local old_is_visual = is_visual(old_mode)
   local new_is_visual = is_visual(new_mode)
+
   if old_is_visual and not new_is_visual then
     state.vis_wpi = nil
   elseif not old_is_visual and new_is_visual then

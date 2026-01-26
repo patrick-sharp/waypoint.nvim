@@ -64,6 +64,7 @@ local M = {
   no_matching_waypoint_error = "Error: could not find a close enough match for this waypoint",
   background_window_vpadding = 1,
   background_window_hpadding = 2,
+  int_32_max = 2147483647,
 }
 
 -- candidate indentation styles

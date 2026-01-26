@@ -58,7 +58,7 @@ local function encode()
   state_to_encode.before_context = state.before_context
   state_to_encode.view = {
     leftcol = state.view.leftcol,
-    col = state.view.col
+    col = state.view.col,
   }
   for _, waypoint in pairs(state.waypoints) do
     local waypoint_to_encode = nil

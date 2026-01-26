@@ -117,6 +117,11 @@
 - [x] decide once and for all what I want to do about annotations
     - [x] annotations should be displayed instead of file text
 - [x] add ability to add waypoint with annotation
+- [x] make it so that waypoints get converted to saved waypoints when the buffer closes, and converted back to regular ones when the buffer is opened
+    - use ryan fleury's megastruct idea.
+- [x] fix visual mode issue (highlight 4-8/11, o, expand context 10 times, reset context)
+    - [x] fix issue with not being able to move through tabs in visual mode
+- [x] delete the toggle waypoint function
 - [ ] increase the performance of highlights and draw calls in general
 - [ ] think about persisting waypoints on every waypoint state change. maybe every time the waypoint window closes
 - [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
@@ -136,7 +141,6 @@
 - [ ] see if you can fix the markdown header treesitter highlight bug
 - [ ] get rid of the rest of the global lua functions in floating_window, replacing them with module-scoped functions
 - [ ] add ability to add waypoint inserted after the current waypoint, not just at the end
-- [ ] delete the toggle waypoint function
 - [ ] add cumulative indent (in visual mode)
 - [ ] write test for:
     - have waypoint in file
@@ -174,10 +178,11 @@
 - [ ] replace some of my homemade stuff with vim builtins
     - [x] vim.deepcopy
     - [ ] vim.ringbuf
-- [x] make it so that waypoints get converted to saved waypoints when the buffer closes, and converted back to regular ones when the buffer is opened
-    - use ryan fleury's megastruct idea.
-- [ ] fix visual mode issue (highlight 4-8/11, o, expand context 10 times, reset context)
-    - [ ] there are a shitton
+- [ ] fix issue with tabs (or multiwidth chars) in file text
+- [ ] fix issue with col resetting on next/prev waypoint
+- [ ] switch all the col stuff to winsaveview/winrestview instead of charpos to deal with tabs properly.
+- [ ] only highlight text that is currently on screen to save perf
+    - [ ] make resize callback redraw the window so it will re-highlight
 
 ### ADVANCED FEATURES:
 
@@ -282,3 +287,37 @@ edit file, erasing the line where waypoint #1 was
 undo deletion of waypoint in waypoint window
 how to disambiguate between intentional delete/undo vs just waypoint with stale extmark?
     have to retain some state somewhere I guess
+
+weird shit with < and > marks
+these marks are the domain of the selection, NOT the cursor location.
+in visual mode, they span cols 0 to maximum int32.
+they also don't tell you where the cursor is. they tell you what text was selected.
+I have to keep track of other info myself.
+todo:
+instead of saving marks, save the position of the cursor and vis_cursor
+ok wait that doesn't work because you lose the hidden state of where the cursor was when you nvim_buf_set_lines
+looks like I'll have to write my own version of gv and ask people to rebind it if they give a shit
+
+
+
+context                 : nuke everything except col et al
+move_to_waypoint        : make sure waypoint is in view
+reselect_visual         : nuke everything 
+scroll                  : keep everything except col et al
+set_waypoint_for_cursor : nuke everything
+swap                    : make sure waypoint is in view
+resize                  : keep everything
+
+keep everything
+keep everything except col et al
+make sure line is in view
+make sure col is in view
+nuke everything
+
+context                 : move cursor to waypoint linenr and center
+move_to_waypoint        : move cursor to waypoint linenr
+reselect_visual         : move cursor to area
+scroll                  : zl/zh
+set_waypoint_for_cursor : nothing
+swap                    : make sure waypoint is in view
+resize                  : keep everything
