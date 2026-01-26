@@ -273,10 +273,25 @@ function M.buf_path(bufnr)
   return vim.fn.fnamemodify(path, ":.")
 end
 
+---@return boolean
+function M.is_in_visual_mode()
+  local mode = vim.api.nvim_get_mode().mode
+  return M.any({
+    mode == 'v',
+    mode == 'V',
+    mode == '',
+  })
+end
+
 -- jump to linenr in current buffer. The extra <C-c> is to reset vim.v.count
 ---@param linenr integer one-indexed line number
 function M.goto_line(linenr)
-  vim.cmd.normal({args = {tostring(linenr) .. "G<C-c>"}, bang=true})
+  -- vim.cmd.normal({args = {tostring(linenr) .. "G<C-c>"}, bang=true})
+  if M.is_in_visual_mode() then
+    vim.cmd.normal({args = {tostring(linenr) .. "G"}, bang=true})
+  else
+    vim.cmd.normal({args = {tostring(linenr) .. "G<C-c>"}, bang=true})
+  end
 end
 
 return M

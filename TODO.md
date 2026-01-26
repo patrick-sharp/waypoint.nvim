@@ -122,6 +122,9 @@
 - [x] fix visual mode issue (highlight 4-8/11, o, expand context 10 times, reset context)
     - [x] fix issue with not being able to move through tabs in visual mode
 - [x] delete the toggle waypoint function
+- [x] fix issue with tabs (or multiwidth chars) in file text
+- [x] fix issue with col resetting on next/prev waypoint
+- [x] remove state.view to simplify logic
 - [ ] increase the performance of highlights and draw calls in general
 - [ ] think about persisting waypoints on every waypoint state change. maybe every time the waypoint window closes
 - [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
@@ -137,10 +140,12 @@
 - [ ] implement some kind of thing to handle errors and rollback state if you encounter them
 - [ ] increase ability to recover from erroneous state (grep for <TBD>)
 - [ ] remove all asserts from the code
+    - [ ] replace them with something that will only panic in debug mode, and just log in release mode
 - [ ] when you change directory, reload waypoints from file (DirChanged autocmd)
 - [ ] see if you can fix the markdown header treesitter highlight bug
 - [ ] get rid of the rest of the global lua functions in floating_window, replacing them with module-scoped functions
 - [ ] add ability to add waypoint inserted after the current waypoint, not just at the end
+    - [ ] write tests for them
 - [ ] add cumulative indent (in visual mode)
 - [ ] write test for:
     - have waypoint in file
@@ -178,9 +183,6 @@
 - [ ] replace some of my homemade stuff with vim builtins
     - [x] vim.deepcopy
     - [ ] vim.ringbuf
-- [ ] fix issue with tabs (or multiwidth chars) in file text
-- [ ] fix issue with col resetting on next/prev waypoint
-- [ ] switch all the col stuff to winsaveview/winrestview instead of charpos to deal with tabs properly.
 - [ ] only highlight text that is currently on screen to save perf
     - [ ] make resize callback redraw the window so it will re-highlight
 
@@ -215,6 +217,7 @@
     - [x] stub visual mode
     - [x] make visual mode work correctly with context
     - [ ] make gv work properly
+        - [ ] fix bug where reselect_visual doesn't account for context
     - [ ] move selection of waypoints around
     - [ ] delete selection of waypoints
 
@@ -297,27 +300,3 @@ todo:
 instead of saving marks, save the position of the cursor and vis_cursor
 ok wait that doesn't work because you lose the hidden state of where the cursor was when you nvim_buf_set_lines
 looks like I'll have to write my own version of gv and ask people to rebind it if they give a shit
-
-
-
-context                 : nuke everything except col et al
-move_to_waypoint        : make sure waypoint is in view
-reselect_visual         : nuke everything 
-scroll                  : keep everything except col et al
-set_waypoint_for_cursor : nuke everything
-swap                    : make sure waypoint is in view
-resize                  : keep everything
-
-keep everything
-keep everything except col et al
-make sure line is in view
-make sure col is in view
-nuke everything
-
-context                 : move cursor to waypoint linenr and center
-move_to_waypoint        : move cursor to waypoint linenr
-reselect_visual         : move cursor to area
-scroll                  : zl/zh
-set_waypoint_for_cursor : nothing
-swap                    : make sure waypoint is in view
-resize                  : keep everything
