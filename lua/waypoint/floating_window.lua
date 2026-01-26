@@ -552,7 +552,7 @@ local function draw_waypoint_window(action)
     if state.vis_wpi then
       local cursor_start_line = math.min(
         ctx_start,
-        ctx_end
+        vis_ctx_start
       ) + 1 + num_lines_before
 
       local cursor_end_line = math.max(
@@ -587,6 +587,8 @@ local function draw_waypoint_window(action)
         vim.fn.setcharpos('.', { 0, wpi_cursor_line, cursor_col, cursor_offset })
       end
     end
+
+
 
     -- update the view (includes cursor row and column, window top/bottom/left/right, virtual offset)
     if action == M.WINDOW_ACTIONS.context then

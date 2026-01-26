@@ -283,12 +283,12 @@ function M.is_in_visual_mode()
   })
 end
 
--- jump to linenr in current buffer. The extra <C-c> is to reset vim.v.count
+-- jump to linenr in current buffer. The extra "_ is to access a register,
+-- which is a no-op that resets vim.v.count
 ---@param linenr integer one-indexed line number
 function M.goto_line(linenr)
-  -- vim.cmd.normal({args = {tostring(linenr) .. "G<C-c>"}, bang=true})
   if M.is_in_visual_mode() then
-    vim.cmd.normal({args = {tostring(linenr) .. "G"}, bang=true})
+    vim.cmd.normal({args = {tostring(linenr) .. 'G"_'}, bang=true})
   else
     vim.cmd.normal({args = {tostring(linenr) .. "G<C-c>"}, bang=true})
   end
