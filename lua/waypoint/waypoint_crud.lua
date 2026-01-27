@@ -214,6 +214,69 @@ function M.remove_waypoint(existing_waypoint_i, filepath)
   M.make_sorted_waypoints()
 end
 
+function M.remove_waypoints()
+  assert(u.is_in_visual_mode())
+
+  ---@type waypoint.Waypoint[]
+  local waypoints
+  ---@type waypoint.Waypoint[]
+  local other_waypoints
+
+  if state.sort_by_file_and_line then
+    waypoints = state.sorted_waypoints
+    other_waypoints = state.waypoints
+  else
+    waypoints = state.waypoints
+    other_waypoints = state.sorted_waypoints
+  end
+
+  ---@type waypoint.Waypoint[]
+  local new_waypoints = {}
+  ---@type waypoint.Waypoint[]
+  local new_other_waypoints = {}
+
+  ---@type table<waypoint.Waypoint, boolean>
+  local waypoint_map = {}
+
+  local start_i = math.min(state.wpi, state.vis_wpi)
+  local end_i = math.max(state.wpi, state.vis_wpi)
+
+  assert(start_i)
+  assert(end_i)
+
+  for i,wp in ipairs(waypoints) do
+    if i < start_i or i > end_i then
+      new_waypoints[#new_waypoints+1] = wp
+      waypoint_map[wp] = true
+    else
+      if wp.extmark_id ~= -1 then
+        vim.api.nvim_buf_del_extmark(wp.bufnr, constants.ns, wp.extmark_id)
+      end
+    end
+  end
+
+  for _,wp in ipairs(other_waypoints) do
+    if waypoint_map[wp] then
+      new_other_waypoints[#new_other_waypoints+1] = wp
+    end
+  end
+
+  if state.sort_by_file_and_line then
+    state.waypoints = new_other_waypoints
+    state.sorted_waypoints = new_waypoints
+  else
+    state.waypoints = new_waypoints
+    state.sorted_waypoints = new_other_waypoints
+  end
+
+  local redo_msg = "Deleted waypoints " .. tostring(start_i) .. "-" .. tostring(end_i)
+  local undo_msg = "Restored waypoints at positions " .. tostring(start_i) .. "-" .. tostring(end_i)
+  state.wpi = start_i
+
+  undo.save_state(undo_msg, redo_msg, start_i)
+end
+
+
 function M.move_waypoint_up()
   local should_return = (
     #state.waypoints <= 1
@@ -363,7 +426,11 @@ function M.delete_current_waypoint()
   else
     waypoints = state.waypoints
   end
-  M.remove_waypoint(state.wpi, waypoints[state.wpi].filepath)
+  if u.is_in_visual_mode() then
+    M.remove_waypoints()
+  else
+    M.remove_waypoint(state.wpi, waypoints[state.wpi].filepath)
+  end
   if #state.waypoints == 0 then
     state.wpi = nil
   else

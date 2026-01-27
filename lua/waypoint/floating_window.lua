@@ -58,6 +58,7 @@ end
  ---@enum waypoint.window_actions
 M.WINDOW_ACTIONS = {
   context                 = "context",
+  exit_visual_mode        = "exit_visual_mode",
   move_to_waypoint        = "move_to_waypoint",
   reselect_visual         = "reselect_visual",
   resize                  = "resize",
@@ -134,15 +135,6 @@ local function get_win_opts()
     style = "minimal",
   }
   return win_opts
-end
-
----@param mode string | vim.api.keyset.get_mode
-local function is_visual(mode)
-  return u.any({
-    mode == 'v',
-    mode == 'V',
-    mode == '',
-  })
 end
 
 ---@return waypoint.Waypoint | nil
@@ -438,9 +430,14 @@ local function draw_waypoint_window(action)
   end
 
 
+  if action == M.WINDOW_ACTIONS.exit_visual_mode then
+    ignore_next_modechanged = true
+    u.exit_visual_mode()
+  end
+
   -- save visual mode cursor for use with reselect_visual
   local mode = vim.api.nvim_get_mode().mode
-  if is_visual(mode) and action ~= M.WINDOW_ACTIONS.reselect_visual then
+  if u.is_visual(mode) and action ~= M.WINDOW_ACTIONS.reselect_visual then
     last_visual_mode = mode
     local dot_pos = vim.fn.getcharpos('.')
     vis_cursor_wpi    = state.wpi
@@ -478,6 +475,7 @@ local function draw_waypoint_window(action)
     right_vis_col = 0
   end
 
+  -- TODO: need to save offset relative to wpi, so it's resilient to deleting waypoints and to changed context.
   vim.api.nvim_buf_set_mark(0, '<', left_vis_mark[1], left_vis_col, {})
   vim.api.nvim_buf_set_mark(0, '>', right_vis_mark[1], right_vis_col, {})
 
@@ -1072,7 +1070,7 @@ function M.redo()
 end
 
 function M.reselect_visual()
-  if is_visual(vim.api.nvim_get_mode().mode) then
+  if u.is_visual(vim.api.nvim_get_mode().mode) then
     return
   end
   if last_visual_mode then
@@ -1590,7 +1588,13 @@ end
 
 function M.delete_current_waypoint()
   crud.delete_current_waypoint()
-  draw_waypoint_window()
+  local action
+  if u.is_in_visual_mode() then
+    action =  M.WINDOW_ACTIONS.exit_visual_mode
+  else
+    action = nil
+  end
+  draw_waypoint_window(action)
   vim.cmd.normal("m.")
 end
 
@@ -1635,8 +1639,8 @@ function M.on_mode_change(arg)
   assert(#modes == 2)
   local old_mode = modes[1]
   local new_mode = modes[2]
-  local old_is_visual = is_visual(old_mode)
-  local new_is_visual = is_visual(new_mode)
+  local old_is_visual = u.is_visual(old_mode)
+  local new_is_visual = u.is_visual(new_mode)
 
   if old_is_visual and not new_is_visual then
     state.vis_wpi = nil

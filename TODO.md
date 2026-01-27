@@ -218,8 +218,46 @@
     - [x] make visual mode work correctly with context
     - [ ] make gv work properly
         - [ ] fix bug where reselect_visual doesn't account for context
-    - [ ] move selection of waypoints around
-    - [ ] delete selection of waypoints
+    - [ ] delete_waypoint
+    - [ ] move_waypoint_down
+    - [ ] move_waypoint_up
+    - [ ] move_waypoint_to_top
+    - [ ] move_waypoint_to_bottom
+    - [ ] exit_waypoint_window
+    - [ ] increase_context
+    - [ ] decrease_context
+    - [ ] increase_before_context
+    - [ ] decrease_before_context
+    - [ ] increase_after_context
+    - [ ] decrease_after_context
+    - [ ] reset_context
+    - [ ] toggle_path
+    - [ ] toggle_full_path
+    - [ ] toggle_line_num
+    - [ ] toggle_file_text
+    - [ ] toggle_context
+    - [ ] toggle_sort
+    - [ ] show_help
+    - [ ] set_quickfix_list
+    - [ ] indent
+    - [ ] unindent
+    - [ ] reset_waypoint_indent
+    - [ ] reset_all_indent
+    - [ ] reselect_visual
+    - [ ] next_waypoint
+    - [ ] prev_waypoint
+    - [ ] first_waypoint
+    - [ ] last_waypoint
+    - [ ] outer_waypoint
+    - [ ] inner_waypoint
+    - [ ] prev_neighbor_waypoint
+    - [ ] next_neighbor_waypoint
+    - [ ] prev_top_level_waypoint
+    - [ ] next_top_level_waypoint
+    - [ ] move_waypoints_to_file
+    - [ ] undo
+    - [ ] redo
+
 
 still got some weird treesitter behavior
 it seems like in the skhd repo I'm using, it will only properly highlight some highlights if the highlight is onscreen or close to it

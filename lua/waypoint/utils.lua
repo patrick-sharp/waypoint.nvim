@@ -1,6 +1,7 @@
 local p = require("waypoint.print")
 
 local M = {}
+local u = M
 
 --- @class waypoint.HighlightRange
 --- col_start and col_end values are byte indexed because that's what 
@@ -273,14 +274,24 @@ function M.buf_path(bufnr)
   return vim.fn.fnamemodify(path, ":.")
 end
 
----@return boolean
-function M.is_in_visual_mode()
-  local mode = vim.api.nvim_get_mode().mode
-  return M.any({
+---@param mode string | vim.api.keyset.get_mode
+function M.is_visual(mode)
+  return u.any({
     mode == 'v',
     mode == 'V',
     mode == '',
   })
+end
+
+---@return boolean
+function M.is_in_visual_mode()
+  local mode = vim.api.nvim_get_mode().mode
+  return M.is_visual(mode)
+end
+
+function M.exit_visual_mode()
+  local args = {vim.api.nvim_replace_termcodes('<C-c>', true, false, true)}
+  vim.cmd.normal({ args = args, bang = true })
 end
 
 -- jump to linenr in current buffer. The extra "_ is to access a register,
@@ -290,7 +301,8 @@ function M.goto_line(linenr)
   if M.is_in_visual_mode() then
     vim.cmd.normal({args = {tostring(linenr) .. 'G"_'}, bang=true})
   else
-    vim.cmd.normal({args = {tostring(linenr) .. "G<C-c>"}, bang=true})
+    local g_ctrl_c = vim.api.nvim_replace_termcodes('G<C-c>', true, false, true)
+    vim.cmd.normal({args = {tostring(linenr) .. g_ctrl_c}, bang=true})
   end
 end
 
