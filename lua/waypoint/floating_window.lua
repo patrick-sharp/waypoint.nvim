@@ -43,10 +43,6 @@ local vis_v_offset = nil
 ---@type string | nil
 local last_visual_mode = nil
 
----@type waypoint.Mark
-local left_vis_mark = vim.api.nvim_buf_get_mark(0, '<')
-local right_vis_mark = vim.api.nvim_buf_get_mark(0, '>')
-
 local function keymap_opts(bufnr)
   return {
     noremap = true,
@@ -450,34 +446,8 @@ local function draw_waypoint_window(action)
     vis_cursor_offset = v_pos[4]
   end
 
-  -- before we replace all text in the buffer, save locations of the < and > marks.
-  -- I restore these after replacing the text so that gv still works.
-  -- note that when the mode changes, I also store whether the cursor was at the beginning
-  -- or end of the visual selection.
-  -- local left_vis_mark = vim.api.nvim_buf_get_mark(0, '<')
-  -- local right_vis_mark = vim.api.nvim_buf_get_mark(0, '>')
-  left_vis_mark = vim.api.nvim_buf_get_mark(0, '<')
-  right_vis_mark = vim.api.nvim_buf_get_mark(0, '>')
-
   -- Set text in the buffer
   vim.api.nvim_buf_set_lines(wp_bufnr, 0, -1, true, aligned)
-
-  -- vim does this with visual line < and > marks. it will just set
-  -- cursor to 0 if the col is int_32_max, so I copy that behavior.
-  -- This doesn't actually seem to change the value of the mark when you get it
-  -- with nvim_buf_get_mark, but does affect behavior so idk.
-  local left_vis_col = left_vis_mark[2]
-  if left_vis_mark[2] == constants.int_32_max then
-    left_vis_col[2] = 0
-  end
-  local right_vis_col = right_vis_mark[2]
-  if right_vis_mark[2] == constants.int_32_max then
-    right_vis_col = 0
-  end
-
-  -- TODO: need to save offset relative to wpi, so it's resilient to deleting waypoints and to changed context.
-  vim.api.nvim_buf_set_mark(0, '<', left_vis_mark[1], left_vis_col, {})
-  vim.api.nvim_buf_set_mark(0, '>', right_vis_mark[1], right_vis_col, {})
 
   -- highlight the text in the buffer
   for linenr,line_hlranges in pairs(hlranges) do
@@ -538,9 +508,9 @@ local function draw_waypoint_window(action)
       local vis_cursor_line = (waypoint_context_lines) * (state.wpi     - 1) + state.before_context + state.context + 1
 
       vim.cmd.normal("o")
-      vis_cursor_col = vim.fn.setcharpos('.', { 0, vis_cursor_line, vis_cursor_col, vis_cursor_offset })
+      vim.fn.setcharpos('.', { 0, vis_cursor_line, vis_cursor_col, vis_cursor_offset })
       vim.cmd.normal("o")
-      vis_cursor_col = vim.fn.setcharpos('.', { 0, vis_v_line,      vis_v_col,      vis_v_offset      })
+      vim.fn.setcharpos('.', { 0, vis_v_line,      vis_v_col,      vis_v_offset      })
       vim.cmd.normal("o")
     end
 
@@ -548,6 +518,10 @@ local function draw_waypoint_window(action)
     -- increasing/decreasing the context while in visual mode causes the visual
     -- mode to be in the wrong place. We need to do this before calling 
     if state.vis_wpi then
+      assert(ctx_start)
+      assert(vis_ctx_start)
+      assert(ctx_end)
+      assert(vis_ctx_end)
       local cursor_start_line = math.min(
         ctx_start,
         vis_ctx_start
@@ -587,12 +561,13 @@ local function draw_waypoint_window(action)
     end
 
 
-
     -- update the view (includes cursor row and column, window top/bottom/left/right, virtual offset)
     if action == M.WINDOW_ACTIONS.context then
       -- move to the current waypoint's line and center the screen
       u.goto_line(cursor_line + 1)
       vim.api.nvim_command("normal! zz")
+    elseif action == M.WINDOW_ACTIONS.exit_visual_mode then
+      u.goto_line(cursor_line + 1)
     elseif action == M.WINDOW_ACTIONS.move_to_waypoint then
       u.goto_line(cursor_line + 1)
     elseif action == M.WINDOW_ACTIONS.reselect_visual then
@@ -1590,7 +1565,7 @@ function M.delete_current_waypoint()
   crud.delete_current_waypoint()
   local action
   if u.is_in_visual_mode() then
-    action =  M.WINDOW_ACTIONS.exit_visual_mode
+    action = M.WINDOW_ACTIONS.exit_visual_mode
   else
     action = nil
   end
@@ -1625,9 +1600,6 @@ function M.toggle_help()
     open_help()
   end
 end
-
----@alias waypoint.Position { [1]: integer, [2]: integer, [3]: integer, [4]: integer } 
----@alias waypoint.Mark { [1]: integer, [2]: integer } 
 
 function M.on_mode_change(arg)
   if ignore_next_modechanged then

@@ -428,6 +428,7 @@ function M.delete_current_waypoint()
   end
   if u.is_in_visual_mode() then
     M.remove_waypoints()
+    state.vis_wpi = nil
   else
     M.remove_waypoint(state.wpi, waypoints[state.wpi].filepath)
   end
