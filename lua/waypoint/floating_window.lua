@@ -507,11 +507,14 @@ local function draw_waypoint_window(action)
       local vis_v_line      = (waypoint_context_lines) * (state.vis_wpi - 1) + state.before_context + state.context + 1
       local vis_cursor_line = (waypoint_context_lines) * (state.wpi     - 1) + state.before_context + state.context + 1
 
-      vim.cmd.normal("o")
+      -- note that this doesn't really handle virtual columns, just char indexes.
+      -- I figured this wasn't that important to add since the cursor will jump anyway.
+      -- It's easier to code this way because virtual col can only be set with vim.cmd.normal and |
+      u.switch_visual()
       vim.fn.setcharpos('.', { 0, vis_cursor_line, vis_cursor_col, vis_cursor_offset })
-      vim.cmd.normal("o")
+      u.switch_visual()
       vim.fn.setcharpos('.', { 0, vis_v_line,      vis_v_col,      vis_v_offset      })
-      vim.cmd.normal("o")
+      u.switch_visual()
     end
 
     -- if in visual mode, set the visual range. this is important because
@@ -546,7 +549,7 @@ local function draw_waypoint_window(action)
         local cursor_col
         local cursor_offset
 
-        vim.cmd.normal("o")
+        u.switch_visual()
         cursor = vim.fn.getcharpos('.')
         cursor_col    = cursor[3]
         cursor_offset = cursor[4]
@@ -616,6 +619,10 @@ local function draw_waypoint_window(action)
     ignore_next_cursormoved = true
   end
 end
+
+-- in certain tests, I need to ability to force the waypoint window to draw,
+-- so this has to be accessible publicly
+M.draw_waypoint_window = draw_waypoint_window
 
 ---@type table<integer, table<string, boolean>>
 M.bound_keys = {}
@@ -706,7 +713,7 @@ local function set_waypoint_keybinds()
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_top",    M.move_waypoint_to_top)
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_bottom", M.move_waypoint_to_bottom)
 
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "delete_waypoint",         M.delete_current_waypoint)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "delete_waypoint",         M.delete_curr)
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoints_to_file",  M.move_waypoints_to_file_wrapper)
 
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "undo",                    M.undo)
@@ -888,6 +895,7 @@ local function find_max_keybinding_width(kb_group)
   end
   return kb_width_override
 end
+
 local function draw_help()
   set_modifiable(help_bufnr, true)
   local lines = {}
@@ -1561,8 +1569,8 @@ function M.resize()
   vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
 end
 
-function M.delete_current_waypoint()
-  crud.delete_current_waypoint()
+function M.delete_curr()
+  crud.delete_curr()
   local action
   if u.is_in_visual_mode() then
     action = M.WINDOW_ACTIONS.exit_visual_mode

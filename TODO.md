@@ -125,14 +125,15 @@
 - [x] fix issue with tabs (or multiwidth chars) in file text
 - [x] fix issue with col resetting on next/prev waypoint
 - [x] remove state.view to simplify logic
+- [x] add ability to add waypoint inserted after the current waypoint, not just at the end
+    - [x] write tests for them
 - [ ] increase the performance of highlights and draw calls in general
 - [ ] think about persisting waypoints on every waypoint state change. maybe every time the waypoint window closes
-- [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
-    - https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua
-    - maybe use vim.schedule to do it async if worried about perf?
+    - [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
+        - https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua
+        - maybe use vim.schedule to do it async if worried about perf?
 - [ ] fix bugs around closing buffers with waypoints in them (use BufDelete autocmd)
 - [ ] write a test for a file getting renamed while open (use BufFilePost autocmd)
-- [ ] handle the case where the extmark gets deleted (hide the waypoint, but allow it to be brought back if they undo the extmark deletion)
 - [ ] add perf logging for each function (use require('jit.p'))
 - [ ] switch to making new state for saving / loading instead of mutating existing state to get there
 - [ ] create better error handling and reporting
@@ -144,8 +145,6 @@
 - [ ] when you change directory, reload waypoints from file (DirChanged autocmd)
 - [ ] see if you can fix the markdown header treesitter highlight bug
 - [ ] get rid of the rest of the global lua functions in floating_window, replacing them with module-scoped functions
-- [ ] add ability to add waypoint inserted after the current waypoint, not just at the end
-    - [ ] write tests for them
 - [ ] add cumulative indent (in visual mode)
 - [ ] write test for:
     - have waypoint in file
@@ -159,6 +158,7 @@
     - error opening file
     - waypoint should still be in "persisted mode"
     - waypoint should be restored
+    - bulk delete, undo, redo (causes assertion error at the moment)
 - [ ] think about adding some kind of error handling to draw_waypoint_window that will just display an error if pcall happens, so you don't have to fight through cumulative errors to close the window
 - [ ] write documentation
     - [ ] quickstart workflow
@@ -213,12 +213,15 @@
     - [ ] fix bugs with undo
         - [x] bug when you run sort test, delete, undo
         - [ ] bug when you run missing file test, delete a buffer, undo
+- [ ] add soft deletes for waypoints
+    - [ ] handle the case where the extmark gets deleted (hide the waypoint, but allow it to be brought back if they undo the extmark deletion)
+    - [ ] when you undo and that causes a soft delete (i.e. waypoint in new state has no extmark), display a message that waypoint is not shown because its extmark was deleted
 - [ ] add visual mode (use ModeChanged command and vim.api.nvim_get_mode().mode)
     - [x] stub visual mode
     - [x] make visual mode work correctly with context
-    - [ ] make gv work properly
-        - [ ] fix bug where reselect_visual doesn't account for context
-    - [ ] delete_waypoint
+    - [x] make gv work properly
+        - [x] fix bug where reselect_visual doesn't account for context
+    - [x] delete_waypoint
     - [ ] move_waypoint_down
     - [ ] move_waypoint_up
     - [ ] move_waypoint_to_top
@@ -329,12 +332,3 @@ undo deletion of waypoint in waypoint window
 how to disambiguate between intentional delete/undo vs just waypoint with stale extmark?
     have to retain some state somewhere I guess
 
-weird shit with < and > marks
-these marks are the domain of the selection, NOT the cursor location.
-in visual mode, they span cols 0 to maximum int32.
-they also don't tell you where the cursor is. they tell you what text was selected.
-I have to keep track of other info myself.
-todo:
-instead of saving marks, save the position of the cursor and vis_cursor
-ok wait that doesn't work because you lose the hidden state of where the cursor was when you nvim_buf_set_lines
-looks like I'll have to write my own version of gv and ask people to rebind it if they give a shit

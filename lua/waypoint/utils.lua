@@ -294,6 +294,10 @@ function M.exit_visual_mode()
   vim.cmd.normal({ args = args, bang = true })
 end
 
+function M.enter_visual_mode()
+  vim.cmd.normal({ args = {'v'}, bang = true })
+end
+
 -- jump to linenr in current buffer. The extra "_ is to access a register,
 -- which is a no-op that resets vim.v.count
 ---@param linenr integer one-indexed line number
@@ -304,6 +308,17 @@ function M.goto_line(linenr)
     local g_ctrl_c = vim.api.nvim_replace_termcodes('G<C-c>', true, false, true)
     vim.cmd.normal({args = {tostring(linenr) .. g_ctrl_c}, bang=true})
   end
+end
+
+---@param col integer one-indexed char index
+function M.goto_char_col(col)
+  local cursor = vim.fn.getcharpos('.')
+  cursor[3] = col
+  vim.fn.setcharpos('.', cursor)
+end
+
+function M.switch_visual()
+  vim.cmd.normal({args={"o"}, bang=true})
 end
 
 return M

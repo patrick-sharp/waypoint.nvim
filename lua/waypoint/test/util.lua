@@ -85,4 +85,38 @@ function M.assert_neq(unexpected, actual)
   assert(unexpected ~= actual, "\n\nShould not equal:\nUnexpected: " .. vim.inspect(unexpected) .. "\nActual:   " .. vim.inspect(actual) .. "\n")
 end
 
+local waypoint_props = {
+  "has_buffer",
+  "extmark_id",
+  "bufnr",
+  "indent",
+  "annotation",
+  "filepath",
+  "text",
+  "linenr",
+  "error",
+}
+
+---@param wp_a waypoint.Waypoint
+---@param wp_b waypoint.Waypoint
+function M.assert_waypoints_eq(wp_a, wp_b)
+  for _,prop in ipairs(waypoint_props) do
+    assert(wp_a[prop] == wp_b[prop], "Values for " .. prop .. " do not match: " .. tostring(wp_a[prop]) .. " ~= " .. tostring(wp_b[prop]))
+  end
+end
+
+-- all parameters are one-indexed
+---@param cursor_line integer
+---@param cursor_char_col integer
+---@param vis_line integer
+---@param vis_char_col integer
+function M.assert_vis_char_pos(cursor_line, cursor_char_col, vis_line, vis_char_col)
+  local cursor = vim.fn.getcharpos('.')
+  local vis = vim.fn.getcharpos('v')
+  assert(cursor[2] == cursor_line,     "cursor line should be " ..     cursor_line ..     ", but was " .. cursor[2])
+  assert(cursor[3] == cursor_char_col, "cursor char col should be " .. cursor_char_col .. ", but was " .. cursor[3])
+  assert(vis[2]    == vis_line,        "vis line should be " ..        vis_line ..        ", but was " .. vis[2])
+  assert(vis[3]    == vis_char_col,    "vis char col should be " ..    vis_char_col ..    ", but was " .. vis[3])
+end
+
 return M

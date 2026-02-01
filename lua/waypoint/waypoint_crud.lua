@@ -417,7 +417,7 @@ function M.delete_waypoint()
   M.remove_waypoint(existing_waypoint_i, state.waypoints[existing_waypoint_i].filepath)
 end
 
-function M.delete_current_waypoint()
+function M.delete_curr()
   if #state.waypoints == 0 then return end
   ---@type waypoint.Waypoint[]
   local waypoints

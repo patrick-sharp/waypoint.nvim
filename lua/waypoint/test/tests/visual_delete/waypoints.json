@@ -18,6 +18,24 @@
     },
     {
       "indent": 0,
+      "text": "",
+      "linenr": 2,
+      "filepath": "lua/waypoint/test/tests/common/file_0.lua"
+    },
+    {
+      "indent": 0,
+      "text": "function M.fn_0()",
+      "linenr": 3,
+      "filepath": "lua/waypoint/test/tests/common/file_0.lua"
+    },
+    {
+      "indent": 0,
+      "text": "  return nil",
+      "linenr": 4,
+      "filepath": "lua/waypoint/test/tests/common/file_0.lua"
+    },
+    {
+      "indent": 0,
       "text": "    table.insert(t, i)",
       "linenr": 8,
       "filepath": "lua/waypoint/test/tests/common/file_1.lua"
