@@ -24,7 +24,7 @@ function M.extmark_from_waypoint(waypoint)
     return nil
   end
   --- @type vim.api.keyset.get_extmark_item_by_id
-  local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {})
+  local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {details=true})
   if #extmark == 0 then
     return nil
   end
@@ -47,6 +47,19 @@ function M.linenr_from_waypoint(waypoint)
   local extmark = M.extmark_from_waypoint(waypoint)
   if not extmark then return nil end
   return extmark[1] + 1 -- convert from zero-indexed to one-indexed
+end
+
+---@param waypoint waypoint.Waypoint
+---@return boolean
+function M.should_draw_waypoint(waypoint)
+  if not waypoint.has_buffer then
+    return true
+  end
+  local extmark = M.extmark_from_waypoint(waypoint)
+  if not extmark or not extmark[3] or extmark[3].invalid then
+    return false
+  end
+  return true
 end
 
 ---@param waypoint waypoint.Waypoint

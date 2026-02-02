@@ -2,7 +2,6 @@
 
 local M = {}
 
-local config = require("waypoint.config")
 local constants = require("waypoint.constants")
 local state = require("waypoint.state")
 local u = require("waypoint.utils")
@@ -385,11 +384,25 @@ function M.indent(increment)
   else
     waypoints = state.waypoints
   end
-  for _=1, vim.v.count1 do
-    local indent = waypoints[state.wpi].indent + increment
-    waypoints[state.wpi].indent = u.clamp(
-      indent, 0, constants.max_indent
-    )
+  if u.is_in_visual_mode() then
+    local lower = math.min(state.wpi, state.vis_wpi)
+    local upper = math.max(state.wpi, state.vis_wpi)
+    for i=lower,upper do
+      local wp = waypoints[i]
+      if uw.has_valid_extmark(wp) then
+        local indent = wp.indent + vim.v.count1 * increment
+        wp.indent = u.clamp(
+          indent, 0, constants.max_indent
+        )
+      end
+    end
+  else
+    for _=1, vim.v.count1 do
+      local indent = waypoints[state.wpi].indent + increment
+      waypoints[state.wpi].indent = u.clamp(
+        indent, 0, constants.max_indent
+      )
+    end
   end
 
   local redo_msg = "Indented waypoint at position " .. tostring(state.wpi)

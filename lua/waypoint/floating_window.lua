@@ -704,7 +704,7 @@ local function set_waypoint_keybinds()
     return
   end
 
-  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "indent",                  M.indent)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "indent",                  M.indent)
   bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "unindent",                M.unindent)
   bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "reset_waypoint_indent",   M.reset_current_indent)
   bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "reset_all_indent",        M.reset_all_indent)

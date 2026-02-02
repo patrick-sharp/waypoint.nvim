@@ -215,8 +215,8 @@
         - [x] bug when you run sort test, delete, undo
         - [ ] bug when you run missing file test, delete a buffer, undo
 - [ ] add soft deletes for waypoints
-    - [ ] handle the case where the extmark gets deleted (hide the waypoint, but allow it to be brought back if they undo the extmark deletion)
-    - [ ] when you undo and that causes a soft delete (i.e. waypoint in new state has no extmark), display a message that waypoint is not shown because its extmark was deleted
+    - [ ] handle the case where the extmark gets invalidated (hide the waypoint, but allow it to be brought back if they undo the extmark deletion)
+    - [ ] when you undo and that causes a soft delete (i.e. waypoint in new state has existing, but invalid extmark), display a message that waypoint is not shown because its extmark was deleted
 - [ ] add visual mode (use ModeChanged command and vim.api.nvim_get_mode().mode)
     - [x] stub visual mode
     - [x] make visual mode work correctly with context
