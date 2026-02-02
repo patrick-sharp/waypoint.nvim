@@ -152,13 +152,14 @@
     - waypoint should be deleted
     - undo text change
     - waypoint should be restored
-- [ ] write test for:
-    - have waypoint saved in json file
-    - open vim
-    - error opening file
-    - waypoint should still be in "persisted mode"
-    - waypoint should be restored
-    - bulk delete, undo, redo (causes assertion error at the moment)
+- [ ] write tests:
+    - [ ] the following:
+        - have waypoint saved in json file
+        - open vim
+        - error opening file
+        - waypoint should still be in "persisted mode"
+        - waypoint should be restored
+    - [ ] bulk delete, undo, redo (causes assertion error at the moment)
 - [ ] think about adding some kind of error handling to draw_waypoint_window that will just display an error if pcall happens, so you don't have to fight through cumulative errors to close the window
 - [ ] write documentation
     - [ ] quickstart workflow
@@ -226,27 +227,10 @@
     - [ ] move_waypoint_up
     - [ ] move_waypoint_to_top
     - [ ] move_waypoint_to_bottom
-    - [ ] exit_waypoint_window
-    - [ ] increase_context
-    - [ ] decrease_context
-    - [ ] increase_before_context
-    - [ ] decrease_before_context
-    - [ ] increase_after_context
-    - [ ] decrease_after_context
-    - [ ] reset_context
-    - [ ] toggle_path
-    - [ ] toggle_full_path
-    - [ ] toggle_line_num
-    - [ ] toggle_file_text
-    - [ ] toggle_context
-    - [ ] toggle_sort
-    - [ ] show_help
-    - [ ] set_quickfix_list
     - [ ] indent
     - [ ] unindent
     - [ ] reset_waypoint_indent
-    - [ ] reset_all_indent
-    - [ ] reselect_visual
+    - [x] reselect_visual
     - [ ] next_waypoint
     - [ ] prev_waypoint
     - [ ] first_waypoint
@@ -257,31 +241,16 @@
     - [ ] next_neighbor_waypoint
     - [ ] prev_top_level_waypoint
     - [ ] next_top_level_waypoint
-    - [ ] move_waypoints_to_file
-    - [ ] undo
-    - [ ] redo
+    - [ ] move_waypoints_to_file (should do nothing in vis mode)
 
 
 still got some weird treesitter behavior
 it seems like in the skhd repo I'm using, it will only properly highlight some highlights if the highlight is onscreen or close to it
 some, like header 2, appear to never work
 
-look into TextChanged, TextChangedI, and FileChangedShell autocmds for watching
-when a file changed in order to keep the extmarks in the right place as the
-file changes
-
-There isn't an autommand for all file changes. here's a list of ones you should cover:
-
 FileChangedShell file changed by something besides vim
     locate_waypoints_in_file as if new load
     covers delete and external rename case
-
-redundancy?
-store extmark id, text, line number
-when extmark updates, update text and line number too
-what to do if buffer update causes two extmarks to be on the same line?
-what to do if buffer updates and location can't be found?
-what to do if file changes name or is deleted?
 
 how to use luajit profiler
 https://luajit.org/ext_profiler.html

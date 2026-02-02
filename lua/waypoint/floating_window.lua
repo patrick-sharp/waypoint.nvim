@@ -488,6 +488,7 @@ local function draw_waypoint_window(action)
     end
   end
 
+  local waypoint_context_lines = (state.before_context + state.context + 1 + state.context + state.after_context)
   if (state.wpi) then
     assert(ctx_start)
     assert(ctx_end)
@@ -495,7 +496,6 @@ local function draw_waypoint_window(action)
     assert(waypoint_topline)
     assert(waypoint_bottomline)
     if action == M.WINDOW_ACTIONS.reselect_visual then
-      local waypoint_context_lines = (state.before_context + state.context + 1 + state.context + state.after_context)
       local has_spacer = u.any({
         state.before_context > 0,
         state.after_context > 0,
@@ -583,6 +583,19 @@ local function draw_waypoint_window(action)
       -- do nothing
     elseif action == M.WINDOW_ACTIONS.swap then
       u.goto_line(cursor_line + 1)
+    end
+
+    -- if need be, scroll up/down to make the whole waypoint context visible
+    local view = vim.fn.winsaveview()
+    local winheight = vim.fn.winheight(0)
+    if waypoint_context_lines >= winheight then
+      vim.api.nvim_command("normal! zz")
+    elseif view.topline > waypoint_topline then
+      view.topline = waypoint_topline
+      vim.fn.winrestview(view)
+    elseif view.topline + winheight - 1 < waypoint_bottomline then
+      view.topline = waypoint_bottomline - winheight + 1
+      vim.fn.winrestview(view)
     end
 
     -- if we're in visual mode, highlight visual selection.
