@@ -302,12 +302,9 @@ end
 -- which is a no-op that resets vim.v.count
 ---@param linenr integer one-indexed line number
 function M.goto_line(linenr)
-  if M.is_in_visual_mode() then
-    vim.cmd.normal({args = {tostring(linenr) .. 'G"_'}, bang=true})
-  else
-    local g_ctrl_c = vim.api.nvim_replace_termcodes('G<C-c>', true, false, true)
-    vim.cmd.normal({args = {tostring(linenr) .. g_ctrl_c}, bang=true})
-  end
+  local cursor = vim.fn.getcharpos('.')
+  cursor[2] = linenr
+  vim.fn.setcharpos('.', cursor)
 end
 
 ---@param col integer one-indexed char index
