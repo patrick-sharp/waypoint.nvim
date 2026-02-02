@@ -168,18 +168,12 @@ local function load_decoded_state_into_state(decoded)
         waypoint.has_buffer = true
         -- one-indexed line number
         local linenr = waypoint.linenr
-        local virt_text = nil
+        assert(linenr)
 
         local line_count = vim.api.nvim_buf_line_count(bufnr)
 
         if linenr <= line_count then
-          local extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, linenr - 1, -1, {
-            sign_text = config.mark_char,
-            priority = 1,
-            sign_hl_group = constants.hl_sign,
-            virt_text = virt_text,
-            virt_text_pos = "eol",
-          })
+          local extmark_id = uw.buf_set_extmark(bufnr, linenr)
           waypoint.extmark_id = extmark_id
         else
           waypoint.extmark_id = -1
@@ -243,16 +237,8 @@ end
 local function create_extmark(bufnr, waypoint, linenr)
   -- one-indexed line number
   local extmark_linenr = linenr or waypoint.linenr
-  local extmark_id = vim.api.nvim_buf_set_extmark(
-    bufnr, constants.ns, extmark_linenr - 1, -1,
-    {
-      sign_text = config.mark_char,
-      priority = 1,
-      sign_hl_group = constants.hl_sign,
-      virt_text = nil,
-      virt_text_pos = "eol",
-    }
-  )
+  assert(extmark_linenr)
+  local extmark_id = uw.buf_set_extmark(bufnr, extmark_linenr)
   return extmark_id
 end
 

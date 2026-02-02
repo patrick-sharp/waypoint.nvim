@@ -65,11 +65,7 @@ function M.set_extmark(waypoint, linenr)
     return false
   end
 
-  waypoint.extmark_id = vim.api.nvim_buf_set_extmark(bufnr, constants.ns, waypoint.linenr - 1, -1, {
-    sign_text = config.mark_char,
-    priority = 1,
-    sign_hl_group = constants.hl_sign,
-  })
+  waypoint.extmark_id = M.buf_set_extmark(bufnr, waypoint.linenr)
   return true
 end
 
@@ -374,5 +370,19 @@ function M.make_sorted_waypoints()
   table.sort(state.sorted_waypoints, waypoint_compare)
 end
 
+---@param bufnr integer
+---@param linenr integer one-indexed line number
+---@return integer extmark id
+function M.buf_set_extmark(bufnr, linenr)
+  return vim.api.nvim_buf_set_extmark(
+    bufnr, constants.ns, linenr - 1, -1,
+    {
+      sign_text = config.mark_char,
+      priority = 1,
+      sign_hl_group = constants.hl_sign,
+      invalidate = true,
+    }
+  )
+end
 
 return M
