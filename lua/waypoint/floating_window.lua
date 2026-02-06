@@ -267,14 +267,59 @@ local function draw_waypoint_window(action)
     num_lines_after = 0
   end
 
-  local waypoints
+  -- these are the waypoints we should draw. some waypoints should not be drawn
+  local waypoints = {}
+  ---@type integer | nil
+  local wpi = nil
+  ---@type integer | nil
+  local vis_wpi = nil
+  local state_waypoints
   if state.sort_by_file_and_line then
-    waypoints = state.sorted_waypoints
+    state_waypoints = state.sorted_waypoints
   else
-    waypoints = state.waypoints
+    state_waypoints = state.waypoints
   end
 
-  for i, waypoint in ipairs(waypoints) do
+  local drawn_waypoints = 0
+  for i,wp in ipairs(state_waypoints) do
+    local should_draw = uw.should_draw_waypoint(wp)
+    if i == state.wpi then
+      if should_draw then
+        wpi = drawn_waypoints
+      else
+        if i == #waypoints then
+          state.wpi = drawn_waypoints
+        else
+          state.wpi = state.wpi + 1
+        end
+      end
+    end
+    if vis_wpi == state.wpi then
+      if should_draw then
+        vis_wpi = drawn_waypoints
+      else
+        if state.vis_wpi < state.wpi then
+          state.vis_wpi = state.vis_wpi + 1
+        elseif state.vis_wpi > state.wpi then
+          state.vis_wpi = drawn_waypoints
+        else
+          assert(false)
+        end
+        if i == #waypoints then
+          state.vis_wpi = drawn_waypoints
+        else
+          state.vis_wpi = state.vis_wpi + 1
+        end
+      end
+    end
+    if should_draw then
+      drawn_waypoints = drawn_waypoints + 1
+      waypoints[#waypoints+1] = wp
+    end
+  end
+
+
+  for i, waypoint in ipairs(state_waypoints) do
     --- @type waypoint.WaypointContext
     local waypoint_file_text = uw.get_waypoint_context(
       waypoint,

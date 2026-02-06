@@ -89,15 +89,7 @@ end
 ---@param str string
 ---@return integer
 function M.vislen(str)
-  local num_tabs = 0
-  for k = 1, #str do
-    local char = str:sub(k, k)
-    if char == "\t" then
-      num_tabs = num_tabs + 1
-    end
-  end
-  local strchars = vim.fn.strchars(str)
-  return strchars + (vim.o.tabstop - 1) * num_tabs
+  return vim.fn.strdisplaywidth(str)
 end
 
 

@@ -186,6 +186,7 @@
     - [ ] vim.ringbuf
 - [ ] only highlight text that is currently on screen to save perf
     - [ ] make resize callback redraw the window so it will re-highlight
+- [ ] add ability to completely reset state
 
 ### ADVANCED FEATURES:
 
@@ -255,7 +256,12 @@ FileChangedShell file changed by something besides vim
 how to use luajit profiler
 https://luajit.org/ext_profiler.html
 
+-- function level
 require('jit.p').start('f', '/tmp/nvim_profile.txt')
+-- line level, include stack, no idea what the r is, include vm states (e.g. garbage collection), 1ms sample frequency
+require('jit.p').start('lsri1', '/tmp/nvim_profile.txt')
+-- function level, include stack, no idea what the r is, include vm states (e.g. garbage collection), 1ms sample frequency
+require('jit.p').start('fsri1', '/tmp/nvim_profile.txt')
 
 -- Execute the code you want to profile, for example:
 -- require('my_slow_plugin').some_function()
@@ -300,4 +306,10 @@ edit file, erasing the line where waypoint #1 was
 undo deletion of waypoint in waypoint window
 how to disambiguate between intentional delete/undo vs just waypoint with stale extmark?
     have to retain some state somewhere I guess
+
+
+how to segfault neovim
+local ffi = require'ffi'
+local p = ffi.new("int *", nil)  -- Pointer to null
+print(p[0])  -- This will crash the program
 

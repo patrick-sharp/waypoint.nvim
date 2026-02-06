@@ -389,7 +389,7 @@ function M.indent(increment)
     local upper = math.max(state.wpi, state.vis_wpi)
     for i=lower,upper do
       local wp = waypoints[i]
-      if uw.has_valid_extmark(wp) then
+      if uw.should_draw_waypoint(wp) then
         local indent = wp.indent + vim.v.count1 * increment
         wp.indent = u.clamp(
           indent, 0, constants.max_indent
