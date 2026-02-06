@@ -221,6 +221,7 @@ local function draw_waypoint_window(action)
   if state.load_error then
     vim.api.nvim_buf_set_lines(wp_bufnr, 0, -1, true, {
       state.load_error,
+      -- TODO: fix this
       "Press <TBD> to delete the file and clear all waypoint state"
     })
     set_modifiable(wp_bufnr, false)
@@ -270,9 +271,9 @@ local function draw_waypoint_window(action)
   -- these are the waypoints we should draw. some waypoints should not be drawn
   local waypoints = {}
   ---@type integer | nil
-  local wpi = nil
+  local drawn_wpi = nil
   ---@type integer | nil
-  local vis_wpi = nil
+  local drawn_vis_wpi = nil
   local state_waypoints
   if state.sort_by_file_and_line then
     state_waypoints = state.sorted_waypoints
@@ -280,44 +281,27 @@ local function draw_waypoint_window(action)
     state_waypoints = state.waypoints
   end
 
-  local drawn_waypoints = 0
+  local num_drawn_waypoints = 0
+  ---@type table[integer]
+  local wpi_from_drawn_wpi = {}
   for i,wp in ipairs(state_waypoints) do
     local should_draw = uw.should_draw_waypoint(wp)
-    if i == state.wpi then
-      if should_draw then
-        wpi = drawn_waypoints
-      else
-        if i == #waypoints then
-          state.wpi = drawn_waypoints
-        else
-          state.wpi = state.wpi + 1
-        end
-      end
-    end
-    if vis_wpi == state.wpi then
-      if should_draw then
-        vis_wpi = drawn_waypoints
-      else
-        if state.vis_wpi < state.wpi then
-          state.vis_wpi = state.vis_wpi + 1
-        elseif state.vis_wpi > state.wpi then
-          state.vis_wpi = drawn_waypoints
-        else
-          assert(false)
-        end
-        if i == #waypoints then
-          state.vis_wpi = drawn_waypoints
-        else
-          state.vis_wpi = state.vis_wpi + 1
-        end
-      end
-    end
     if should_draw then
-      drawn_waypoints = drawn_waypoints + 1
+      if drawn_wpi == nil and i >= state.wpi then
+        drawn_wpi = num_drawn_waypoints
+      end
+      if state.vis_wpi then
+        if drawn_vis_wpi == nil and state.vis_wpi < state.wpi and state.vis_wpi >= i then
+          drawn_vis_wpi = num_drawn_waypoints
+        elseif state.vis_wpi > state.wpi and state.wpi < i then
+          drawn_vis_wpi = num_drawn_waypoints
+        end
+      end
+      num_drawn_waypoints = num_drawn_waypoints + 1
       waypoints[#waypoints+1] = wp
+      wpi_from_drawn_wpi[num_drawn_waypoints] = i
     end
   end
-
 
   for i, waypoint in ipairs(state_waypoints) do
     --- @type waypoint.WaypointContext
