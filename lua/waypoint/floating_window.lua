@@ -283,27 +283,32 @@ local function draw_waypoint_window(action)
 
   local num_drawn_waypoints = 0
   ---@type table[integer]
-  local wpi_from_drawn_wpi = {}
   for i,wp in ipairs(state_waypoints) do
     local should_draw = uw.should_draw_waypoint(wp)
     if should_draw then
+      num_drawn_waypoints = num_drawn_waypoints + 1
+      waypoints[#waypoints+1] = wp
+
       if drawn_wpi == nil and i >= state.wpi then
         drawn_wpi = num_drawn_waypoints
       end
       if state.vis_wpi then
-        if drawn_vis_wpi == nil and state.vis_wpi < state.wpi and state.vis_wpi >= i then
+        if drawn_vis_wpi == nil and state.vis_wpi < state.wpi and state.vis_wpi <= i then
           drawn_vis_wpi = num_drawn_waypoints
-        elseif state.vis_wpi > state.wpi and state.wpi < i then
+        elseif state.wpi < state.vis_wpi and state.wpi < i and i <= state.vis_wpi then
           drawn_vis_wpi = num_drawn_waypoints
         end
       end
-      num_drawn_waypoints = num_drawn_waypoints + 1
-      waypoints[#waypoints+1] = wp
-      wpi_from_drawn_wpi[num_drawn_waypoints] = i
     end
   end
+  if state.vis_wpi and not drawn_vis_wpi then
+    drawn_vis_wpi = drawn_wpi
+  end
 
-  for i, waypoint in ipairs(state_waypoints) do
+  --u.log(state.wpi, state.vis_wpi, "DRAWN", drawn_wpi, drawn_vis_wpi)
+  u.log(#state.waypoints, #waypoints)
+
+  for i, waypoint in ipairs(waypoints) do
     --- @type waypoint.WaypointContext
     local waypoint_file_text = uw.get_waypoint_context(
       waypoint,
@@ -318,13 +323,13 @@ local function draw_waypoint_window(action)
     local file_end_idx = waypoint_file_text.file_end_idx
     assert(extmark_lines)
 
-    if i == state.wpi then
+    if i == drawn_wpi then
       ctx_start = #rows
       waypoint_topline = #rows + 1
       waypoint_bottomline = #rows + #extmark_lines
       cursor_line = #rows + extmark_line
     end
-    if i == state.vis_wpi then
+    if i == drawn_vis_wpi then
       vis_ctx_start = #rows
     end
 
@@ -340,10 +345,10 @@ local function draw_waypoint_window(action)
       if j == extmark_line + 1 then
         -- if this is line the waypoint is on
         if config.enable_relative_waypoint_numbers then
-          if i == state.wpi then
-            table.insert(row, tostring(state.wpi))
+          if i == drawn_wpi then
+            table.insert(row, tostring(drawn_wpi))
           else
-            table.insert(row, tostring((math.abs(i - state.wpi))))
+            table.insert(row, tostring((math.abs(i - drawn_wpi))))
           end
         else
           table.insert(row, tostring(i))
@@ -405,10 +410,10 @@ local function draw_waypoint_window(action)
       table.insert(rows, row)
       table.insert(hlranges, line_hlranges)
     end
-    if i == state.wpi then
+    if i == drawn_wpi then
       ctx_end = #rows
     end
-    if i == state.vis_wpi then
+    if i == drawn_vis_wpi then
       vis_ctx_end = #rows
     end
     local has_context = state.before_context ~= 0
@@ -518,7 +523,7 @@ local function draw_waypoint_window(action)
   end
 
   local waypoint_context_lines = (state.before_context + state.context + 1 + state.context + state.after_context)
-  if (state.wpi) then
+  if (drawn_wpi) then
     assert(ctx_start)
     assert(ctx_end)
     assert(cursor_line)
@@ -533,8 +538,8 @@ local function draw_waypoint_window(action)
       if has_spacer then
         waypoint_context_lines = waypoint_context_lines + 1
       end
-      local vis_v_line      = (waypoint_context_lines) * (state.vis_wpi - 1) + state.before_context + state.context + 1
-      local vis_cursor_line = (waypoint_context_lines) * (state.wpi     - 1) + state.before_context + state.context + 1
+      local vis_v_line      = (waypoint_context_lines) * (drawn_vis_wpi - 1) + state.before_context + state.context + 1
+      local vis_cursor_line = (waypoint_context_lines) * (drawn_wpi     - 1) + state.before_context + state.context + 1
 
       -- note that this doesn't really handle virtual columns, just char indexes.
       -- I figured this wasn't that important to add since the cursor will jump anyway.
@@ -549,7 +554,7 @@ local function draw_waypoint_window(action)
     -- if in visual mode, set the visual range. this is important because
     -- increasing/decreasing the context while in visual mode causes the visual
     -- mode to be in the wrong place. We need to do this before calling 
-    if state.vis_wpi then
+    if drawn_vis_wpi then
       assert(ctx_start)
       assert(vis_ctx_start)
       assert(ctx_end)
@@ -567,7 +572,7 @@ local function draw_waypoint_window(action)
       do
         local vis_cursor_line
         local wpi_cursor_line
-        if state.wpi < state.vis_wpi then
+        if drawn_wpi < drawn_vis_wpi then
           wpi_cursor_line = cursor_start_line
           vis_cursor_line = cursor_end_line
         else
@@ -629,7 +634,7 @@ local function draw_waypoint_window(action)
 
     -- if we're in visual mode, highlight visual selection.
     -- otherwise, highlight current waypoint with constants.hl_selected
-    if state.vis_wpi then
+    if drawn_vis_wpi then
       local highlight_start = math.min(
         ctx_start,
         vis_ctx_start
