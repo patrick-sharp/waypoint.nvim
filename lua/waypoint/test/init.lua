@@ -137,7 +137,6 @@ function M.run_tests()
     test.pass = not test.err
     floating_window.clear_state_and_close()
     clear_buffers()
-    --vim.fn.feedkeys(':MoveWaypointsToFile ', 'n')
     vim.cmd.normal(vim.api.nvim_replace_termcodes('<C-c>', true, false, true)) -- this resets vim.v.count and vim.v.count1, which can persist between tests otherwise
   end
   state.should_notify = true

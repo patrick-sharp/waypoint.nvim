@@ -279,108 +279,6 @@ function M.remove_waypoints()
   undo.save_state(undo_msg, redo_msg, start_i)
 end
 
-
--- since we don't draw waypoints whose text has been deleted
----@return integer | nil, integer | nil, integer | nil, integer | nil
-function M.get_drawn_wpi()
-  assert(state.wpi)
-  assert(u.is_in_visual_mode() == (nil ~= state.vis_wpi))
-
-  ---@type integer | nil
-  local result_wpi_top = nil
-  ---@type integer
-  local result_wpi_bottom = nil
-
-  ---@type waypoint.Waypoint[]
-  local waypoints
-  if state.sort_by_file_and_line then
-    waypoints = state.sorted_waypoints
-  else
-    waypoints = state.waypoints
-  end
-
-  ---@type integer | nil
-  local result_top = nil
-  ---@type integer | nil
-  local result_bottom = nil
-  for i = 1, #waypoints do
-    if uw.should_draw_waypoint(waypoints[i]) then
-      result_top = i
-      break
-    end
-  end
-
-  if result_top then
-    for i = #waypoints, 1, -1 do
-      if uw.should_draw_waypoint(waypoints[i]) then
-        result_bottom = i
-        break
-      end
-    end
-  end
-
-  -- find the top and bottom of the while waypoint array
-
-  if u.is_in_visual_mode() then
-    -- keep in mind that the top bound has the lower index
-    local top = math.min(state.wpi, state.vis_wpi)
-    local bottom = math.max(state.wpi, state.vis_wpi)
-
-    -- check to see if everything is the visual selection is undrawable
-    local should_draw_any_in_selection = false
-
-    ---@type integer | nil
-    local top_drawable = nil
-    for i = top, bottom do
-      if uw.should_draw_waypoint(waypoints[i]) then
-        should_draw_any_in_selection = true
-        top_drawable = i
-        break
-      end
-    end
-
-    if not should_draw_any_in_selection then
-      for i = bottom, #waypoints do
-        if uw.should_draw_waypoint(waypoints[i]) then
-          result_wpi_top = i
-          result_wpi_bottom = i
-          break
-        end
-      end
-    else
-      -- if the bottom of the visual selection has since been deleted, don't move it
-      local bottom_drawable = bottom
-      while not uw.should_draw_waypoint(state.waypoints[bottom_drawable]) do
-        bottom_drawable = bottom_drawable - 1
-      end
-
-      assert(top_drawable)
-      assert(bottom_drawable)
-      result_wpi_top = top_drawable
-      result_wpi_bottom = bottom_drawable
-    end
-  else
-    for i = state.wpi, #waypoints do
-      local wp = waypoints[i]
-      if uw.should_draw_waypoint(wp) then
-        result_wpi_top = i
-        break
-      end
-    end
-    if not result_wpi_top then
-      for i = state.wpi, 1, -1 do
-        local wp = waypoints[i]
-        if uw.should_draw_waypoint(wp) then
-          result_wpi_top = i
-          break
-        end
-      end
-    end
-  end
-
-  return result_wpi_top, result_wpi_bottom, result_top, result_bottom
-end
-
 -- move current waypoint or selection of waypoints
 -- -1 for up, 1 for down
 ---@param direction -1 | 1
@@ -396,7 +294,7 @@ function M.move_curr(direction)
 
   local old_wpi = state.wpi
 
-  local selection_top, selection_bottom, top, bottom = M.get_drawn_wpi()
+  local selection_top, selection_bottom, top, bottom = uw.get_drawn_wpi()
 
   local did_anything = false
 

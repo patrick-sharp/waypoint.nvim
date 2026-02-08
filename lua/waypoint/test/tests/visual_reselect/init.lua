@@ -5,6 +5,7 @@ local file_1 = test_list.file_1
 
 local floating_window = require("waypoint.floating_window")
 local file = require'waypoint.file'
+local state = require'waypoint.state'
 local u = require("waypoint.utils")
 local tu = require'waypoint.test.util'
 
@@ -235,3 +236,55 @@ describe('Visual reselect', function()
   reselect_two_interior_lines("reselect_after_expand")
   reselect_all_lines("reselect_after_expand")
 end)
+
+describe('Visual reselect deleted', function()
+  assert(u.file_exists(file_0))
+  assert(u.file_exists(file_1))
+  local waypoints_json = "lua/waypoint/test/tests/visual_reselect/waypoints.json"
+  assert(u.file_exists(waypoints_json))
+
+  file.load_from_file(waypoints_json)
+
+  floating_window.open()
+  floating_window.move_to_last_waypoint()
+  u.enter_visual_mode()
+  floating_window.prev_waypoint()
+  floating_window.delete_curr()
+  floating_window.move_to_first_waypoint()
+  floating_window.reselect_visual()
+  tu.assert_eq(state.wpi, #state.waypoints)
+  tu.assert_eq(state.vis_wpi, #state.waypoints)
+end)
+
+describe('Visual reselect invisible', function()
+  print(state.wpi, state.vis_wpi)
+  assert(u.file_exists(file_0))
+  assert(u.file_exists(file_1))
+  local waypoints_json = "lua/waypoint/test/tests/visual_reselect/waypoints.json"
+  assert(u.file_exists(waypoints_json))
+
+  file.load_from_file(waypoints_json)
+
+  floating_window.open()
+  floating_window.move_to_last_waypoint()
+  u.enter_visual_mode()
+  floating_window.prev_waypoint()
+  u.exit_visual_mode()
+  floating_window.draw_waypoint_window() -- force redraw so waypoint tracks that we exited visual mode
+  floating_window.leave()
+
+  tu.edit_file(file_1)
+  -- delete lines 8 and 9
+  u.goto_line(8)
+  tu.normal("dd")
+  tu.normal("dd")
+
+  floating_window.open()
+  floating_window.move_to_first_waypoint()
+  floating_window.reselect_visual()
+  tu.assert_vis_char_pos(
+    num_waypoints - 2, 1,
+    num_waypoints - 2, 1
+  )
+end)
+

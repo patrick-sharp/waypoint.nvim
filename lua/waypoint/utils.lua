@@ -307,6 +307,7 @@ function M.goto_char_col(col)
 end
 
 function M.switch_visual()
+  assert(u.is_in_visual_mode())
   vim.cmd.normal({args={"o"}, bang=true})
 end
 

@@ -164,7 +164,6 @@ local function get_drawn_waypoints()
   end
 
   local num_drawn_waypoints = 0
-  ---@type table[integer]
   for i,wp in ipairs(state_waypoints) do
     local should_draw = uw.should_draw_waypoint(wp)
     if should_draw then
@@ -185,6 +184,12 @@ local function get_drawn_waypoints()
   end
   if state.vis_wpi and not drawn_vis_wpi then
     drawn_vis_wpi = drawn_wpi
+  end
+  if drawn_wpi == nil and num_drawn_waypoints > 0 then
+    drawn_wpi = num_drawn_waypoints
+  end
+  if state.vis_wpi and drawn_vis_wpi == nil and num_drawn_waypoints > 0 then
+    drawn_vis_wpi = num_drawn_waypoints
   end
   return waypoints, drawn_wpi, drawn_vis_wpi
 end
@@ -751,15 +756,15 @@ local function set_waypoint_keybinds()
 
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_up",        M.move_waypoint_up)
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_down",      M.move_waypoint_down)
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "current_waypoint",        M.go_to_current_waypoint)
+  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "current_waypoint",        M.go_to_current_waypoint)
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_top",    M.move_waypoint_to_top)
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_bottom", M.move_waypoint_to_bottom)
 
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "delete_waypoint",         M.delete_curr)
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoints_to_file",  M.move_waypoints_to_file_wrapper)
+  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "move_waypoints_to_file",  M.move_waypoints_to_file_wrapper)
 
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "undo",                    M.undo)
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "redo",                    M.redo)
+  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "undo",                    M.undo)
+  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "redo",                    M.redo)
 
   bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "reselect_visual",         M.reselect_visual)
 end
@@ -1105,8 +1110,8 @@ function M.reselect_visual()
     assert(vis_v_wpi)
     assert(vis_v_col)
 
-    state.wpi = vis_cursor_wpi
-    state.vis_wpi = vis_v_wpi
+    state.wpi = u.clamp(vis_cursor_wpi, 1, #state.waypoints)
+    state.vis_wpi = u.clamp(vis_v_wpi, 1, #state.waypoints)
 
     ignore_next_modechanged = true
     vim.cmd.normal(last_visual_mode)
@@ -1134,19 +1139,27 @@ function M.next_waypoint()
     waypoints = state.waypoints
   end
   local count = 0
-  local bottom
-  state.wpi, _, _, bottom = crud.get_drawn_wpi()
-  assert(state.wpi)
-  assert(bottom)
-  while state.wpi and bottom and state.wpi < bottom and count < vim.v.count1 do
-    state.wpi = state.wpi + 1
-    local wp = waypoints[state.wpi]
-    if uw.should_draw_waypoint(wp) then
-      count = count + 1
+  local selection_top, selection_bottom, _, bottom = uw.get_drawn_wpi()
+  if state.vis_wpi then
+    if state.wpi < state.vis_wpi then
+      state.wpi = selection_top
+    else
+      state.wpi = selection_bottom
     end
+  else
+    state.wpi = selection_top
   end
-  if wp_bufnr then
-    draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
+  if state.wpi and bottom then
+    while state.wpi < bottom and count < vim.v.count1 do
+      state.wpi = state.wpi + 1
+      local wp = waypoints[state.wpi]
+      if uw.should_draw_waypoint(wp) then
+        count = count + 1
+      end
+    end
+    if wp_bufnr then
+      draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
+    end
   end
 end
 
@@ -1162,19 +1175,27 @@ function M.prev_waypoint()
     waypoints = state.waypoints
   end
   local count = 0
-  local top
-  state.wpi, _, top, _ = crud.get_drawn_wpi()
-  assert(state.wpi)
-  assert(top)
-  while state.wpi and top and state.wpi > top and count < vim.v.count1 do
-    state.wpi = state.wpi - 1
-    local wp = waypoints[state.wpi]
-    if uw.should_draw_waypoint(wp) then
-      count = count + 1
+  local selection_top, selection_bottom, top, _ = uw.get_drawn_wpi()
+  if state.vis_wpi then
+    if state.wpi < state.vis_wpi then
+      state.wpi = selection_top
+    else
+      state.wpi = selection_bottom
     end
+  else
+    state.wpi = selection_top
   end
-  if wp_bufnr then
-    draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
+  if state.wpi and top then
+    while state.wpi and top and state.wpi > top and count < vim.v.count1 do
+      state.wpi = state.wpi - 1
+      local wp = waypoints[state.wpi]
+      if uw.should_draw_waypoint(wp) then
+        count = count + 1
+      end
+    end
+    if wp_bufnr then
+      draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
+    end
   end
 end
 
@@ -1375,12 +1396,12 @@ function M.reset_all_indent()
 end
 
 function M.move_to_first_waypoint()
-  _, _, state.wpi, _ = crud.get_drawn_wpi()
+  _, _, state.wpi, _ = uw.get_drawn_wpi()
   draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
 end
 
 function M.move_to_last_waypoint()
-  _, _, _, state.wpi = crud.get_drawn_wpi()
+  _, _, _, state.wpi = uw.get_drawn_wpi()
   draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
 end
 
@@ -1797,8 +1818,13 @@ function M.close()
 end
 
 function M.clear_state()
+  for k,_ in pairs(state) do
+    state[k] = nil
+  end
+
   state.load_error       = nil
   state.wpi              = nil
+  state.vis_wpi          = nil
   state.waypoints        = {}
   state.sorted_waypoints = {}
 

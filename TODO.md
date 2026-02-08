@@ -193,6 +193,7 @@
     - [ ] undone deletions should re-show extmark
     - [ ] undone deletions should not re-show invalid extmark
     - [ ] have waypoints, delete one, delete text to make extmarks invalid, undo, check num waypoints
+    - [ ] reselect visual after deleting waypoints
 - [ ] write docs
     - [ ] drawn vs not drawn waypoints
     - [ ] undo and file changes
@@ -234,14 +235,15 @@
 - [ ] add soft deletes for waypoints
     - [ ] handle the case where the extmark gets invalidated (hide the waypoint, but allow it to be brought back if they undo the extmark deletion)
     - [ ] when you undo and that causes a soft delete (i.e. waypoint in new state has existing, but invalid extmark), display a message that waypoint is not shown because its extmark was deleted
+- [ ] fix it so that waypoint window auto-exits when you try to edit a file in it
 - [ ] add visual mode (use ModeChanged command and vim.api.nvim_get_mode().mode)
     - [x] stub visual mode
     - [x] make visual mode work correctly with context
     - [x] make gv work properly
         - [x] fix bug where reselect_visual doesn't account for context
     - [x] delete_waypoint
-    - [ ] move_waypoint_down
-    - [ ] move_waypoint_up
+    - [x] move_waypoint_down
+    - [x] move_waypoint_up
     - [ ] move_waypoint_to_top
     - [ ] move_waypoint_to_bottom
     - [ ] indent
@@ -258,7 +260,6 @@
     - [ ] next_neighbor_waypoint
     - [ ] prev_top_level_waypoint
     - [ ] next_top_level_waypoint
-    - [ ] move_waypoints_to_file (should do nothing in vis mode)
 
 
 still got some weird treesitter behavior
