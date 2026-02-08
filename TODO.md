@@ -187,6 +187,21 @@
 - [ ] only highlight text that is currently on screen to save perf
     - [ ] make resize callback redraw the window so it will re-highlight
 - [ ] add ability to completely reset state
+- [ ] misc tests
+    - [ ] don't affect state of deleted waypoints 
+    - [ ] many existing tests, but with deleted waypoints everywhere
+    - [ ] undone deltions should re-show extmark
+    - [ ] undone deltions should not re-show invalid extmark
+- [ ] write docs
+    - [ ] drawn vs not drawn waypoints
+    - [ ] undo and file changes
+    - [ ] buffer vs bufferless waypoints
+    - [ ] serialization/persistence
+        - [ ] when the file is saved
+    - [ ] immediate mode model of rendering
+    - [ ] highlighting
+    - [ ] extmarks
+    - [ ] tutorial
 
 ### ADVANCED FEATURES:
 
@@ -313,3 +328,6 @@ local ffi = require'ffi'
 local p = ffi.new("int *", nil)  -- Pointer to null
 print(p[0])  -- This will crash the program
 
+
+make redo/undo messages show if the redo/undo is displayed (e.g. undo deletion of waypoint without extmark any more)
+when you delete a waypoint, set the extmark to be invisible, but not invalid

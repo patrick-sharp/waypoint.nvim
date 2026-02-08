@@ -139,6 +139,19 @@ function M.reset_current_indent()
   else
     waypoints = state.waypoints
   end
+  if u.is_in_visual_mode() then
+    local lower = math.min(state.wpi, state.vis_wpi)
+    local upper = math.max(state.wpi, state.vis_wpi)
+    for i=lower,upper do
+      local wp = waypoints[i]
+      if uw.should_draw_waypoint(wp) then
+        wp.indent = 0
+      end
+    end
+  else
+    waypoints[state.wpi].indent = 0
+  end
+
   local old_indent = waypoints[state.wpi].indent
   waypoints[state.wpi].indent = 0
 
@@ -268,37 +281,113 @@ function M.remove_waypoints()
 end
 
 
-function M.move_waypoint_up()
-  local should_return = (
-    #state.waypoints <= 1
-    or (state.wpi == 1)
-    or state.sort_by_file_and_line
-  )
+-- since we don't draw waypoints whose text has been deleted
+---@return integer | nil, integer | nil, integer | nil, integer | nil
+function M.get_drawn_wpi()
+  assert(state.wpi)
+  assert(u.is_in_visual_mode() == (nil ~= state.vis_wpi))
+
+  ---@type integer | nil
+  local result_wpi_top = nil
+  ---@type integer
+  local result_wpi_bottom = nil
+
+  ---@type waypoint.Waypoint[]
+  local waypoints
   if state.sort_by_file_and_line then
-    message.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
-  end
-  if should_return then return end
-
-  local old_wpi = state.wpi
-
-  for _=1, vim.v.count1 do
-    local temp = state.waypoints[state.wpi - 1]
-    state.waypoints[state.wpi - 1] = state.waypoints[state.wpi]
-    state.waypoints[state.wpi] = temp
-    state.wpi = state.wpi - 1
+    waypoints = state.sorted_waypoints
+  else
+    waypoints = state.waypoints
   end
 
-  local redo_msg = message.move_waypoint(old_wpi, state.wpi)
-  local undo_msg = message.move_waypoint(state.wpi, old_wpi)
+  ---@type integer | nil
+  local result_top = nil
+  ---@type integer | nil
+  local result_bottom = nil
+  for i = 1, #waypoints do
+    if uw.should_draw_waypoint(waypoints[i]) then
+      result_top = i
+      break
+    end
+  end
 
-  undo.save_state(undo_msg, redo_msg)
-  M.make_sorted_waypoints()
+  if result_top then
+    for i = #waypoints, 1, -1 do
+      if uw.should_draw_waypoint(waypoints[i]) then
+        result_bottom = i
+        break
+      end
+    end
+  end
+
+  -- find the top and bottom of the while waypoint array
+
+  if u.is_in_visual_mode() then
+    -- keep in mind that the top bound has the lower index
+    local top = math.min(state.wpi, state.vis_wpi)
+    local bottom = math.max(state.wpi, state.vis_wpi)
+
+    -- check to see if everything is the visual selection is undrawable
+    local should_draw_any_in_selection = false
+
+    ---@type integer | nil
+    local top_drawable = nil
+    for i = top, bottom do
+      if uw.should_draw_waypoint(waypoints[i]) then
+        should_draw_any_in_selection = true
+        top_drawable = i
+        break
+      end
+    end
+
+    if not should_draw_any_in_selection then
+      for i = bottom, #waypoints do
+        if uw.should_draw_waypoint(waypoints[i]) then
+          result_wpi_top = i
+          result_wpi_bottom = i
+          break
+        end
+      end
+    else
+      -- if the bottom of the visual selection has since been deleted, don't move it
+      local bottom_drawable = bottom
+      while not uw.should_draw_waypoint(state.waypoints[bottom_drawable]) do
+        bottom_drawable = bottom_drawable - 1
+      end
+
+      assert(top_drawable)
+      assert(bottom_drawable)
+      result_wpi_top = top_drawable
+      result_wpi_bottom = bottom_drawable
+    end
+  else
+    for i = state.wpi, #waypoints do
+      local wp = waypoints[i]
+      if uw.should_draw_waypoint(wp) then
+        result_wpi_top = i
+        break
+      end
+    end
+    if not result_wpi_top then
+      for i = state.wpi, 1, -1 do
+        local wp = waypoints[i]
+        if uw.should_draw_waypoint(wp) then
+          result_wpi_top = i
+          break
+        end
+      end
+    end
+  end
+
+  return result_wpi_top, result_wpi_bottom, result_top, result_bottom
 end
 
-function M.move_waypoint_down()
+-- move current waypoint or selection of waypoints
+-- -1 for up, 1 for down
+---@param direction -1 | 1
+function M.move_curr(direction)
   local should_return = (
     #state.waypoints <= 1
-    or (state.wpi == #state.waypoints)
     or state.sort_by_file_and_line
   )
   if state.sort_by_file_and_line then
@@ -308,18 +397,100 @@ function M.move_waypoint_down()
 
   local old_wpi = state.wpi
 
-  for _=1, vim.v.count1 do
-    local temp = state.waypoints[state.wpi + 1]
-    state.waypoints[state.wpi + 1] = state.waypoints[state.wpi]
-    state.waypoints[state.wpi] = temp
-    state.wpi = state.wpi + 1
+  local selection_top, selection_bottom, top, bottom = M.get_drawn_wpi()
+
+  local did_anything = false
+
+  if u.is_in_visual_mode() then
+    for _ = 1, vim.v.count1 do
+      -- this will only happen if all waypoints in the window have been deleted
+      if selection_top == nil or selection_bottom == nil then
+        return
+      end
+
+      -- if moving up, front is top
+      -- if moving down, front is bottom
+      ---@type integer
+      local front = selection_top
+      local back = selection_bottom
+      local bound = top - 1
+      if direction == 1 then
+        front = selection_bottom
+        back = selection_top
+        bound = bottom + 1
+      end
+
+      local new_front = front
+      local can_move = false
+      while new_front + direction ~= bound do
+        new_front = new_front + direction
+        if uw.should_draw_waypoint(state.waypoints[new_front]) then
+          can_move = true
+          break
+        end
+      end
+
+      if not can_move then
+        return
+      end
+
+      local wp_to_move_to_back = state.waypoints[new_front]
+
+      local new_back = back
+      for i=front,back,-direction do
+        local wp = state.waypoints[i]
+        if uw.should_draw_waypoint(wp) then
+          local new_i = i + direction
+          -- the bound check is not ever supposed to hit, just there for sanity to prevent infinite loop
+          while new_i ~= bound and not(uw.should_draw_waypoint(state.waypoints[new_i])) do
+            new_i = new_i + direction
+          end
+          state.waypoints[new_i] = wp
+          if i == back then
+            new_back = new_i
+          end
+        end
+      end
+
+      assert(new_front)
+      assert(new_back)
+
+      state.waypoints[back] = wp_to_move_to_back
+
+      if (state.wpi < state.vis_wpi) == (front < back) then
+        state.wpi = new_front
+        state.vis_wpi = new_back
+      else
+        state.wpi = new_back
+        state.vis_wpi = new_front
+      end
+      did_anything = true
+    end
+  else
+    local wpi = selection_top
+    local count = 0
+    local bound = 0
+    if direction == 1 then
+      bound = bottom + 1
+    end
+    while wpi + direction ~= bound and count < vim.v.count1 do
+      assert(wpi)
+      local temp = state.waypoints[wpi + direction]
+      state.waypoints[wpi + direction] = state.waypoints[wpi]
+      state.waypoints[wpi] = temp
+      state.wpi = wpi + direction
+      count = count + 1
+      did_anything = true
+    end
   end
 
-  local redo_msg = message.move_waypoint(old_wpi, state.wpi)
-  local undo_msg = message.move_waypoint(state.wpi, old_wpi)
+  if did_anything then
+    local redo_msg = message.move_waypoint(old_wpi, state.wpi)
+    local undo_msg = message.move_waypoint(state.wpi, old_wpi)
 
-  undo.save_state(undo_msg, redo_msg)
-  M.make_sorted_waypoints()
+    undo.save_state(undo_msg, redo_msg)
+    M.make_sorted_waypoints()
+  end
 end
 
 function M.move_waypoint_to_top()
@@ -385,9 +556,9 @@ function M.indent(increment)
     waypoints = state.waypoints
   end
   if u.is_in_visual_mode() then
-    local lower = math.min(state.wpi, state.vis_wpi)
-    local upper = math.max(state.wpi, state.vis_wpi)
-    for i=lower,upper do
+    local top = math.min(state.wpi, state.vis_wpi)
+    local bottom = math.max(state.wpi, state.vis_wpi)
+    for i=top,bottom do
       local wp = waypoints[i]
       if uw.should_draw_waypoint(wp) then
         local indent = wp.indent + vim.v.count1 * increment

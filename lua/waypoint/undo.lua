@@ -29,9 +29,14 @@ M.states = ring_buffer.new(config.max_msg_history)
 function M.save_state(undo_msg, redo_msg, change_wpi)
   message.notify(redo_msg, vim.log.levels.INFO)
 
+  local waypoints = vim.deepcopy(state.waypoints)
+  for _,wp in ipairs(waypoints) do
+    wp.should_draw = uw.should_draw_waypoint(wp)
+  end
+
   ---@type waypoint.UndoNode
   local undo_node = {
-    waypoints = vim.deepcopy(state.waypoints),
+    waypoints = waypoints,
     wpi = change_wpi or state.wpi,
     undo_msg = undo_msg,
     redo_msg = redo_msg,
@@ -62,7 +67,10 @@ function M.set_extmarks_for_state()
       vim.api.nvim_buf_del_extmark(bufnr, constants.ns, extmark_id)
     end
     for _,waypoint in ipairs(waypoints) do
-      uw.set_extmark(waypoint)
+      if waypoint.should_draw then
+        uw.set_extmark(waypoint)
+      end
+      waypoint.should_draw = nil -- this field is only used to remember whether a waypoint should have been drawn when it was saved to the undo state
     end
   end
 end

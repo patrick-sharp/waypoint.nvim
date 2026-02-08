@@ -59,18 +59,20 @@ local function encode()
   for _, waypoint in pairs(state.waypoints) do
     local waypoint_to_encode = nil
     if waypoint.has_buffer then
-      local filepath = uw.filepath_from_waypoint(waypoint)
-      local linenr = uw.linenr_from_waypoint(waypoint)
-      assert(linenr)
-      local line = vim.api.nvim_buf_get_lines(waypoint.bufnr, linenr - 1, linenr, false)[1]
-      if linenr then
-        waypoint_to_encode = {
-          text = line,
-          filepath = filepath,
-          linenr = linenr,
-          indent = waypoint.indent,
-          annotation = waypoint.annotation,
-        }
+      if uw.should_draw_waypoint(waypoint) then
+        local filepath = uw.filepath_from_waypoint(waypoint)
+        local linenr = uw.linenr_from_waypoint(waypoint)
+        assert(linenr)
+        local line = vim.api.nvim_buf_get_lines(waypoint.bufnr, linenr - 1, linenr, false)[1]
+        if linenr then
+          waypoint_to_encode = {
+            text = line,
+            filepath = filepath,
+            linenr = linenr,
+            indent = waypoint.indent,
+            annotation = waypoint.annotation,
+          }
+        end
       end
     else
       waypoint_to_encode = {

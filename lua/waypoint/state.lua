@@ -12,15 +12,16 @@
 -- when a buffer with waypoints is closed, we hook onto the BufUnload autocmd to convert buffer waypoints into bufferless waypoints
 
 ---@class waypoint.Waypoint
----@field has_buffer    boolean
----@field extmark_id    integer | nil the id of the extmark within the buffer. Note that these are not unique globally. Can become stale if extmark is deleted for any reason (e.g. the buffer is closed)
----@field bufnr         integer | nil the buffer number the waypoint is in. can become stale if the file is deleted and reopened.
----@field indent        integer
----@field annotation    string | nil
----@field filepath      string | nil relative path to file the waypoint is in. Does NOT start with ./, i.e. a path to ./lua/myfile.lua would be stored as lua/myfile.lua
----@field text          string | nil
----@field linenr        integer | nil the one-indexed line number the waypoint is on. Can become stale if a buffer edit causes the extmark to move.
----@field error         string | nil
+---@field has_buffer  boolean
+---@field extmark_id  integer | nil the id of the extmark within the buffer. Note that these are not unique globally. Can become stale if extmark is deleted for any reason (e.g. the buffer is closed)
+---@field bufnr       integer | nil the buffer number the waypoint is in. can become stale if the file is deleted and reopened.
+---@field indent      integer
+---@field annotation  string | nil
+---@field filepath    string | nil relative path to file the waypoint is in. Does NOT start with ./, i.e. a path to ./lua/myfile.lua would be stored as lua/myfile.lua
+---@field text        string | nil
+---@field linenr      integer | nil the one-indexed line number the waypoint is on. Can become stale if a buffer edit causes the extmark to move.
+---@field error       string | nil
+---@field should_draw boolean | nil whether or not this waypoint should have been drawn when it was saved into the undo state. This field will be nil on waypoints in the state.waypoints array
 
 ---@class waypoint.State
 ---@field load_error            string | nil if there was an error loading the file. if so, we show it in the waypoint window

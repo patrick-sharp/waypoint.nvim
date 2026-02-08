@@ -305,9 +305,6 @@ local function draw_waypoint_window(action)
     drawn_vis_wpi = drawn_wpi
   end
 
-  --u.log(state.wpi, state.vis_wpi, "DRAWN", drawn_wpi, drawn_vis_wpi)
-  u.log(#state.waypoints, #waypoints)
-
   for i, waypoint in ipairs(waypoints) do
     --- @type waypoint.WaypointContext
     local waypoint_file_text = uw.get_waypoint_context(
@@ -589,7 +586,7 @@ local function draw_waypoint_window(action)
         cursor_offset = cursor[4]
         vim.fn.setcharpos('.', { 0, vis_cursor_line, cursor_col, cursor_offset })
 
-        vim.cmd.normal("o")
+        u.switch_visual()
         cursor = vim.fn.getcharpos('.')
         cursor_col    = cursor[3]
         cursor_offset = cursor[4]
@@ -739,8 +736,8 @@ local function set_waypoint_keybinds()
   end
 
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "indent",                  M.indent)
-  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "unindent",                M.unindent)
-  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "reset_waypoint_indent",   M.reset_current_indent)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "unindent",                M.unindent)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "reset_waypoint_indent",   M.reset_current_indent)
   bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "reset_all_indent",        M.reset_all_indent)
 
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "prev_waypoint",           M.prev_waypoint)
@@ -1064,13 +1061,13 @@ function M.unindent()
 end
 
 function M.move_waypoint_up()
-  crud.move_waypoint_up()
+  crud.move_curr(-1)
   draw_waypoint_window(M.WINDOW_ACTIONS.swap)
   vim.cmd.normal("m.")
 end
 
 function M.move_waypoint_down()
-  crud.move_waypoint_down()
+  crud.move_curr(1)
   draw_waypoint_window(M.WINDOW_ACTIONS.swap)
   vim.cmd.normal("m.")
 end
@@ -1128,12 +1125,22 @@ end
 
 function M.next_waypoint()
   if state.wpi == nil or state.wpi == #state.waypoints then return end
-  for _=1, vim.v.count1 do
-    state.wpi = u.clamp(
-      state.wpi + 1,
-      1,
-      #state.waypoints
-    )
+
+  ---@type waypoint.Waypoint[]
+  local waypoints
+
+  if state.sort_by_file_and_line then
+    waypoints = state.sorted_waypoints
+  else
+    waypoints = state.waypoints
+  end
+  local count = 0
+  while state.wpi < #state.waypoints and count < vim.v.count1 do
+    local wp = waypoints[state.wpi]
+    state.wpi = state.wpi + 1
+    if uw.should_draw_waypoint(wp) then
+      count = count + 1
+    end
   end
   if wp_bufnr then
     draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
@@ -1142,12 +1149,22 @@ end
 
 function M.prev_waypoint()
   if state.wpi == nil or state.wpi == 1 then return end
-  for _=1, vim.v.count1 do
-    state.wpi = u.clamp(
-      state.wpi - 1,
-      1,
-      #state.waypoints
-    )
+
+  ---@type waypoint.Waypoint[]
+  local waypoints
+
+  if state.sort_by_file_and_line then
+    waypoints = state.sorted_waypoints
+  else
+    waypoints = state.waypoints
+  end
+  local count = 0
+  while state.wpi > 1 and count < vim.v.count1 do
+    local wp = waypoints[state.wpi]
+    state.wpi = state.wpi - 1
+    if uw.should_draw_waypoint(wp) then
+      count = count + 1
+    end
   end
   if wp_bufnr then
     draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
