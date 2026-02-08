@@ -98,7 +98,7 @@ end
 function M.notify(msg, level)
   level = level or vim.log.levels.INFO
   ring_buffer.push(M.messages, {msg = msg, level = level})
-  if state.should_notify then
+  if state.should_notify ~= false then
     vim.notify(msg, level)
   end
 end

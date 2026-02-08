@@ -1858,6 +1858,8 @@ function M.clear_state()
 
   state.sort_by_file_and_line = false
 
+  state.should_notify = true
+
   os.remove(config.file)
 end
 

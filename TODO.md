@@ -249,11 +249,11 @@
     - [x] reselect_visual
     - [x] next_waypoint
     - [x] prev_waypoint
+    - [x] indent
+    - [x] unindent
+    - [x] reset_waypoint_indent
     - [ ] move_waypoint_to_top
     - [ ] move_waypoint_to_bottom
-    - [ ] indent
-    - [ ] unindent
-    - [ ] reset_waypoint_indent
     - [ ] first_waypoint
     - [ ] last_waypoint
     - [ ] prev_neighbor_waypoint
