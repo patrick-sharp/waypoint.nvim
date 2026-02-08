@@ -148,7 +148,7 @@ function M.get_current_waypoint()
   return waypoints[state.wpi]
 end
 
----@return waypoint.Waypoint[], integer | nil, integer | nil
+---@return waypoint.Waypoint[], integer?, integer?, integer?, integer?
 local function get_drawn_waypoints()
   -- these are the waypoints we should draw. some waypoints should not be drawn
   local waypoints = {}
@@ -156,6 +156,11 @@ local function get_drawn_waypoints()
   local drawn_wpi = nil
   ---@type integer | nil
   local drawn_vis_wpi = nil
+  ---@type integer | nil
+  local state_drawn_wpi = nil
+  ---@type integer | nil
+  local state_drawn_vis_wpi = nil
+
   local state_waypoints
   if state.sort_by_file_and_line then
     state_waypoints = state.sorted_waypoints
@@ -172,12 +177,15 @@ local function get_drawn_waypoints()
 
       if drawn_wpi == nil and i >= state.wpi then
         drawn_wpi = num_drawn_waypoints
+        state_drawn_wpi = i
       end
       if state.vis_wpi then
         if drawn_vis_wpi == nil and state.vis_wpi < state.wpi and state.vis_wpi <= i then
           drawn_vis_wpi = num_drawn_waypoints
+          state_drawn_vis_wpi = i
         elseif state.wpi < state.vis_wpi and state.wpi < i and i <= state.vis_wpi then
           drawn_vis_wpi = num_drawn_waypoints
+          state_drawn_vis_wpi = i
         end
       end
     end
@@ -191,7 +199,7 @@ local function get_drawn_waypoints()
   if state.vis_wpi and drawn_vis_wpi == nil and num_drawn_waypoints > 0 then
     drawn_vis_wpi = num_drawn_waypoints
   end
-  return waypoints, drawn_wpi, drawn_vis_wpi
+  return waypoints, drawn_wpi, drawn_vis_wpi, state_drawn_wpi, state_drawn_vis_wpi
 end
 
 ---@param option boolean
@@ -307,7 +315,16 @@ local function draw_waypoint_window(action)
     num_lines_after = 0
   end
 
-  local waypoints, drawn_wpi, drawn_vis_wpi = get_drawn_waypoints()
+  local waypoints, drawn_wpi, drawn_vis_wpi, state_drawn_wpi, state_drawn_vis_wpi = get_drawn_waypoints()
+
+  -- In general, we don't want to be updating state on draw calls, but this simplifies things a lot
+  if state_drawn_wpi then
+    state.wpi = state_drawn_wpi
+  end
+  if state_drawn_vis_wpi then
+    state.vis_wpi = state_drawn_vis_wpi
+  end
+
   local num_drawn_waypoints = #waypoints
 
   for i, waypoint in ipairs(waypoints) do
@@ -1815,6 +1832,7 @@ function M.close()
   winnr = nil
   bg_winnr = nil
   help_bufnr = nil
+  -- state.vis_wpi = nil -- since the mode_change autocomd won't fire when we leave, we have to reset this now
 end
 
 function M.clear_state()

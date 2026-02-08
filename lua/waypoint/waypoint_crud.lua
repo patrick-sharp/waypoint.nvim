@@ -164,7 +164,9 @@ end
 
 function M.reset_all_indent()
   for _,waypoint in pairs(state.waypoints) do
-    waypoint.indent = 0
+    if uw.should_draw_waypoint(waypoint) then
+      waypoint.indent = 0
+    end
   end
 end
 
