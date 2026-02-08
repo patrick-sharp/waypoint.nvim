@@ -222,10 +222,10 @@ function M.load_from_file(file)
     return
   end
 
-  -- before we load in the waypoints in from a file, delete the current ones.
+  -- before we load in the waypoints in from a file, hide the current ones.
+  -- they can be made visible again if you undo the file load
   for _,waypoint in pairs(state.waypoints) do
-    local bufnr = vim.fn.bufnr(waypoint.filepath)
-    vim.api.nvim_buf_del_extmark(bufnr, constants.ns, waypoint.extmark_id)
+    uw.set_wp_extmark_visible(waypoint, false)
   end
 
   load_decoded_state_into_state(decoded)

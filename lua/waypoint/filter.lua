@@ -77,7 +77,7 @@ function M.fix_waypoint_positions()
 
     if #diff < hunk_i then
       waypoint.linenr = waypoint.linenr + running_hunk_length_diff
-      uw.set_extmark(waypoint)
+      uw.wp_set_extmark(waypoint)
     else
       local old_end_line = 0
       local new_end_line = 0
@@ -85,7 +85,7 @@ function M.fix_waypoint_positions()
       while old_end_line < waypoint_line do
         if hunk_i > #diff then
           waypoint.linenr = waypoint.linenr + running_hunk_length_diff
-          uw.set_extmark(waypoint)
+          uw.wp_set_extmark(waypoint)
           break
         end
         local hunk = diff[hunk_i]
@@ -106,7 +106,7 @@ function M.fix_waypoint_positions()
         local should_break = false
         if is_before_start then
           waypoint.linenr = waypoint.linenr + running_hunk_length_diff
-          uw.set_extmark(waypoint)
+          uw.wp_set_extmark(waypoint)
           should_break = true
         elseif is_after_start and is_before_end then
           local num_matches_in_old = 0
@@ -143,7 +143,7 @@ function M.fix_waypoint_positions()
           end
 
           waypoint.linenr = new_line
-          uw.set_extmark(waypoint, new_line)
+          uw.wp_set_extmark(waypoint)
           should_break = true
         end
 

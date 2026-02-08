@@ -1649,15 +1649,17 @@ function M.set_quickfix_list()
   local qflist = {}
   for _,waypoint in pairs(state.waypoints) do
     local bufnr = vim.fn.bufnr(waypoint.filepath)
-    local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {})
-    local lnum = extmark[1] + 1 -- convert from zero-indexed to one-indexed
-    local line = vim.api.nvim_buf_get_lines(bufnr, lnum - 1, lnum, false)[1]
-    table.insert(qflist, {
-      filename = waypoint.filepath,
-      lnum = lnum,
-      col = 0,
-      text = line,
-    })
+    local extmark = uw.buf_get_extmark(bufnr, waypoint.extmark_id)
+    if extmark then
+      local lnum = extmark[1]
+      local line = vim.api.nvim_buf_get_lines(bufnr, lnum - 1, lnum, false)[1]
+      table.insert(qflist, {
+        filename = waypoint.filepath,
+        lnum = lnum,
+        col = 0,
+        text = line,
+      })
+    end
   end
   vim.fn.setqflist(qflist, 'r')
   vim.cmd('copen')

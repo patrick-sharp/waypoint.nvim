@@ -21,7 +21,6 @@
 ---@field text        string | nil
 ---@field linenr      integer | nil the one-indexed line number the waypoint is on. Can become stale if a buffer edit causes the extmark to move.
 ---@field error       string | nil
----@field should_draw boolean | nil whether or not this waypoint should have been drawn when it was saved into the undo state. This field will be nil on waypoints in the state.waypoints array
 
 ---@class waypoint.State
 ---@field load_error            string | nil if there was an error loading the file. if so, we show it in the waypoint window

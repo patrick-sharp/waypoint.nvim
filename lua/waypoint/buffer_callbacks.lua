@@ -46,7 +46,7 @@ function M.convert_bufferless_waypoints_to_buffer(arg)
   local filepath = u.relative_path(arg.file)
   for _,waypoint in ipairs(state.waypoints) do
     if waypoint.filepath == filepath then
-      local ok = uw.set_extmark(waypoint)
+      local ok = uw.wp_set_extmark(waypoint)
       assert(ok)
       waypoint.has_buffer = true
       waypoint.bufnr      = bufnr

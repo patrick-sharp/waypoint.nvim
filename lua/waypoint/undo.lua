@@ -30,9 +30,6 @@ function M.save_state(undo_msg, redo_msg, change_wpi)
   message.notify(redo_msg, vim.log.levels.INFO)
 
   local waypoints = vim.deepcopy(state.waypoints)
-  for _,wp in ipairs(waypoints) do
-    wp.should_draw = uw.should_draw_waypoint(wp)
-  end
 
   ---@type waypoint.UndoNode
   local undo_node = {
@@ -45,9 +42,8 @@ function M.save_state(undo_msg, redo_msg, change_wpi)
   ring_buffer.push(M.states, undo_node)
 end
 
--- if any extmarks in state are missing, replace them.
--- if any extmarks are present with no waypoint, remove them
--- if any extmarks don't match their waypoint's line number, move them
+-- hide extmarks that don't have a drawn waypoint.
+-- show extmarks that do
 function M.set_extmarks_for_state()
   ---@type table<integer,waypoint.Waypoint[]>
   local bufnr_to_waypoints = {}
@@ -60,17 +56,13 @@ function M.set_extmarks_for_state()
       wp.bufnr = -1
     end
   end
+  -- hide all extmarks, then re-show the ones whose waypoints are in the current state
   for bufnr,waypoints in pairs(bufnr_to_waypoints) do
-    local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, constants.ns, 0, -1, {})
-    for _,extmark in ipairs(extmarks) do
-      local extmark_id = extmark[1]
-      vim.api.nvim_buf_del_extmark(bufnr, constants.ns, extmark_id)
-    end
+    uw.buf_hide_extmarks(bufnr)
     for _,waypoint in ipairs(waypoints) do
-      if waypoint.should_draw then
-        uw.set_extmark(waypoint)
+      if uw.should_draw_waypoint(waypoint) then
+        uw.set_wp_extmark_visible(waypoint, true)
       end
-      waypoint.should_draw = nil -- this field is only used to remember whether a waypoint should have been drawn when it was saved to the undo state
     end
   end
 end

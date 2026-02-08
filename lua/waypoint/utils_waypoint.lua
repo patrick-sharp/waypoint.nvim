@@ -63,20 +63,11 @@ function M.should_draw_waypoint(waypoint)
 end
 
 ---@param waypoint waypoint.Waypoint
----@param linenr integer | nil
-function M.set_extmark(waypoint, linenr)
-  assert(waypoint.linenr or linenr, "Either waypoint.linenr or linenr must not be nil, but both were")
+function M.wp_set_extmark(waypoint)
   local bufnr, ok = M.bufnr_from_waypoint(waypoint)
+
   assert(ok)
-
-  if waypoint.extmark_id then
-    vim.api.nvim_buf_del_extmark(bufnr, constants.ns, waypoint.extmark_id)
-  end
-
-  if waypoint.linenr > vim.api.nvim_buf_line_count(bufnr) then
-    waypoint.extmark_id = -1
-    return false
-  end
+  assert(waypoint.linenr)
 
   waypoint.extmark_id = M.buf_set_extmark(bufnr, waypoint.linenr)
   return true
@@ -383,14 +374,75 @@ function M.make_sorted_waypoints()
   table.sort(state.sorted_waypoints, waypoint_compare)
 end
 
+--- @class waypoint.Extmark
+--- @field [1] integer row -- one-indexed, unlike base extmark value
+--- @field [2] integer col
+--- @field [3] vim.api.keyset.extmark_details
+
+---@param bufnr integer
+---@param extmark_id integer
+---@return waypoint.Extmark | nil
+function M.buf_get_extmark(bufnr, extmark_id)
+  local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, extmark_id, {details=true})
+  local details = extmark[3]
+  assert(details)
+  if #extmark == 0 then
+    return nil
+  end
+  local result = {
+    extmark[1] + 1,
+    extmark[2],
+    details
+  }
+  return result
+end
+
+-- does not set extmark visibility if none exists
+---@param wp waypoint.Waypoint
+---@param is_visible boolean
+---@return boolean whether an extmark exists for this waypoint
+function M.set_wp_extmark_visible(wp, is_visible)
+  local bufnr = wp.bufnr
+  local extmark_id = wp.extmark_id
+  if bufnr and extmark_id then
+    local extmark = M.buf_get_extmark(bufnr, extmark_id)
+    if not extmark then
+      return false
+    end
+    u.log(extmark)
+    M.buf_set_extmark(bufnr, extmark[1], is_visible)
+    return true
+  end
+  return false
+end
+
+-- does not set extmark visibility if none exists
+---@param bufnr integer
+function M.buf_hide_extmarks(bufnr)
+  local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, constants.ns, 0, -1, {})
+  -- set all extmarks to be hidden, and only the show the ones whose waypoints exist in current state
+  for _,extmark in ipairs(extmarks) do
+    local extmark_id = extmark[1]
+    local linenr = extmark[2] + 1
+    M.buf_set_extmark(bufnr, linenr, false, extmark_id)
+  end
+end
+
 ---@param bufnr integer
 ---@param linenr integer one-indexed line number
+---@param is_visible boolean | nil whether the extmark will appear next to the line number
+---@param extmark_id integer | nil whether the extmark will appear next to the line number
 ---@return integer extmark id
-function M.buf_set_extmark(bufnr, linenr)
+function M.buf_set_extmark(bufnr, linenr, is_visible, extmark_id)
+  local sign_text = config.mark_char
+  if is_visible == false then
+    sign_text = ""
+  end
   return vim.api.nvim_buf_set_extmark(
     bufnr, constants.ns, linenr - 1, -1,
     {
-      sign_text = config.mark_char,
+      id = extmark_id,
+      sign_text = sign_text,
       priority = 1,
       sign_hl_group = constants.hl_sign,
       invalidate = true,

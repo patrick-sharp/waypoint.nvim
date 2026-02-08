@@ -176,10 +176,12 @@ function M.find_waypoint(filepath, linenr)
   for i = #state.waypoints, 1, -1 do
     local waypoint = state.waypoints[i]
     if waypoint.filepath == filepath and waypoint.extmark_id ~= -1 then
-      local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {})
-      local extmark_row = extmark[1] + 1 -- have to do this because extmark line numbers are 0 indexed
-      if extmark_row == linenr then
-        return i
+      local extmark = uw.buf_get_extmark(bufnr, waypoint.extmark_id)
+      if extmark then
+        local extmark_row = extmark[1]
+        if extmark_row == linenr then
+          return i
+        end
       end
     end
   end
@@ -189,8 +191,6 @@ end
 ---@param existing_waypoint_i integer
 ---@param filepath string
 function M.remove_waypoint(existing_waypoint_i, filepath)
-  local bufnr = vim.fn.bufnr(filepath)
-
   local existing_waypoint
   if state.sort_by_file_and_line then
     existing_waypoint = state.sorted_waypoints[existing_waypoint_i]
@@ -199,7 +199,7 @@ function M.remove_waypoint(existing_waypoint_i, filepath)
   end
 
   if existing_waypoint.extmark_id ~= -1 then
-    vim.api.nvim_buf_del_extmark(bufnr, constants.ns, existing_waypoint.extmark_id)
+    uw.set_wp_extmark_visible(existing_waypoint, false)
   end
 
   --- @type waypoint.Waypoint[]
@@ -254,7 +254,7 @@ function M.remove_waypoints()
       waypoint_map[wp] = true
     else
       if wp.extmark_id ~= -1 then
-        vim.api.nvim_buf_del_extmark(wp.bufnr, constants.ns, wp.extmark_id)
+        uw.set_wp_extmark_visible(wp, false)
       end
     end
   end
