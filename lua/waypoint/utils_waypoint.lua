@@ -406,11 +406,13 @@ function M.set_wp_extmark_visible(wp, is_visible)
   local extmark_id = wp.extmark_id
   if bufnr and extmark_id then
     local extmark = M.buf_get_extmark(bufnr, extmark_id)
-    if not extmark then
+    if not extmark or extmark[3].invalid then
       return false
     end
-    u.log(extmark)
-    M.buf_set_extmark(bufnr, extmark[1], is_visible)
+    M.buf_set_extmark(bufnr, extmark[1], {
+      is_visible = is_visible,
+      extmark_id = extmark_id,
+    })
     return true
   end
   return false
@@ -419,31 +421,42 @@ end
 -- does not set extmark visibility if none exists
 ---@param bufnr integer
 function M.buf_hide_extmarks(bufnr)
-  local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, constants.ns, 0, -1, {})
+  local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, constants.ns, 0, -1, {details=true})
   -- set all extmarks to be hidden, and only the show the ones whose waypoints exist in current state
   for _,extmark in ipairs(extmarks) do
     local extmark_id = extmark[1]
     local linenr = extmark[2] + 1
-    M.buf_set_extmark(bufnr, linenr, false, extmark_id)
+    if not extmark[4].invalid then
+      M.buf_set_extmark(bufnr, linenr, {
+          is_visible = false,
+          extmark_id = extmark_id,
+        }
+      )
+    end
   end
 end
 
+---@class waypoint.ExtmarkOpts
+---@field extmark_id integer?
+---@field is_visible boolean?
+
 ---@param bufnr integer
 ---@param linenr integer one-indexed line number
----@param is_visible boolean | nil whether the extmark will appear next to the line number
----@param extmark_id integer | nil whether the extmark will appear next to the line number
+---@param opts waypoint.ExtmarkOpts?
 ---@return integer extmark id
-function M.buf_set_extmark(bufnr, linenr, is_visible, extmark_id)
+function M.buf_set_extmark(bufnr, linenr, opts)
   local sign_text = config.mark_char
-  if is_visible == false then
-    sign_text = ""
+  local priority = 1 -- waypoints aren't very high priority because you can see them in the waypoint window anyway
+  if opts and opts.is_visible == false then
+    sign_text = " "
+    priority = 0
   end
   return vim.api.nvim_buf_set_extmark(
     bufnr, constants.ns, linenr - 1, -1,
     {
-      id = extmark_id,
+      id = opts and opts.extmark_id,
       sign_text = sign_text,
-      priority = 1,
+      priority = priority,
       sign_hl_group = constants.hl_sign,
       invalidate = true,
     }

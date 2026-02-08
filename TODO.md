@@ -190,8 +190,9 @@
 - [ ] misc tests
     - [ ] don't affect state of deleted waypoints 
     - [ ] many existing tests, but with deleted waypoints everywhere
-    - [ ] undone deltions should re-show extmark
-    - [ ] undone deltions should not re-show invalid extmark
+    - [ ] undone deletions should re-show extmark
+    - [ ] undone deletions should not re-show invalid extmark
+    - [ ] have waypoints, delete one, delete text to make extmarks invalid, undo, check num waypoints
 - [ ] write docs
     - [ ] drawn vs not drawn waypoints
     - [ ] undo and file changes

@@ -148,12 +148,45 @@ function M.get_current_waypoint()
   return waypoints[state.wpi]
 end
 
-function M.get_waypoints()
+---@return waypoint.Waypoint[], integer | nil, integer | nil
+local function get_drawn_waypoints()
+  -- these are the waypoints we should draw. some waypoints should not be drawn
+  local waypoints = {}
+  ---@type integer | nil
+  local drawn_wpi = nil
+  ---@type integer | nil
+  local drawn_vis_wpi = nil
+  local state_waypoints
   if state.sort_by_file_and_line then
-    return state.sorted_waypoints
+    state_waypoints = state.sorted_waypoints
   else
-    return state.waypoints
+    state_waypoints = state.waypoints
   end
+
+  local num_drawn_waypoints = 0
+  ---@type table[integer]
+  for i,wp in ipairs(state_waypoints) do
+    local should_draw = uw.should_draw_waypoint(wp)
+    if should_draw then
+      num_drawn_waypoints = num_drawn_waypoints + 1
+      waypoints[#waypoints+1] = wp
+
+      if drawn_wpi == nil and i >= state.wpi then
+        drawn_wpi = num_drawn_waypoints
+      end
+      if state.vis_wpi then
+        if drawn_vis_wpi == nil and state.vis_wpi < state.wpi and state.vis_wpi <= i then
+          drawn_vis_wpi = num_drawn_waypoints
+        elseif state.wpi < state.vis_wpi and state.wpi < i and i <= state.vis_wpi then
+          drawn_vis_wpi = num_drawn_waypoints
+        end
+      end
+    end
+  end
+  if state.vis_wpi and not drawn_vis_wpi then
+    drawn_vis_wpi = drawn_wpi
+  end
+  return waypoints, drawn_wpi, drawn_vis_wpi
 end
 
 ---@param option boolean
@@ -165,7 +198,7 @@ local function get_toggle_hl(option)
   return constants.hl_toggle_off
 end
 
-local function get_bg_win_opts(win_opts)
+local function get_bg_win_opts(win_opts, drawn_wpi, drawn_vis_wpi, num_drawn_waypoints)
   assert(win_opts, "win_opts required arg to get_bg_win_opts")
   local bg_win_opts = u.shallow_copy(win_opts)
 
@@ -193,20 +226,21 @@ local function get_bg_win_opts(win_opts)
   local context =    {"C", get_toggle_hl(state.show_context) }
   local sort =       {"S", get_toggle_hl(state.sort_by_file_and_line) }
 
-  local wpi
-  if state.wpi == nil then
-    wpi = {"No waypoints", constants.hl_footer_waypoint_nr}
-  elseif state.vis_wpi == nil then
-    wpi = {state.wpi .. '/' .. #state.waypoints, constants.hl_footer_waypoint_nr }
+  local wpi_info
+
+  if drawn_wpi == nil then
+    wpi_info = {"No waypoints", constants.hl_footer_waypoint_nr}
+  elseif drawn_vis_wpi == nil then
+    wpi_info = {drawn_wpi .. '/' .. num_drawn_waypoints, constants.hl_footer_waypoint_nr }
   else
-    local lower = math.min(state.wpi, state.vis_wpi)
-    local higher = math.max(state.wpi, state.vis_wpi)
-    wpi = {lower .. "-" .. higher .. '/' .. #state.waypoints, constants.hl_footer_waypoint_nr }
+    local lower = math.min(drawn_wpi, drawn_vis_wpi)
+    local higher = math.max(drawn_wpi, drawn_vis_wpi)
+    wpi_info = {lower .. "-" .. higher .. '/' .. #state.waypoints, constants.hl_footer_waypoint_nr }
   end
   bg_win_opts.footer = {
     { "─ ", 'FloatBorder'},
     { "Press g? for help", constants.hl_selected },
-    sep, a, sep, b, sep, c, sep, wpi, sep,
+    sep, a, sep, b, sep, c, sep, wpi_info, sep,
     path, num, text, sep, full_path, context, sort,
     { " ", 'FloatBorder'},
   }
@@ -268,42 +302,8 @@ local function draw_waypoint_window(action)
     num_lines_after = 0
   end
 
-  -- these are the waypoints we should draw. some waypoints should not be drawn
-  local waypoints = {}
-  ---@type integer | nil
-  local drawn_wpi = nil
-  ---@type integer | nil
-  local drawn_vis_wpi = nil
-  local state_waypoints
-  if state.sort_by_file_and_line then
-    state_waypoints = state.sorted_waypoints
-  else
-    state_waypoints = state.waypoints
-  end
-
-  local num_drawn_waypoints = 0
-  ---@type table[integer]
-  for i,wp in ipairs(state_waypoints) do
-    local should_draw = uw.should_draw_waypoint(wp)
-    if should_draw then
-      num_drawn_waypoints = num_drawn_waypoints + 1
-      waypoints[#waypoints+1] = wp
-
-      if drawn_wpi == nil and i >= state.wpi then
-        drawn_wpi = num_drawn_waypoints
-      end
-      if state.vis_wpi then
-        if drawn_vis_wpi == nil and state.vis_wpi < state.wpi and state.vis_wpi <= i then
-          drawn_vis_wpi = num_drawn_waypoints
-        elseif state.wpi < state.vis_wpi and state.wpi < i and i <= state.vis_wpi then
-          drawn_vis_wpi = num_drawn_waypoints
-        end
-      end
-    end
-  end
-  if state.vis_wpi and not drawn_vis_wpi then
-    drawn_vis_wpi = drawn_wpi
-  end
+  local waypoints, drawn_wpi, drawn_vis_wpi = get_drawn_waypoints()
+  local num_drawn_waypoints = #waypoints
 
   for i, waypoint in ipairs(waypoints) do
     --- @type waypoint.WaypointContext
@@ -594,8 +594,6 @@ local function draw_waypoint_window(action)
       end
     end
 
-
-    -- update the view (includes cursor row and column, window top/bottom/left/right, virtual offset)
     if action == M.WINDOW_ACTIONS.context then
       -- move to the current waypoint's line and center the screen
       u.goto_line(cursor_line + 1)
@@ -654,7 +652,7 @@ local function draw_waypoint_window(action)
 
   -- update window config, used to update the footer a/b/c indicators and the size of the window
   local win_opts = get_win_opts()
-  local bg_win_opts = get_bg_win_opts(win_opts)
+  local bg_win_opts = get_bg_win_opts(win_opts, drawn_wpi, drawn_vis_wpi, num_drawn_waypoints)
   vim.api.nvim_win_set_config(winnr, win_opts)
   vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
 
@@ -947,7 +945,8 @@ local function draw_help()
 
   -- update window config, used to update the footer a/b/c indicators and the size of the window
   local win_opts = get_win_opts()
-  local bg_win_opts = get_bg_win_opts(win_opts)
+  local waypoints, drawn_wpi, drawn_vis_wpi = get_drawn_waypoints()
+  local bg_win_opts = get_bg_win_opts(win_opts, drawn_wpi, drawn_vis_wpi, #waypoints)
   vim.api.nvim_win_set_config(winnr, win_opts)
   vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
 
@@ -1135,9 +1134,13 @@ function M.next_waypoint()
     waypoints = state.waypoints
   end
   local count = 0
-  while state.wpi < #state.waypoints and count < vim.v.count1 do
-    local wp = waypoints[state.wpi]
+  local bottom
+  state.wpi, _, _, bottom = crud.get_drawn_wpi()
+  assert(state.wpi)
+  assert(bottom)
+  while state.wpi and bottom and state.wpi < bottom and count < vim.v.count1 do
     state.wpi = state.wpi + 1
+    local wp = waypoints[state.wpi]
     if uw.should_draw_waypoint(wp) then
       count = count + 1
     end
@@ -1159,9 +1162,13 @@ function M.prev_waypoint()
     waypoints = state.waypoints
   end
   local count = 0
-  while state.wpi > 1 and count < vim.v.count1 do
-    local wp = waypoints[state.wpi]
+  local top
+  state.wpi, _, top, _ = crud.get_drawn_wpi()
+  assert(state.wpi)
+  assert(top)
+  while state.wpi and top and state.wpi > top and count < vim.v.count1 do
     state.wpi = state.wpi - 1
+    local wp = waypoints[state.wpi]
     if uw.should_draw_waypoint(wp) then
       count = count + 1
     end
@@ -1368,16 +1375,12 @@ function M.reset_all_indent()
 end
 
 function M.move_to_first_waypoint()
-  if state.wpi then
-    state.wpi = 1
-  end
+  _, _, state.wpi, _ = crud.get_drawn_wpi()
   draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
 end
 
 function M.move_to_last_waypoint()
-  if state.wpi then
-    state.wpi = #state.waypoints
-  end
+  _, _, _, state.wpi = crud.get_drawn_wpi()
   draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
 end
 
@@ -1628,7 +1631,8 @@ end
 
 function M.resize()
   local win_opts = get_win_opts()
-  local bg_win_opts = get_bg_win_opts(win_opts)
+  local waypoints, drawn_wpi, drawn_vis_wpi = get_drawn_waypoints()
+  local bg_win_opts = get_bg_win_opts(win_opts, drawn_wpi, drawn_vis_wpi, #waypoints)
   vim.api.nvim_win_set_config(winnr, win_opts)
   vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
 end
@@ -1745,7 +1749,8 @@ function M.open()
   })
 
   local win_opts = get_win_opts()
-  local bg_win_opts = get_bg_win_opts(win_opts)
+  local waypoints, drawn_wpi, drawn_vis_wpi = get_drawn_waypoints()
+  local bg_win_opts = get_bg_win_opts(win_opts, drawn_wpi, drawn_vis_wpi, #waypoints)
 
   -- Create the background
   bg_winnr = vim.api.nvim_open_win(bg_bufnr, false, bg_win_opts)

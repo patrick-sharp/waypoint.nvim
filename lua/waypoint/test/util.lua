@@ -119,4 +119,14 @@ function M.assert_vis_char_pos(cursor_line, cursor_char_col, vis_line, vis_char_
   assert(vis[3]    == vis_char_col,    "vis char col should be " ..    vis_char_col ..    ", but was " .. vis[3])
 end
 
+---@param command string
+function M.normal(command)
+  vim.cmd.normal({ args = {command}, bang = true })
+end
+
+---@param file string
+function M.edit_file(file)
+  vim.cmd.edit({args = {file}, bang=true})
+end
+
 return M

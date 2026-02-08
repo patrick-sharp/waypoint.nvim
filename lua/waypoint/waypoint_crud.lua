@@ -189,8 +189,7 @@ function M.find_waypoint(filepath, linenr)
 end
 
 ---@param existing_waypoint_i integer
----@param filepath string
-function M.remove_waypoint(existing_waypoint_i, filepath)
+function M.remove_waypoint(existing_waypoint_i)
   local existing_waypoint
   if state.sort_by_file_and_line then
     existing_waypoint = state.sorted_waypoints[existing_waypoint_i]
@@ -590,23 +589,16 @@ function M.delete_waypoint()
   local existing_waypoint_i = M.find_waypoint(filepath, cur_line_nr)
   if existing_waypoint_i == -1 then return end
 
-  M.remove_waypoint(existing_waypoint_i, state.waypoints[existing_waypoint_i].filepath)
+  M.remove_waypoint(existing_waypoint_i)
 end
 
 function M.delete_curr()
   if #state.waypoints == 0 then return end
-  ---@type waypoint.Waypoint[]
-  local waypoints
-  if state.sort_by_file_and_line then
-    waypoints = state.sorted_waypoints
-  else
-    waypoints = state.waypoints
-  end
   if u.is_in_visual_mode() then
     M.remove_waypoints()
     state.vis_wpi = nil
   else
-    M.remove_waypoint(state.wpi, waypoints[state.wpi].filepath)
+    M.remove_waypoint(state.wpi)
   end
   if #state.waypoints == 0 then
     state.wpi = nil
