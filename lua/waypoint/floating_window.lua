@@ -148,7 +148,15 @@ function M.get_current_waypoint()
   return waypoints[state.wpi]
 end
 
----@return waypoint.Waypoint[], integer?, integer?, integer?, integer?
+---@class waypoint.DrawnWaypoints
+---@field waypoints waypoint.Waypoint[]
+---@field drawn_wpi integer?
+---@field drawn_vis_wpi integer?
+---@field state_drawn_wpi integer?
+---@field state_drawn_vis_wpi integer?
+---@field wpi_from_drawn_wpi integer[]
+
+---@return waypoint.DrawnWaypoints
 local function get_drawn_waypoints()
   -- these are the waypoints we should draw. some waypoints should not be drawn
   local waypoints = {}
@@ -160,6 +168,8 @@ local function get_drawn_waypoints()
   local state_drawn_wpi = nil
   ---@type integer | nil
   local state_drawn_vis_wpi = nil
+  ---@type integer[]
+  local wpi_from_drawn_wpi = {}
 
   local state_waypoints
   if state.sort_by_file_and_line then
@@ -174,6 +184,7 @@ local function get_drawn_waypoints()
     if should_draw then
       num_drawn_waypoints = num_drawn_waypoints + 1
       waypoints[#waypoints+1] = wp
+      wpi_from_drawn_wpi[#wpi_from_drawn_wpi+1] = i
 
       if drawn_wpi == nil and i >= state.wpi then
         drawn_wpi = num_drawn_waypoints
@@ -199,7 +210,14 @@ local function get_drawn_waypoints()
   if state.vis_wpi and drawn_vis_wpi == nil and num_drawn_waypoints > 0 then
     drawn_vis_wpi = num_drawn_waypoints
   end
-  return waypoints, drawn_wpi, drawn_vis_wpi, state_drawn_wpi, state_drawn_vis_wpi
+  return {
+    waypoints = waypoints,
+    wpi_from_drawn_wpi = wpi_from_drawn_wpi,
+    drawn_wpi = drawn_wpi,
+    drawn_vis_wpi = drawn_vis_wpi,
+    state_drawn_wpi = state_drawn_wpi,
+    state_drawn_vis_wpi = state_drawn_vis_wpi,
+  }
 end
 
 ---@param option boolean
@@ -315,7 +333,13 @@ local function draw_waypoint_window(action)
     num_lines_after = 0
   end
 
-  local waypoints, drawn_wpi, drawn_vis_wpi, state_drawn_wpi, state_drawn_vis_wpi = get_drawn_waypoints()
+  local drawn_waypoints = get_drawn_waypoints()
+  local waypoints = drawn_waypoints.waypoints
+  local drawn_wpi = drawn_waypoints.drawn_wpi
+  local drawn_vis_wpi = drawn_waypoints.drawn_vis_wpi
+  local state_drawn_wpi = drawn_waypoints.state_drawn_wpi
+  local state_drawn_vis_wpi = drawn_waypoints.state_drawn_vis_wpi
+  local wpi_from_drawn_wpi = drawn_waypoints.wpi_from_drawn_wpi
 
   -- In general, we don't want to be updating state on draw calls, but this simplifies things a lot
   if state_drawn_wpi then
@@ -357,7 +381,7 @@ local function draw_waypoint_window(action)
       --- @type waypoint.HighlightRange[]
       local line_extmark_hlranges = extmark_hlranges[j]
       table.insert(indents, waypoint.indent * config.indent_width)
-      table.insert(line_to_waypoint, i)
+      table.insert(line_to_waypoint, wpi_from_drawn_wpi[i])
       local row = {}
 
       -- waypoint number
@@ -443,7 +467,7 @@ local function draw_waypoint_window(action)
       table.insert(indents, 0)
       -- if the user somehow moves to a blank space, just treat that as 
       -- selecting the waypoint above the space
-      table.insert(line_to_waypoint, i)
+      table.insert(line_to_waypoint, wpi_from_drawn_wpi[i])
       table.insert(hlranges, {})
     end
   end
@@ -967,7 +991,10 @@ local function draw_help()
 
   -- update window config, used to update the footer a/b/c indicators and the size of the window
   local win_opts = get_win_opts()
-  local waypoints, drawn_wpi, drawn_vis_wpi = get_drawn_waypoints()
+  local drawn_waypoints = get_drawn_waypoints()
+  local waypoints = drawn_waypoints.waypoints
+  local drawn_wpi = drawn_waypoints.drawn_wpi
+  local drawn_vis_wpi = drawn_waypoints.drawn_vis_wpi
   local bg_win_opts = get_bg_win_opts(win_opts, drawn_wpi, drawn_vis_wpi, #waypoints)
   vim.api.nvim_win_set_config(winnr, win_opts)
   vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
@@ -1642,8 +1669,12 @@ function M.move_waypoints_to_file_wrapper()
   end
 end
 
-local function set_waypoint_for_cursor()
-  if ignore_next_cursormoved then
+-- override_ignore is used to make sure this gets called during tests, where the
+-- autocmd normally doesn't trigger until the test is over, and so has to be
+-- triggered manually.
+---@param override_ignore boolean?
+local function set_waypoint_for_cursor(override_ignore)
+  if not override_ignore and ignore_next_cursormoved then
     ignore_next_cursormoved = false
     return
   end
@@ -1667,9 +1698,14 @@ local function set_waypoint_for_cursor()
   draw_waypoint_window(M.WINDOW_ACTIONS.set_waypoint_for_cursor)
 end
 
+M.set_waypoint_for_cursor = set_waypoint_for_cursor
+
 function M.resize()
   local win_opts = get_win_opts()
-  local waypoints, drawn_wpi, drawn_vis_wpi = get_drawn_waypoints()
+  local drawn_waypoints = get_drawn_waypoints()
+  local waypoints = drawn_waypoints.waypoints
+  local drawn_wpi = drawn_waypoints.drawn_wpi
+  local drawn_vis_wpi = drawn_waypoints.drawn_vis_wpi
   local bg_win_opts = get_bg_win_opts(win_opts, drawn_wpi, drawn_vis_wpi, #waypoints)
   vim.api.nvim_win_set_config(winnr, win_opts)
   vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
@@ -1787,7 +1823,10 @@ function M.open()
   })
 
   local win_opts = get_win_opts()
-  local waypoints, drawn_wpi, drawn_vis_wpi = get_drawn_waypoints()
+  local drawn_waypoints = get_drawn_waypoints()
+  local waypoints = drawn_waypoints.waypoints
+  local drawn_wpi = drawn_waypoints.drawn_wpi
+  local drawn_vis_wpi = drawn_waypoints.drawn_vis_wpi
   local bg_win_opts = get_bg_win_opts(win_opts, drawn_wpi, drawn_vis_wpi, #waypoints)
 
   -- Create the background

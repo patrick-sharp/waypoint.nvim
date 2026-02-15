@@ -29,6 +29,7 @@ local _ = require'waypoint.test.tests.undo_delete'
 local _ = require'waypoint.test.tests.undo_insert'
 local _ = require'waypoint.test.tests.undo_move'
 local _ = require'waypoint.test.tests.visual_delete'
+local _ = require'waypoint.test.tests.visual_first_last'
 local _ = require'waypoint.test.tests.visual_indent'
 local _ = require'waypoint.test.tests.visual_move'
 local _ = require'waypoint.test.tests.visual_reselect'
@@ -134,9 +135,11 @@ function M.run_tests()
   state.should_notify = false
   for _,test in ipairs(test_list.tests) do
     floating_window.clear_state_and_close()
+    state.should_notify = false
     _, test.err = xpcall(test.fn, debug.traceback)
     test.pass = not test.err
     floating_window.clear_state_and_close()
+    state.should_notify = false
     clear_buffers()
     vim.cmd.normal(vim.api.nvim_replace_termcodes('<C-c>', true, false, true)) -- this resets vim.v.count and vim.v.count1, which can persist between tests otherwise
   end

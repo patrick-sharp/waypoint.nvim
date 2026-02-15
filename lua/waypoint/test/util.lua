@@ -129,4 +129,10 @@ function M.edit_file(file)
   vim.cmd.edit({args = {file}, bang=true})
 end
 
+function M.switch_visual()
+  u.switch_visual()
+  floating_window.set_waypoint_for_cursor(true)
+end
+
+
 return M

@@ -230,7 +230,7 @@ local M = {
       delete_waypoint           = "md",
     },
     waypoint_window_keybindings = {
-      exit_waypoint_window    = {"ms", "q", "<esc>"},
+      exit_waypoint_window    = {"ms", "<esc>", "<C-c>"},
       increase_context        = "c",
       decrease_context        = "C",
       increase_before_context = "b",

@@ -145,7 +145,6 @@
 - [ ] see if you can fix the markdown header treesitter highlight bug
 - [ ] get rid of the rest of the global lua functions in floating_window, replacing them with module-scoped functions
 - [ ] add cumulative indent (in visual mode)
-- [ ] write tests:
 - [ ] think about adding some kind of error handling to draw_waypoint_window that will just display an error if pcall happens, so you don't have to fight through cumulative errors to close the window
 - [ ] write documentation
     - [ ] quickstart workflow
@@ -167,15 +166,15 @@
         - only supports one mark per file
         - can't reorder/indent
         - can't see context around mark
-- [ ] replace some of my homemade stuff with vim builtins
+- [x] replace some of my homemade stuff with vim builtins
     - [x] vim.deepcopy
-    - [ ] vim.ringbuf
 - [ ] only highlight text that is currently on screen to save perf
     - [ ] make resize callback redraw the window so it will re-highlight
 - [ ] add ability to completely reset state
 - [ ] write tests
     - [x] don't affect state of deleted waypoints 
     - [x] reselect visual after deleting waypoints
+    - [x] bulk delete, undo, redo
     - [ ] the following:
         - have waypoint saved in json file
         - open vim
@@ -188,7 +187,6 @@
         - waypoint should be deleted
         - undo text change
         - waypoint should be restored
-    - [ ] bulk delete, undo, redo (causes assertion error at the moment)
     - [ ] many existing tests, but with deleted waypoints everywhere
     - [ ] undone deletions should re-show extmark
     - [ ] undone deletions should not re-show invalid extmark
