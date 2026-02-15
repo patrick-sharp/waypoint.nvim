@@ -23,6 +23,7 @@ function M.extmark_from_waypoint(waypoint)
   if not ok or waypoint.extmark_id == -1 or waypoint.extmark_id == nil then
     return nil
   end
+
   --- @type vim.api.keyset.get_extmark_item_by_id
   local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {details=true})
   if #extmark == 0 then
@@ -464,7 +465,10 @@ function M.buf_set_extmark(bufnr, linenr, opts)
 end
 
 -- since we don't draw waypoints whose text has been deleted
----@return integer | nil, integer | nil, integer | nil, integer | nil
+-- return the top selection drawn wpi (or the cursor wpi if not in vis mode),
+-- the bottom selection drawn wpi, the first drawable wpi, and the last
+-- drawable wpi
+---@return integer?, integer?, integer?, integer?
 function M.get_drawn_wpi()
   assert(state.wpi)
   assert(u.is_in_visual_mode() == (nil ~= state.vis_wpi))
@@ -563,5 +567,120 @@ function M.get_drawn_wpi()
 
   return result_wpi_top, result_wpi_bottom, result_top, result_bottom
 end
+
+---@class waypoint.Undrawn
+---@field i integer
+---@field wp waypoint.Waypoint
+
+---@class waypoint.DrawnSplit
+---@field cursor_i           integer?
+---@field cursor_vis_i       integer?
+---@field top                integer?
+---@field bottom             integer?
+---@field drawn              waypoint.Waypoint[]
+---@field undrawn            waypoint.Undrawn[]
+---@field wpi_from_drawn_i   integer[]
+
+-- This exists because:
+-- * Waypoints should not be drawn if their extmark has been deleted
+-- * No operation should affect undrawn waypoints
+-- * Mutations get way easier to do if you don't have to worry about undrawn waypoints
+---@return waypoint.DrawnSplit
+function M.split_by_drawn()
+  local waypoints
+  if state.sort_by_file_and_line then
+    waypoints = state.sorted_waypoints
+  else
+    waypoints = state.waypoints
+  end
+
+  ---@type waypoint.Waypoint[]
+  local drawn = {}
+  ---@type waypoint.Undrawn[]
+  local undrawn = {}
+  ---@type integer[]
+  local wpi_from_drawn_i = {}
+  ---@type integer?
+  local cursor_i = nil
+  ---@type integer?
+  local cursor_vis_i = nil
+
+  for i,wp in ipairs(waypoints) do
+    local should_draw = M.should_draw_waypoint(wp)
+    if should_draw then
+      drawn[#drawn+1] = wp
+      wpi_from_drawn_i[#wpi_from_drawn_i+1] = i
+
+      if cursor_i == nil and i >= state.wpi then
+        cursor_i = #drawn
+      end
+      if state.vis_wpi then
+        if cursor_vis_i == nil and state.vis_wpi < state.wpi and state.vis_wpi <= i then
+          cursor_vis_i = #drawn
+        elseif state.wpi < state.vis_wpi and state.wpi < i and i <= state.vis_wpi then
+          cursor_vis_i = #drawn
+        end
+      end
+    else
+      undrawn[#undrawn+1] = { i = i, wp = wp }
+    end
+  end
+  if state.vis_wpi and not cursor_vis_i then
+    cursor_vis_i = cursor_i
+  end
+  if cursor_i == nil and #drawn > 0 then
+    cursor_i = #drawn
+  end
+  if state.vis_wpi and cursor_vis_i == nil and #drawn > 0 then
+    cursor_vis_i = #drawn
+  end
+
+  local top = nil
+  local bottom = nil
+  if cursor_i and cursor_vis_i then
+    top = math.min(cursor_i, cursor_vis_i)
+    bottom = math.max(cursor_i, cursor_vis_i)
+  end
+
+  return {
+    drawn = drawn,
+    undrawn = undrawn,
+    cursor_i = cursor_i,
+    cursor_vis_i = cursor_vis_i,
+    top = top,
+    bottom = bottom,
+    wpi_from_drawn_i = wpi_from_drawn_i,
+  }
+end
+
+  ---@param split waypoint.DrawnSplit
+function M.recombine_drawn_split(split)
+  local drawn = split.drawn
+  local undrawn = split.undrawn
+
+  local waypoints = {}
+  local i = 1
+  local drawn_i = 1
+  local undrawn_i = 1
+
+  while i <= #drawn + #undrawn do
+    if undrawn_i <= #undrawn and undrawn[undrawn_i].i == i then
+      waypoints[i] = undrawn[undrawn_i].wp
+      undrawn_i = undrawn_i + 1
+    else
+      waypoints[i] = drawn[drawn_i]
+      drawn_i = drawn_i + 1
+    end
+    i = i + 1
+  end
+
+  state.wpi = split.wpi_from_drawn_i[split.cursor_i]
+  if split.cursor_vis_i then
+    state.vis_wpi = split.wpi_from_drawn_i[split.cursor_vis_i]
+  end
+  state.waypoints = waypoints
+  M.make_sorted_waypoints()
+end
+
 
 return M

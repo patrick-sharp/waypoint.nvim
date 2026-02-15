@@ -204,6 +204,14 @@
     - [ ] tutorial
 - [ ] test waypoint (manual + test suite) on a fresh neovim install
     - [ ] think about optional dependencies like telescope
+- [ ] rename functions with new vocab:
+      cursor_to: move the cursor
+      move_to:   move waypoints
+      goto:      jump to location in file of waypoint
+- [ ] double check undo/redo messages for anything
+- [ ] add ability to see soft-deleted waypoints in waypoint window (maybe a toggle)
+    - [ ] refactor the drawn wpi functions to be clearer
+- [ ] remove inner/outer/top-level/whatever stuff
 
 ### ADVANCED FEATURES:
 
@@ -250,10 +258,10 @@
     - [x] indent
     - [x] unindent
     - [x] reset_waypoint_indent
+    - [x] first_waypoint
+    - [x] last_waypoint
     - [ ] move_waypoint_to_top
     - [ ] move_waypoint_to_bottom
-    - [ ] first_waypoint
-    - [ ] last_waypoint
     - [ ] prev_neighbor_waypoint
     - [ ] next_neighbor_waypoint
     - [ ] prev_top_level_waypoint
