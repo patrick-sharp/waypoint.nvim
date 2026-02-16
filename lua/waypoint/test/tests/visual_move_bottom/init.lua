@@ -10,10 +10,10 @@ local tu = require'waypoint.test.util'
 local state = require'waypoint.state'
 
 -- this test also tests waypoints not displaying when their extmarks are deleted
-describe('Visual move top', function()
+describe('Visual move bottom', function()
   assert(u.file_exists(file_0))
   assert(u.file_exists(file_1))
-  local waypoints_json = "lua/waypoint/test/tests/visual_move_top/waypoints.json"
+  local waypoints_json = "lua/waypoint/test/tests/visual_move_bottom/waypoints.json"
   assert(u.file_exists(waypoints_json))
 
   file.load_from_file(waypoints_json)
@@ -42,18 +42,18 @@ describe('Visual move top', function()
 
   tu.assert_eq(4, #lines)
 
+  floating_window.move_to_last_waypoint()
   u.enter_visual_mode()
   floating_window.on_mode_change(true)
-  floating_window.draw_waypoint_window()
-  floating_window.next_waypoint()
-  floating_window.next_waypoint()
-  tu.assert_eq(5, state.wpi)
-  tu.assert_eq(2, state.vis_wpi)
+  floating_window.prev_waypoint()
+  floating_window.prev_waypoint()
+  tu.assert_eq(3, state.wpi)
+  tu.assert_eq(6, state.vis_wpi)
 
-  -- move top (does nothing)
-  floating_window.move_waypoint_to_top()
-  tu.assert_eq(5, state.wpi)
-  tu.assert_eq(2, state.vis_wpi)
+  -- move bottom (does nothing)
+  floating_window.move_waypoint_to_bottom()
+  tu.assert_eq(3, state.wpi)
+  tu.assert_eq(6, state.vis_wpi)
   tu.assert_waypoints_eq(waypoints[1], state.waypoints[1])
   tu.assert_waypoints_eq(waypoints[2], state.waypoints[2])
   tu.assert_waypoints_eq(waypoints[3], state.waypoints[3])
@@ -64,19 +64,19 @@ describe('Visual move top', function()
 
   -- move middle
   tu.switch_visual()
-  floating_window.next_waypoint()
-  floating_window.move_waypoint_to_top()
+  floating_window.prev_waypoint()
+  floating_window.move_waypoint_to_bottom()
   tu.assert_waypoints_eq(waypoints[1], state.waypoints[1])
-  tu.assert_waypoints_eq(waypoints[3], state.waypoints[2])
-  tu.assert_waypoints_eq(waypoints[5], state.waypoints[3])
+  tu.assert_waypoints_eq(waypoints[2], state.waypoints[2])
+  tu.assert_waypoints_eq(waypoints[6], state.waypoints[3])
   tu.assert_waypoints_eq(waypoints[4], state.waypoints[4])
-  tu.assert_waypoints_eq(waypoints[2], state.waypoints[5])
-  tu.assert_waypoints_eq(waypoints[6], state.waypoints[6])
+  tu.assert_waypoints_eq(waypoints[3], state.waypoints[5])
+  tu.assert_waypoints_eq(waypoints[5], state.waypoints[6])
   tu.assert_waypoints_eq(waypoints[7], state.waypoints[7])
 
-  -- move bottom
-  floating_window.move_to_last_waypoint()
-  floating_window.move_waypoint_to_top()
+  -- move top
+  floating_window.move_to_first_waypoint()
+  floating_window.move_waypoint_to_bottom()
   tu.assert_waypoints_eq(waypoints[1], state.waypoints[1])
   tu.assert_waypoints_eq(waypoints[5], state.waypoints[2])
   tu.assert_waypoints_eq(waypoints[2], state.waypoints[3])
@@ -88,11 +88,11 @@ describe('Visual move top', function()
   -- undo
   floating_window.undo()
   tu.assert_waypoints_eq(waypoints[1], state.waypoints[1])
-  tu.assert_waypoints_eq(waypoints[3], state.waypoints[2])
-  tu.assert_waypoints_eq(waypoints[5], state.waypoints[3])
+  tu.assert_waypoints_eq(waypoints[2], state.waypoints[2])
+  tu.assert_waypoints_eq(waypoints[6], state.waypoints[3])
   tu.assert_waypoints_eq(waypoints[4], state.waypoints[4])
-  tu.assert_waypoints_eq(waypoints[2], state.waypoints[5])
-  tu.assert_waypoints_eq(waypoints[6], state.waypoints[6])
+  tu.assert_waypoints_eq(waypoints[3], state.waypoints[5])
+  tu.assert_waypoints_eq(waypoints[5], state.waypoints[6])
   tu.assert_waypoints_eq(waypoints[7], state.waypoints[7])
 
   -- redo

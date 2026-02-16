@@ -403,7 +403,7 @@ function M.move_waypoint_to_top()
 
   local old_wpi = split.cursor_i
 
-  local should_return = #drawn <= 2 or split.cursor_i == 1
+  local should_return = #drawn <= 2 or split.cursor_i == 1 or split.cursor_vis_i == 1
   if should_return then
     return
   end
@@ -443,30 +443,53 @@ function M.move_waypoint_to_top()
 end
 
 function M.move_waypoint_to_bottom()
-  local should_return = (
-    #state.waypoints <= 2
-    or state.wpi == #state.waypoints
-    or state.sort_by_file_and_line
-  )
   if state.sort_by_file_and_line then
     message.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
+    return
   end
-  if should_return then return end
 
-  local old_wpi = state.wpi
+  local split = uw.split_by_drawn()
+  local drawn = split.drawn
 
-  local temp = state.waypoints[state.wpi]
-  for i=state.wpi, #state.waypoints - 1 do
-    state.waypoints[i] = state.waypoints[i+1]
+  local old_wpi = split.cursor_i
+
+  local should_return = #drawn <= 2 or split.cursor_i == #drawn or split.cursor_vis_i == #drawn
+  if should_return then
+    return
   end
-  state.waypoints[#state.waypoints] = temp
-  state.wpi = #state.waypoints
+
+  if u.is_in_visual_mode() then
+    local selection = {}
+    for i = split.top, split.bottom do
+      selection[#selection+1] = split.drawn[i]
+    end
+    for i = split.bottom + 1, #drawn do
+      drawn[i - #selection] = drawn[i]
+    end
+    for i, wp in ipairs(selection) do
+      drawn[#drawn - #selection + i] = wp
+    end
+    if split.cursor_i < split.cursor_vis_i then
+      split.cursor_i = #drawn - #selection + 1
+      split.cursor_vis_i = #drawn
+    else
+      split.cursor_i = #drawn
+      split.cursor_vis_i = #drawn - #selection + 1
+    end
+  else
+    local temp = state.waypoints[state.wpi]
+    for i=state.wpi, #state.waypoints - 1 do
+      state.waypoints[i] = state.waypoints[i+1]
+    end
+    state.waypoints[#state.waypoints] = temp
+    state.wpi = #state.waypoints
+  end
+
+  uw.recombine_drawn_split(split)
 
   local redo_msg = message.move_waypoint(old_wpi, state.wpi)
   local undo_msg = message.move_waypoint(state.wpi, old_wpi)
-
   undo.save_state(undo_msg, redo_msg)
-  M.make_sorted_waypoints()
 end
 
 function M.indent(increment)

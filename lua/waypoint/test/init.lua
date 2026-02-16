@@ -32,6 +32,7 @@ local _ = require'waypoint.test.tests.visual_delete'
 local _ = require'waypoint.test.tests.visual_first_last'
 local _ = require'waypoint.test.tests.visual_indent'
 local _ = require'waypoint.test.tests.visual_move'
+local _ = require'waypoint.test.tests.visual_move_bottom'
 local _ = require'waypoint.test.tests.visual_move_top'
 local _ = require'waypoint.test.tests.visual_reselect'
 -- other tests to write
@@ -133,6 +134,7 @@ end
 function M.run_tests()
   if not cwd_is_repo_root() then return end
 
+  clear_buffers()
   state.should_notify = false
   for _,test in ipairs(test_list.tests) do
     floating_window.clear_state_and_close()
