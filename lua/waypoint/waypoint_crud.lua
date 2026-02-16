@@ -410,7 +410,7 @@ function M.move_waypoint_to_top()
 
   if u.is_in_visual_mode() then
     local selection = {}
-    for i = split.cursor_i, split.cursor_vis_i do
+    for i = split.top, split.bottom do
       selection[#selection+1] = split.drawn[i]
     end
     for i = split.top - 1, 1, -1 do
@@ -419,8 +419,13 @@ function M.move_waypoint_to_top()
     for i, wp in ipairs(selection) do
       drawn[i] = wp
     end
-    split.cursor_i = 1
-    split.cursor_vis_i = #selection
+    if split.cursor_i < split.cursor_vis_i then
+      split.cursor_i = 1
+      split.cursor_vis_i = #selection
+    else
+      split.cursor_i = #selection
+      split.cursor_vis_i = 1
+    end
   else
     local temp = drawn[split.cursor_i]
     for i=split.cursor_i, 2, -1 do

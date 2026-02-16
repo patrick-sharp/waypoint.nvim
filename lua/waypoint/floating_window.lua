@@ -1754,9 +1754,12 @@ function M.toggle_help()
 end
 
 function M.on_mode_change(arg)
-  if ignore_next_modechanged then
+  if arg ~= true and ignore_next_modechanged then
     ignore_next_modechanged = false
     return
+  end
+  if arg == true then
+    arg = {match="n:v"}
   end
   assert(line_to_waypoint)
   local modes = vim.split(arg.match, ":")

@@ -32,6 +32,7 @@ local _ = require'waypoint.test.tests.visual_delete'
 local _ = require'waypoint.test.tests.visual_first_last'
 local _ = require'waypoint.test.tests.visual_indent'
 local _ = require'waypoint.test.tests.visual_move'
+local _ = require'waypoint.test.tests.visual_move_top'
 local _ = require'waypoint.test.tests.visual_reselect'
 -- other tests to write
 -- * advanced navigations (outer/inner/neighbor/top/bottom)
