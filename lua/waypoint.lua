@@ -71,6 +71,22 @@ function M.setup(opts)
   --   group = constants.augroup,
   --   callback = function() end
   -- })
+  vim.api.nvim_create_autocmd("DirChangedPre", {
+    group = constants.augroup,
+    callback = function(arg)
+      if arg.match == "global" then
+        file.save()
+      end
+    end
+  })
+  vim.api.nvim_create_autocmd("DirChanged", {
+    group = constants.augroup,
+    callback = function()
+      floating_window.clear_state()
+      floating_window.clear_extmarks()
+      file.load_wrapper()
+    end
+  })
   vim.api.nvim_create_autocmd("BufReadPost", {
     group = constants.augroup,
     callback = buffer_callbacks.convert_bufferless_waypoints_to_buffer,

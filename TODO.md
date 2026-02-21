@@ -134,23 +134,20 @@
 - [x] implement some kind of thing to handle errors and rollback state if you encounter them
 - [x] get rid of the rest of the global lua functions in floating_window, replacing them with module-scoped functions
 - [x] increase ability to recover from erroneous state (grep for <TBD>)
+- [x] when you change directory, reload waypoints from file (DirChanged autocmd)
 - [ ] increase the performance of highlights and draw calls in general
 - [ ] think about persisting waypoints on every waypoint state change. maybe every time the waypoint window closes
     - [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
         - https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua
         - maybe use vim.schedule to do it async if worried about perf?
 - [ ] add perf logging for each function (use require('jit.p'))
-- [ ] switch to making new state for saving / loading instead of mutating existing state to get there
 - [ ] create better error handling and reporting
     - [ ] if highlighting fails for some reason, just show an error message and turn off highlighting
+    - [ ] think about adding some kind of error handling to draw_waypoint_window that will just display an error if pcall happens, so you don't have to fight through cumulative errors to close the window
 - [ ] remove all asserts from the code
     - [ ] replace them with something that will only panic in debug mode, and just log in release mode
     - [ ] make this function use error with level 2 (or 3 or whatev) to keep the traceback clean
-- [ ] fix the test runner to have better traceback (i.e. no assert_eq)
-- [ ] when you change directory, reload waypoints from file (DirChanged autocmd)
 - [ ] see if you can fix the markdown header treesitter highlight bug
-- [ ] add cumulative indent (in visual mode)
-- [ ] think about adding some kind of error handling to draw_waypoint_window that will just display an error if pcall happens, so you don't have to fight through cumulative errors to close the window
 - [ ] write documentation
     - [ ] quickstart workflow
     - [ ] video
@@ -232,6 +229,7 @@
 - [ ] make a better experience for the non-telescope "locate waypoints within file" command
 - [ ] think about using bufleave to prevent editing another file in the waypoint window with :edit
 - [ ] remove unused vars (use lsp warnings)
+- [ ] fix it so that waypoint window auto-exits when you try to edit a file in it
 
 ### ADVANCED FEATURES:
 
@@ -281,7 +279,6 @@
 - [x] add soft deletes for waypoints
     - [x] handle the case where the extmark gets invalidated (hide the waypoint, but allow it to be brought back if they undo the extmark deletion)
     - [ ] when you undo and that causes a soft delete (i.e. waypoint in new state has existing, but invalid extmark), display a message that waypoint is not shown because its extmark was deleted
-- [ ] fix it so that waypoint window auto-exits when you try to edit a file in it
 
 still got some weird treesitter behavior
 it seems like in the skhd repo I'm using, it will only properly highlight some highlights if the highlight is onscreen or close to it

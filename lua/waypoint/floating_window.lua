@@ -1691,16 +1691,20 @@ function M.clear_state()
   state.sort_by_file_and_line = false
 
   state.should_notify = true
-
-  os.remove(config.file)
 end
 
-function M.clear_state_and_close()
+function M.clear_extmarks()
+  local bufs = vim.api.nvim_list_bufs()
+  for _, bufnr in ipairs(bufs) do
+    vim.api.nvim_buf_clear_namespace(bufnr, constants.ns, 0, -1)
+  end
+end
+
+function M.clear_and_close()
   if is_open then
     M.close()
   end
-  M.clear_state()
-  undo.clear()
+  M.clear()
 end
 
 function M.clear_state_with_confirmation()
@@ -1710,21 +1714,23 @@ function M.clear_state_with_confirmation()
 
   if choice == 1 then
     if is_open then
-      M.clear_state_and_keep_open()
+      M.clear_and_keep_open()
     else
-      M.clear_state()
+      M.clear()
     end
-    local bufs = vim.api.nvim_list_bufs()
-    u.log(bufs)
-    for _, bufnr in ipairs(bufs) do
-      vim.api.nvim_buf_clear_namespace(bufnr, constants.ns, 0, -1)
-    end
-    os.remove(config.file)
   end
 end
 
-function M.clear_state_and_keep_open()
+function M.clear()
   M.clear_state()
+  M.clear_extmarks()
+  undo.clear()
+  os.remove(config.file)
+end
+
+
+function M.clear_and_keep_open()
+  M.clear()
   set_waypoint_keybinds()
   draw_waypoint_window()
 end

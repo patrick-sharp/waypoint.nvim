@@ -128,11 +128,11 @@ function M.run_tests()
   clear_buffers()
   state.should_notify = false
   for _,test in ipairs(test_list.tests) do
-    floating_window.clear_state_and_close()
+    floating_window.clear_and_close()
     state.should_notify = false
     _, test.err = xpcall(test.fn, debug.traceback)
     test.pass = not test.err
-    floating_window.clear_state_and_close()
+    floating_window.clear_and_close()
     state.should_notify = false
     clear_buffers()
     vim.cmd.normal(vim.api.nvim_replace_termcodes('<C-c>', true, false, true)) -- this resets vim.v.count and vim.v.count1, which can persist between tests otherwise
@@ -154,7 +154,7 @@ function M.run_test(opts)
     if test.name == test_name then
       matches = true
       clear_buffers()
-      floating_window.clear_state_and_close()
+      floating_window.clear_and_close()
       local _, err = xpcall(test.fn, debug.traceback)
       if not err then
         message.notify("TEST PASSED", vim.log.levels.INFO)
