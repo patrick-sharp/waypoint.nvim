@@ -1,10 +1,18 @@
 # Development
 
-What I used for developing this:
+This file contains information about what I used to develop waypoint.
 
 ## OS
 
-MacOS
+MacOS Sonoma 14.7.2
+
+## Neovim version
+
+NVIM v0.11.5 Build type: Release LuaJIT 2.1.1765228720
+
+## Lua language server version
+
+3.15.0
 
 ## Lua language server
 
@@ -79,16 +87,20 @@ require("lazy").setup({
 
 ## Running tests
 
-When not in release mode (see the
+When not in release mode (see the is_release field in the 
 [constants.lua](./lua/waypoint/constants.lua) file), waypoint
 will create two commands for running tests: `WaypointRunTests`
 and `WaypointRunTest`.
+
+`WaypointRunTests` runs the entire test suite.
 
 To use `WaypointRunTests`, open neovim in the root of the
 waypoint.nvim repo and run the command
 (`:WaypointRunTests`). This will run all tests, save the
 report of which tests passed and failed, and open that report
 file in neovim.
+
+`WaypointRunTests` runs a single test from the test suite.
 
 To use `WaypointRunTest`, open neovim in the root of the
 waypoint.nvim repo and run the command with the name of the
@@ -97,10 +109,3 @@ test's file. For example, the name of the test in
 ./lua/test/tests/missing_file is "Missing file". To run that
 test, run the command `:WaypointRunTest Missing file`. I use
 this to debug individual tests. 
-
-It's less obvious whether the test passed when you run it
-individually. Sometimes tests cause errors on purpose, so you
-may see errors in your vim messages even for passing tests.
-Tests are considered failed if they trigger an assertion error
-during execution, so if you don't see any assertion errors it
-means the test passed.
