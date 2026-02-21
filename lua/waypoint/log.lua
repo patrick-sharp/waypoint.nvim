@@ -1,6 +1,6 @@
 local constants = require("waypoint.constants")
 
-if constants.debug then
+if not constants.is_release then
   -- delete the debug file on startup
   os.remove(constants.debug_file)
 end
@@ -8,7 +8,8 @@ end
 local counter = 0
 
 -- appends the message to the debug file
-local function p(...)
+local function log(...)
+  if constants.is_release then return end
   local args_table = { n = select('#', ...), ... }
   local inspected = {}
   counter = counter + 1
@@ -26,7 +27,7 @@ local function p(...)
   })
 
   local file = io.open(constants.debug_file, "a")
-  if constants.debug then
+  if not constants.is_release then
     if file then
       file:write(message)
       file:close()
@@ -38,4 +39,4 @@ local function p(...)
   end
 end
 
-return p
+return log

@@ -20,7 +20,6 @@ local window_augroup = "waypoint.window"
 ---@field max_indent integer
 ---@field table_separator string
 ---@field highlights_on boolean
----@field debug boolean
 ---@field debug_file string
 ---@field test_output_file string
 ---@field is_release boolean
@@ -45,17 +44,7 @@ local M = {
   ns = vim.api.nvim_create_namespace(augroup),
   max_indent = 16,
   table_separator = '│',
-  -- ┼ ┴ ┬ ╵ ╷ 
-  -- table_separator = '|',
-  -- table_separator = '-',
-  -- table_separator = '–',
-  -- table_separator = '—',
-  -- table_separator = " ",
-  -- table_separator = "   ",
-  -- table_separator = "·",
-  -- table_separator = "···",
   highlights_on = true,
-  debug = true,
   debug_file = "./debug.log",
   test_output_file = "./test_output.txt",
   is_release = false,
@@ -68,8 +57,5 @@ local M = {
   command_reset = "WaypointReset",
   command_relocate = "WaypointRelocate",
 }
-
--- candidate indentation styles
--- https://en.wikipedia.org/wiki/Box-drawing_characters
 
 return M

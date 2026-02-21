@@ -1,4 +1,4 @@
-local p = require("waypoint.print")
+local log = require("waypoint.log")
 
 local M = {}
 local u = M
@@ -14,8 +14,7 @@ local u = M
 --- @field col_end integer one-indexed inclusive column end for highlight.
 
 function M.log(...)
-  if not debug then return end
-  p(...)
+  log(...)
 end
 
 function M.get_in(t, keys)

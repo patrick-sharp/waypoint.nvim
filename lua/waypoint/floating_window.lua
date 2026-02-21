@@ -1704,6 +1704,26 @@ function M.clear_state_and_close()
   undo.clear()
 end
 
+function M.clear_state_with_confirmation()
+  local choice = vim.fn.confirm(
+    "Clear all state? This will delete your waypoints", "&yes\n&no", 2
+  )
+
+  if choice == 1 then
+    if is_open then
+      M.clear_state_and_keep_open()
+    else
+      M.clear_state()
+    end
+    local bufs = vim.api.nvim_list_bufs()
+    u.log(bufs)
+    for _, bufnr in ipairs(bufs) do
+      vim.api.nvim_buf_clear_namespace(bufnr, constants.ns, 0, -1)
+    end
+    os.remove(config.file)
+  end
+end
+
 function M.clear_state_and_keep_open()
   M.clear_state()
   set_waypoint_keybinds()

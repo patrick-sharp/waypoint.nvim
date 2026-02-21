@@ -117,8 +117,8 @@ function M.setup(opts)
 
   vim.api.nvim_create_user_command(
     constants.command_reset,
-    floating_window.move_waypoints_to_file_command,
-    {nargs = 1}
+    floating_window.clear_state_with_confirmation,
+    {nargs = 0}
   )
 end
 

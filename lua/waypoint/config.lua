@@ -7,7 +7,7 @@
 ---@field color_toggle_off                 string
 ---@field window_width                     number
 ---@field window_height                    number
----@field file                             string
+---@field file                             string the file where waypoints are saved
 ---@field mark_char                        string
 ---@field telescope_filename_width         integer
 ---@field telescope_linenr_width           integer
