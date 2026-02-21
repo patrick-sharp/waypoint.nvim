@@ -585,6 +585,7 @@ end
 -- * Waypoints should not be drawn if their extmark has been deleted
 -- * No operation should affect undrawn waypoints
 -- * Mutations get way easier to do if you don't have to worry about undrawn waypoints
+-- (however, bufferless waypoints should always be drawn)
 ---@return waypoint.DrawnSplit
 function M.split_by_drawn()
   local waypoints

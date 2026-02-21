@@ -128,6 +128,11 @@
 - [x] add ability to add waypoint inserted after the current waypoint, not just at the end
     - [x] write tests for them
 - [x] fix bugs around closing buffers with waypoints in them (use BufDelete autocmd)
+- [x] replace some of my homemade stuff with vim builtins
+    - [x] vim.deepcopy
+- [x] remove inner/outer/top-level/whatever stuff
+- [x] implement some kind of thing to handle errors and rollback state if you encounter them
+- [x] get rid of the rest of the global lua functions in floating_window, replacing them with module-scoped functions
 - [ ] increase the performance of highlights and draw calls in general
 - [ ] think about persisting waypoints on every waypoint state change. maybe every time the waypoint window closes
     - [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
@@ -137,13 +142,13 @@
 - [ ] switch to making new state for saving / loading instead of mutating existing state to get there
 - [ ] create better error handling and reporting
     - [ ] if highlighting fails for some reason, just show an error message and turn off highlighting
-- [ ] implement some kind of thing to handle errors and rollback state if you encounter them
 - [ ] increase ability to recover from erroneous state (grep for <TBD>)
 - [ ] remove all asserts from the code
     - [ ] replace them with something that will only panic in debug mode, and just log in release mode
+    - [ ] make this function use error with level 2 (or 3 or whatev) to keep the traceback clean
+- [ ] fix the test runner to have better traceback (i.e. no assert_eq)
 - [ ] when you change directory, reload waypoints from file (DirChanged autocmd)
 - [ ] see if you can fix the markdown header treesitter highlight bug
-- [ ] get rid of the rest of the global lua functions in floating_window, replacing them with module-scoped functions
 - [ ] add cumulative indent (in visual mode)
 - [ ] think about adding some kind of error handling to draw_waypoint_window that will just display an error if pcall happens, so you don't have to fight through cumulative errors to close the window
 - [ ] write documentation
@@ -166,8 +171,6 @@
         - only supports one mark per file
         - can't reorder/indent
         - can't see context around mark
-- [x] replace some of my homemade stuff with vim builtins
-    - [x] vim.deepcopy
 - [ ] only highlight text that is currently on screen to save perf
     - [ ] make resize callback redraw the window so it will re-highlight
 - [ ] add ability to completely reset state
@@ -175,6 +178,7 @@
     - [x] don't affect state of deleted waypoints 
     - [x] reselect visual after deleting waypoints
     - [x] bulk delete, undo, redo
+    - [x] many existing tests, but with deleted waypoints everywhere
     - [ ] the following:
         - have waypoint saved in json file
         - open vim
@@ -187,11 +191,19 @@
         - waypoint should be deleted
         - undo text change
         - waypoint should be restored
-    - [ ] many existing tests, but with deleted waypoints everywhere
     - [ ] undone deletions should re-show extmark
     - [ ] undone deletions should not re-show invalid extmark
     - [ ] have waypoints, delete one, delete text to make extmarks invalid, undo, check num waypoints
     - [ ] write a test for a file getting renamed while open (use BufFilePost autocmd)
+    - [ ] navigations outside the waypoint window (next/previous etc.)
+    - [ ] doing normal crud operations with waypoints in missing files or outside file range
+    - [ ] multiple waypoints getting moved onto the same line by a filter
+    - [ ] rename file and make sure waypoints in that file are updated
+    - [ ] waypoints being moved after a filter
+    - [ ] filter breaking and vomiting garbage into the buffer
+    - [ ] filter on only part of the buffer
+    - [ ] test the vanilla highlighter
+    - [ ] test the treesitter highlighter
 - [ ] write docs
     - [ ] drawn vs not drawn waypoints
     - [ ] undo and file changes
@@ -209,9 +221,13 @@
       move_to:   move waypoints
       goto:      jump to location in file of waypoint
 - [ ] double check undo/redo messages for anything
+    - [ ] maybe think about making them dynamic (e.g. show message if an un-deleted waypoint isn't shown because its extmark is gone)
 - [ ] add ability to see soft-deleted waypoints in waypoint window (maybe a toggle)
     - [ ] refactor the drawn wpi functions to be clearer
-- [ ] remove inner/outer/top-level/whatever stuff
+- [ ] refactor several things for cleanliness
+    - [ ] make the state in floating window that persists after the render more clear
+    - [x] consolidate split_by_drawn and get_drawn_waypoints
+- [ ] make a better experience for the non-telescope "locate waypoints within file" command
 
 ### ADVANCED FEATURES:
 
@@ -229,22 +245,7 @@
     - [x] keybind: ts to toggle sort 
 - [x] add option for relative waypoint numbers
 - [x] allow for fixing of waypoints for missing files, allowing user to switch all waypoints to a different file
-- [ ] add ability to undo changing waypoints with u
-    - [x] moving up and down
-    - [x] moving waypoints to different files
-    - [x] creating
-    - [x] deleting
-    - [x] indenting and unindenting
-    - [x] moving waypoints to the top and bottom
-    - [x] make the cursor behave better at undo (i.e. move to last change even if change didn't affect the wpi)
-    - [ ] fix bugs with undo
-        - [x] bug when you run sort test, delete, undo
-        - [ ] when you undo/redo, make sure to convert extmarks to buffered/bufferless
-- [x] add soft deletes for waypoints
-    - [x] handle the case where the extmark gets invalidated (hide the waypoint, but allow it to be brought back if they undo the extmark deletion)
-    - [ ] when you undo and that causes a soft delete (i.e. waypoint in new state has existing, but invalid extmark), display a message that waypoint is not shown because its extmark was deleted
-- [ ] fix it so that waypoint window auto-exits when you try to edit a file in it
-- [ ] add visual mode (use ModeChanged command and vim.api.nvim_get_mode().mode)
+- [x] add visual mode (use ModeChanged command and vim.api.nvim_get_mode().mode)
     - [x] stub visual mode
     - [x] make visual mode work correctly with context
     - [x] make gv work properly
@@ -260,13 +261,23 @@
     - [x] reset_waypoint_indent
     - [x] first_waypoint
     - [x] last_waypoint
-    - [ ] move_waypoint_to_top
-    - [ ] move_waypoint_to_bottom
-    - [ ] prev_neighbor_waypoint
-    - [ ] next_neighbor_waypoint
-    - [ ] prev_top_level_waypoint
-    - [ ] next_top_level_waypoint
-
+    - [x] move_waypoint_to_top
+    - [x] move_waypoint_to_bottom
+- [ ] add ability to undo changing waypoints with u
+    - [x] moving up and down
+    - [x] moving waypoints to different files
+    - [x] creating
+    - [x] deleting
+    - [x] indenting and unindenting
+    - [x] moving waypoints to the top and bottom
+    - [x] make the cursor behave better at undo (i.e. move to last change even if change didn't affect the wpi)
+    - [ ] fix bugs with undo
+        - [x] bug when you run sort test, delete, undo
+        - [ ] when you undo/redo, make sure to convert extmarks to buffered/bufferless
+- [x] add soft deletes for waypoints
+    - [x] handle the case where the extmark gets invalidated (hide the waypoint, but allow it to be brought back if they undo the extmark deletion)
+    - [ ] when you undo and that causes a soft delete (i.e. waypoint in new state has existing, but invalid extmark), display a message that waypoint is not shown because its extmark was deleted
+- [ ] fix it so that waypoint window auto-exits when you try to edit a file in it
 
 still got some weird treesitter behavior
 it seems like in the skhd repo I'm using, it will only properly highlight some highlights if the highlight is onscreen or close to it

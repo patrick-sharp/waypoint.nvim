@@ -34,12 +34,6 @@
 ---@field prev_waypoint             waypoint.Keybinding
 ---@field first_waypoint            waypoint.Keybinding
 ---@field last_waypoint             waypoint.Keybinding
----@field prev_neighbor_waypoint    waypoint.Keybinding
----@field next_neighbor_waypoint    waypoint.Keybinding
----@field prev_top_level_waypoint   waypoint.Keybinding
----@field next_top_level_waypoint   waypoint.Keybinding
----@field outer_waypoint            waypoint.Keybinding
----@field inner_waypoint            waypoint.Keybinding
 ---@field open_waypoint_window      waypoint.Keybinding
 ---@field append_waypoint           waypoint.Keybinding
 ---@field insert_waypoint           waypoint.Keybinding
@@ -72,12 +66,6 @@
 ---@field prev_waypoint            waypoint.Keybinding
 ---@field first_waypoint           waypoint.Keybinding
 ---@field last_waypoint            waypoint.Keybinding
----@field outer_waypoint           waypoint.Keybinding
----@field inner_waypoint           waypoint.Keybinding
----@field next_neighbor_waypoint   waypoint.Keybinding
----@field prev_neighbor_waypoint   waypoint.Keybinding
----@field next_top_level_waypoint  waypoint.Keybinding
----@field prev_top_level_waypoint  waypoint.Keybinding
 ---@field delete_waypoint          waypoint.Keybinding
 ---@field current_waypoint         waypoint.Keybinding
 ---@field move_waypoint_down       waypoint.Keybinding
@@ -130,12 +118,6 @@
 ---@field next_waypoint             nil | waypoint.Keybinding
 ---@field first_waypoint            nil | waypoint.Keybinding
 ---@field last_waypoint             nil | waypoint.Keybinding
----@field prev_neighbor_waypoint    nil | waypoint.Keybinding
----@field next_neighbor_waypoint    nil | waypoint.Keybinding
----@field prev_top_level_waypoint   nil | waypoint.Keybinding
----@field next_top_level_waypoint   nil | waypoint.Keybinding
----@field outer_waypoint            nil | waypoint.Keybinding
----@field inner_waypoint            nil | waypoint.Keybinding
 ---@field open_waypoint_window      nil | waypoint.Keybinding
 ---@field append_waypoint           nil | waypoint.Keybinding
 ---@field insert_waypoint           nil | waypoint.Keybinding
@@ -168,12 +150,6 @@
 ---@field prev_waypoint            nil | waypoint.Keybinding
 ---@field first_waypoint           nil | waypoint.Keybinding
 ---@field last_waypoint            nil | waypoint.Keybinding
----@field outer_waypoint           nil | waypoint.Keybinding
----@field inner_waypoint           nil | waypoint.Keybinding
----@field next_neighbor_waypoint   nil | waypoint.Keybinding
----@field prev_neighbor_waypoint   nil | waypoint.Keybinding
----@field next_top_level_waypoint  nil | waypoint.Keybinding
----@field prev_top_level_waypoint  nil | waypoint.Keybinding
 ---@field delete_waypoint          nil | waypoint.Keybinding
 ---@field current_waypoint         nil | waypoint.Keybinding
 ---@field move_waypoint_down       nil | waypoint.Keybinding
@@ -217,12 +193,6 @@ local M = {
       next_waypoint             = "mn",
       first_waypoint            = "mg",
       last_waypoint             = "mG",
-      prev_neighbor_waypoint    = "m[",
-      next_neighbor_waypoint    = "m]",
-      prev_top_level_waypoint   = "m{",
-      next_top_level_waypoint   = "m}",
-      outer_waypoint            = "mo",
-      inner_waypoint            = "mi",
       append_waypoint           = "ma",
       insert_waypoint           = "mi",
       append_annotated_waypoint = "mA",
@@ -254,12 +224,6 @@ local M = {
       next_waypoint           = "j",
       first_waypoint          = "gg",
       last_waypoint           = "G",
-      outer_waypoint          = {"o", "I"},
-      inner_waypoint          = "i",
-      prev_neighbor_waypoint  = "[",
-      next_neighbor_waypoint  = "]",
-      prev_top_level_waypoint = "{",
-      next_top_level_waypoint = "}",
       delete_waypoint         = "d",
       current_waypoint        = "<CR>",
       move_waypoint_up        = "K",

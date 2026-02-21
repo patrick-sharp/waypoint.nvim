@@ -35,15 +35,6 @@ local _ = require'waypoint.test.tests.visual_move'
 local _ = require'waypoint.test.tests.visual_move_bottom'
 local _ = require'waypoint.test.tests.visual_move_top'
 local _ = require'waypoint.test.tests.visual_reselect'
--- other tests to write
--- * advanced navigations (outer/inner/neighbor/top/bottom)
--- * navigations outside the waypoint window (next/previous etc.)
--- * doing normal crud operations with waypoints in missing files or outside file range
--- * multiple waypoints getting moved onto the same line by a filter
--- * rename file and make sure waypoints in that file are updated
--- * waypoints being moved after a filter
--- * filter breaking and vomiting garbage into the buffer
--- * filter on only part of the buffer
 
 local border = "\n================================================================\n"
 local PASS = "✓ PASS"

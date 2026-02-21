@@ -156,70 +156,6 @@ end
 ---@field state_drawn_vis_wpi integer?
 ---@field wpi_from_drawn_wpi integer[]
 
----@return waypoint.DrawnWaypoints
-local function get_drawn_waypoints()
-  -- these are the waypoints we should draw. some waypoints should not be drawn
-  local waypoints = {}
-  ---@type integer | nil
-  local drawn_wpi = nil
-  ---@type integer | nil
-  local drawn_vis_wpi = nil
-  ---@type integer | nil
-  local state_drawn_wpi = nil
-  ---@type integer | nil
-  local state_drawn_vis_wpi = nil
-  ---@type integer[]
-  local wpi_from_drawn_wpi = {}
-
-  local state_waypoints
-  if state.sort_by_file_and_line then
-    state_waypoints = state.sorted_waypoints
-  else
-    state_waypoints = state.waypoints
-  end
-
-  local num_drawn_waypoints = 0
-  for i,wp in ipairs(state_waypoints) do
-    local should_draw = uw.should_draw_waypoint(wp)
-    if should_draw then
-      num_drawn_waypoints = num_drawn_waypoints + 1
-      waypoints[#waypoints+1] = wp
-      wpi_from_drawn_wpi[#wpi_from_drawn_wpi+1] = i
-
-      if drawn_wpi == nil and i >= state.wpi then
-        drawn_wpi = num_drawn_waypoints
-        state_drawn_wpi = i
-      end
-      if state.vis_wpi then
-        if drawn_vis_wpi == nil and state.vis_wpi < state.wpi and state.vis_wpi <= i then
-          drawn_vis_wpi = num_drawn_waypoints
-          state_drawn_vis_wpi = i
-        elseif state.wpi < state.vis_wpi and state.wpi < i and i <= state.vis_wpi then
-          drawn_vis_wpi = num_drawn_waypoints
-          state_drawn_vis_wpi = i
-        end
-      end
-    end
-  end
-  if state.vis_wpi and not drawn_vis_wpi then
-    drawn_vis_wpi = drawn_wpi
-  end
-  if drawn_wpi == nil and num_drawn_waypoints > 0 then
-    drawn_wpi = num_drawn_waypoints
-  end
-  if state.vis_wpi and drawn_vis_wpi == nil and num_drawn_waypoints > 0 then
-    drawn_vis_wpi = num_drawn_waypoints
-  end
-  return {
-    waypoints = waypoints,
-    wpi_from_drawn_wpi = wpi_from_drawn_wpi,
-    drawn_wpi = drawn_wpi,
-    drawn_vis_wpi = drawn_vis_wpi,
-    state_drawn_wpi = state_drawn_wpi,
-    state_drawn_vis_wpi = state_drawn_vis_wpi,
-  }
-end
-
 ---@param option boolean
 ---@return string
 local function get_toggle_hl(option)
@@ -229,9 +165,13 @@ local function get_toggle_hl(option)
   return constants.hl_toggle_off
 end
 
-local function get_bg_win_opts(win_opts, drawn_wpi, drawn_vis_wpi, num_drawn_waypoints)
+---@param win_opts
+---@param split waypoint.DrawnSplit
+local function get_bg_win_opts(win_opts, split)
   assert(win_opts, "win_opts required arg to get_bg_win_opts")
   local bg_win_opts = u.shallow_copy(win_opts)
+
+  local num_drawn_waypoints = #split.drawn
 
   local hpadding = constants.background_window_hpadding
   local vpadding = constants.background_window_vpadding
@@ -259,13 +199,16 @@ local function get_bg_win_opts(win_opts, drawn_wpi, drawn_vis_wpi, num_drawn_way
 
   local wpi_info
 
-  if drawn_wpi == nil then
+  local cursor_i = split.cursor_i
+  local cursor_vis_i = split.cursor_vis_i
+
+  if cursor_i == nil then
     wpi_info = {"No waypoints", constants.hl_footer_waypoint_nr}
-  elseif drawn_vis_wpi == nil then
-    wpi_info = {drawn_wpi .. '/' .. num_drawn_waypoints, constants.hl_footer_waypoint_nr }
+  elseif split.cursor_vis_i == nil then
+    wpi_info = {cursor_i .. '/' .. num_drawn_waypoints, constants.hl_footer_waypoint_nr }
   else
-    local lower = math.min(drawn_wpi, drawn_vis_wpi)
-    local higher = math.max(drawn_wpi, drawn_vis_wpi)
+    local lower = math.min(cursor_i, cursor_vis_i)
+    local higher = math.max(cursor_i, cursor_vis_i)
     wpi_info = {lower .. "-" .. higher .. '/' .. #state.waypoints, constants.hl_footer_waypoint_nr }
   end
   bg_win_opts.footer = {
@@ -333,25 +276,22 @@ local function draw_waypoint_window(action)
     num_lines_after = 0
   end
 
-  local drawn_waypoints = get_drawn_waypoints()
-  local waypoints = drawn_waypoints.waypoints
-  local drawn_wpi = drawn_waypoints.drawn_wpi
-  local drawn_vis_wpi = drawn_waypoints.drawn_vis_wpi
-  local state_drawn_wpi = drawn_waypoints.state_drawn_wpi
-  local state_drawn_vis_wpi = drawn_waypoints.state_drawn_vis_wpi
-  local wpi_from_drawn_wpi = drawn_waypoints.wpi_from_drawn_wpi
+  local split = uw.split_by_drawn()
+  local drawn = split.drawn
+  local cursor_i = split.cursor_i
+  local cursor_vis_i = split.cursor_vis_i
+  local wpi_from_drawn_i = split.wpi_from_drawn_i
 
-  -- In general, we don't want to be updating state on draw calls, but this simplifies things a lot
-  if state_drawn_wpi then
-    state.wpi = state_drawn_wpi
+  -- In general, we don't want to be updating state on draw calls, but this simplifies things a lot.
+  -- This basically updates the wpi if either the cursor or the vis cursor are on an undrawn waypoint.
+  if cursor_i then
+    state.wpi = wpi_from_drawn_i[cursor_i]
   end
-  if state_drawn_vis_wpi then
-    state.vis_wpi = state_drawn_vis_wpi
+  if cursor_vis_i then
+    state.vis_wpi = wpi_from_drawn_i[cursor_vis_i]
   end
 
-  local num_drawn_waypoints = #waypoints
-
-  for i, waypoint in ipairs(waypoints) do
+  for i, waypoint in ipairs(drawn) do
     --- @type waypoint.WaypointContext
     local waypoint_file_text = uw.get_waypoint_context(
       waypoint,
@@ -366,13 +306,13 @@ local function draw_waypoint_window(action)
     local file_end_idx = waypoint_file_text.file_end_idx
     assert(extmark_lines)
 
-    if i == drawn_wpi then
+    if i == cursor_i then
       ctx_start = #rows
       waypoint_topline = #rows + 1
       waypoint_bottomline = #rows + #extmark_lines
       cursor_line = #rows + extmark_line
     end
-    if i == drawn_vis_wpi then
+    if i == cursor_vis_i then
       vis_ctx_start = #rows
     end
 
@@ -381,17 +321,17 @@ local function draw_waypoint_window(action)
       --- @type waypoint.HighlightRange[]
       local line_extmark_hlranges = extmark_hlranges[j]
       table.insert(indents, waypoint.indent * config.indent_width)
-      table.insert(line_to_waypoint, wpi_from_drawn_wpi[i])
+      table.insert(line_to_waypoint, wpi_from_drawn_i[i])
       local row = {}
 
       -- waypoint number
       if j == extmark_line + 1 then
         -- if this is line the waypoint is on
         if config.enable_relative_waypoint_numbers then
-          if i == drawn_wpi then
-            table.insert(row, tostring(drawn_wpi))
+          if i == cursor_i then
+            table.insert(row, tostring(cursor_i))
           else
-            table.insert(row, tostring((math.abs(i - drawn_wpi))))
+            table.insert(row, tostring((math.abs(i - cursor_i))))
           end
         else
           table.insert(row, tostring(i))
@@ -453,21 +393,21 @@ local function draw_waypoint_window(action)
       table.insert(rows, row)
       table.insert(hlranges, line_hlranges)
     end
-    if i == drawn_wpi then
+    if i == cursor_i then
       ctx_end = #rows
     end
-    if i == drawn_vis_wpi then
+    if i == cursor_vis_i then
       vis_ctx_end = #rows
     end
     local has_context = state.before_context ~= 0
     has_context = has_context or state.context ~= 0
     has_context = has_context or state.after_context ~= 0
-    if state.show_context and has_context and i < #waypoints then
+    if state.show_context and has_context and i < #drawn then
       table.insert(rows, "")
       table.insert(indents, 0)
       -- if the user somehow moves to a blank space, just treat that as 
       -- selecting the waypoint above the space
-      table.insert(line_to_waypoint, wpi_from_drawn_wpi[i])
+      table.insert(line_to_waypoint, wpi_from_drawn_i[i])
       table.insert(hlranges, {})
     end
   end
@@ -566,7 +506,7 @@ local function draw_waypoint_window(action)
   end
 
   local waypoint_context_lines = (state.before_context + state.context + 1 + state.context + state.after_context)
-  if (drawn_wpi) then
+  if (cursor_i) then
     assert(ctx_start)
     assert(ctx_end)
     assert(cursor_line)
@@ -581,8 +521,8 @@ local function draw_waypoint_window(action)
       if has_spacer then
         waypoint_context_lines = waypoint_context_lines + 1
       end
-      local vis_v_line      = (waypoint_context_lines) * (drawn_vis_wpi - 1) + state.before_context + state.context + 1
-      local vis_cursor_line = (waypoint_context_lines) * (drawn_wpi     - 1) + state.before_context + state.context + 1
+      local vis_v_line      = (waypoint_context_lines) * (cursor_vis_i - 1) + state.before_context + state.context + 1
+      local vis_cursor_line = (waypoint_context_lines) * (cursor_i     - 1) + state.before_context + state.context + 1
 
       -- note that this doesn't really handle virtual columns, just char indexes.
       -- I figured this wasn't that important to add since the cursor will jump anyway.
@@ -597,7 +537,7 @@ local function draw_waypoint_window(action)
     -- if in visual mode, set the visual range. this is important because
     -- increasing/decreasing the context while in visual mode causes the visual
     -- mode to be in the wrong place. We need to do this before calling 
-    if drawn_vis_wpi then
+    if cursor_vis_i then
       assert(ctx_start)
       assert(vis_ctx_start)
       assert(ctx_end)
@@ -615,7 +555,7 @@ local function draw_waypoint_window(action)
       do
         local vis_cursor_line
         local wpi_cursor_line
-        if drawn_wpi < drawn_vis_wpi then
+        if cursor_i < cursor_vis_i then
           wpi_cursor_line = cursor_start_line
           vis_cursor_line = cursor_end_line
         else
@@ -675,7 +615,7 @@ local function draw_waypoint_window(action)
 
     -- if we're in visual mode, highlight visual selection.
     -- otherwise, highlight current waypoint with constants.hl_selected
-    if drawn_vis_wpi then
+    if cursor_vis_i then
       local highlight_start = math.min(
         ctx_start,
         vis_ctx_start
@@ -698,7 +638,7 @@ local function draw_waypoint_window(action)
 
   -- update window config, used to update the footer a/b/c indicators and the size of the window
   local win_opts = get_win_opts()
-  local bg_win_opts = get_bg_win_opts(win_opts, drawn_wpi, drawn_vis_wpi, num_drawn_waypoints)
+  local bg_win_opts = get_bg_win_opts(win_opts, split)
   vim.api.nvim_win_set_config(winnr, win_opts)
   vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
 
@@ -788,12 +728,6 @@ local function set_waypoint_keybinds()
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "next_waypoint",           M.next_waypoint)
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "first_waypoint",          M.move_to_first_waypoint)
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "last_waypoint",           M.move_to_last_waypoint)
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "prev_neighbor_waypoint",  ":<C-u>lua MoveToPrevNeighborWaypoint(true)<CR>")
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "next_neighbor_waypoint",  ":<C-u>lua MoveToNextNeighborWaypoint(true)<CR>")
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "prev_top_level_waypoint", ":<C-u>lua MoveToPrevTopLevelWaypoint(true)<CR>")
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "next_top_level_waypoint", ":<C-u>lua MoveToNextTopLevelWaypoint(true)<CR>")
-  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "outer_waypoint",          ":<C-u>lua MoveToOuterWaypoint(true)<CR>")
-  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "inner_waypoint",          ":<C-u>lua MoveToInnerWaypoint(true)<CR>")
 
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_up",        M.move_waypoint_up)
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_down",      M.move_waypoint_down)
@@ -822,12 +756,6 @@ M.global_keybindings_description = {
   {"next_waypoint"            ,  "Jump to next waypoint"}                                                                              ,
   {"first_waypoint"           ,  "Jump to first waypoint"}                                                                             ,
   {"last_waypoint"            ,  "Jump to last waypoint"}                                                                              ,
-  {"prev_neighbor_waypoint"   ,  "Jump to the previous waypoint at the same indentation"}                                              ,
-  {"next_neighbor_waypoint"   ,  "Jump to the next waypoint at the same indentation"}                                                  ,
-  {"prev_top_level_waypoint"  ,  "Jump to the previous unindented waypoint"}                                                           ,
-  {"next_top_level_waypoint"  ,  "Jump to the next unindented waypoint"}                                                               ,
-  {"outer_waypoint"           ,  "Jump to the previous waypoint indented one level less"}                                              ,
-  {"inner_waypoint"           ,  "Jump to the next waypoint indented one level more"}                                                  ,
 }
 
 M.waypoint_window_keybindings_description = {
@@ -862,12 +790,6 @@ M.waypoint_window_keybindings_description = {
   {"prev_waypoint"            , "Move to the previous waypoint in the waypoint window"}        ,
   {"first_waypoint"           , "Move to the first waypoint in the waypoint window"}           ,
   {"last_waypoint"            , "Move to the last waypoint in the waypoint window"}            ,
-  {"outer_waypoint"           , "Move to the previous waypoint indented one level less"}       ,
-  {"inner_waypoint"           , "Move to the next waypoint indented one level more"}           ,
-  {"prev_neighbor_waypoint"   , "Move to the previous waypoint at the same indentation"}       ,
-  {"next_neighbor_waypoint"   , "Move to the next waypoint at the same indentation"}           ,
-  {"prev_top_level_waypoint"  , "Move to the previous unindented waypoint"}                    ,
-  {"next_top_level_waypoint"  , "Move to the next unindented waypoint"}                        ,
   {"move_waypoints_to_file"   , "Move all waypoints in one file to another file"}              ,
   {"undo"                     , "Undo the last change to the waypoints"}                       ,
   {"redo"                     , "Redo the last undone change to the waypoints"}                ,
@@ -991,11 +913,8 @@ local function draw_help()
 
   -- update window config, used to update the footer a/b/c indicators and the size of the window
   local win_opts = get_win_opts()
-  local drawn_waypoints = get_drawn_waypoints()
-  local waypoints = drawn_waypoints.waypoints
-  local drawn_wpi = drawn_waypoints.drawn_wpi
-  local drawn_vis_wpi = drawn_waypoints.drawn_vis_wpi
-  local bg_win_opts = get_bg_win_opts(win_opts, drawn_wpi, drawn_vis_wpi, #waypoints)
+  local split = uw.split_by_drawn()
+  local bg_win_opts = get_bg_win_opts(win_opts, split)
   vim.api.nvim_win_set_config(winnr, win_opts)
   vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
 
@@ -1449,134 +1368,6 @@ function M.move_to_last_waypoint()
   draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
 end
 
-function MoveToOuterWaypoint(draw)
-  if state.wpi == nil then return end
-  for _=1, vim.v.count1 do
-    local current_indent = state.waypoints[state.wpi].indent
-    while state.wpi > 1 and state.waypoints[state.wpi].indent >= current_indent do
-      state.wpi = state.wpi - 1
-    end
-  end
-  if draw then
-    draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
-  end
-end
-
-function MoveToInnerWaypoint(draw)
-  if state.wpi == nil then return end
-  for _=1, vim.v.count1 do
-    local current_indent = state.waypoints[state.wpi].indent
-    local i = state.wpi
-    while i < #state.waypoints and state.waypoints[i].indent == current_indent do
-      i = i + 1
-    end
-    if state.waypoints[i].indent > current_indent then
-      state.wpi = i
-    end
-  end
-  if draw then
-    draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
-  end
-end
-
-
-function M.GoToOuterWaypoint()
-  MoveToOuterWaypoint(false)
-  M.go_to_current_waypoint()
-end
-
-function M.GoToInnerWaypoint()
-  MoveToInnerWaypoint(false)
-  M.go_to_current_waypoint()
-end
-
-function MoveToPrevNeighborWaypoint(draw)
-  if state.wpi == nil or state.wpi == 1 then return end
-  for _=1, vim.v.count1 do
-    local current_indent = state.waypoints[state.wpi].indent
-    local i = state.wpi - 1
-    while i > 1 and state.waypoints[i].indent > current_indent do
-      i = i - 1
-    end
-    if state.waypoints[i].indent == state.waypoints[state.wpi].indent then
-      state.wpi = i
-    end
-  end
-  if draw then
-    draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
-  end
-end
-
-function MoveToNextNeighborWaypoint(draw)
-  if state.wpi == nil or state.wpi == #state.waypoints then return end
-  for _=1, vim.v.count1 do
-    local current_indent = state.waypoints[state.wpi].indent
-    local i = state.wpi + 1
-    while i < #state.waypoints and state.waypoints[i].indent > current_indent do
-      i = i + 1
-    end
-    if state.waypoints[i].indent == state.waypoints[state.wpi].indent then
-      state.wpi = i
-    end
-  end
-  if draw then
-    draw_waypoint_window("move_to_waypoint")
-  end
-end
-
-function M.GoToPrevNeighborWaypoint()
-  MoveToPrevNeighborWaypoint(false)
-  M.go_to_current_waypoint()
-end
-
-function M.GoToNextNeighborWaypoint()
-  MoveToNextNeighborWaypoint(false)
-  M.go_to_current_waypoint()
-end
-
-function MoveToPrevTopLevelWaypoint(draw)
-  if state.wpi == nil or state.wpi == 1 then return end
-  for _=1, vim.v.count1 do
-    local i = state.wpi - 1
-    while i > 1 and state.waypoints[i].indent > 0 do
-      i = i - 1
-    end
-    if state.waypoints[i].indent == 0 then
-      state.wpi = i
-    end
-  end
-  if draw then
-    draw_waypoint_window("move_to_waypoint")
-  end
-end
-
-
-function MoveToNextTopLevelWaypoint(draw)
-  if state.wpi == nil or state.wpi == #state.waypoints then return end
-  for _=1, vim.v.count1 do
-    local i = state.wpi + 1
-    while i < #state.waypoints and state.waypoints[i].indent > 0 do
-      i = i + 1
-    end
-    if state.waypoints[i].indent == 0 then
-      state.wpi = i
-    end
-  end
-  if draw then
-    draw_waypoint_window("move_to_waypoint")
-  end
-end
-
-function M.GoToPrevTopLevelWaypoint()
-  MoveToPrevTopLevelWaypoint(false)
-  M.go_to_current_waypoint()
-end
-
-function M.GoToNextTopLevelWaypoint()
-  MoveToNextTopLevelWaypoint(false)
-  M.go_to_current_waypoint()
-end
-
 ---@param source_file_path string
 ---@param dest_file_path string
 ---@return boolean # if the move was successful
@@ -1702,13 +1493,11 @@ M.set_waypoint_for_cursor = set_waypoint_for_cursor
 
 function M.resize()
   local win_opts = get_win_opts()
-  local drawn_waypoints = get_drawn_waypoints()
-  local waypoints = drawn_waypoints.waypoints
-  local drawn_wpi = drawn_waypoints.drawn_wpi
-  local drawn_vis_wpi = drawn_waypoints.drawn_vis_wpi
-  local bg_win_opts = get_bg_win_opts(win_opts, drawn_wpi, drawn_vis_wpi, #waypoints)
+  local split = uw.split_by_drawn()
+  local bg_win_opts = get_bg_win_opts(win_opts, split)
   vim.api.nvim_win_set_config(winnr, win_opts)
   vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
+  -- TODO: once you add perf optimization, redraw here
 end
 
 function M.delete_curr()
@@ -1826,11 +1615,8 @@ function M.open()
   })
 
   local win_opts = get_win_opts()
-  local drawn_waypoints = get_drawn_waypoints()
-  local waypoints = drawn_waypoints.waypoints
-  local drawn_wpi = drawn_waypoints.drawn_wpi
-  local drawn_vis_wpi = drawn_waypoints.drawn_vis_wpi
-  local bg_win_opts = get_bg_win_opts(win_opts, drawn_wpi, drawn_vis_wpi, #waypoints)
+  local split = uw.split_by_drawn()
+  local bg_win_opts = get_bg_win_opts(win_opts, split)
 
   -- Create the background
   bg_winnr = vim.api.nvim_open_win(bg_bufnr, false, bg_win_opts)
