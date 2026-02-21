@@ -26,12 +26,13 @@ describe('Buffer callbacks', function()
 
   tu.assert_eq(3, #state.waypoints)
   tu.assert_eq(7,       uw.linenr_from_waypoint(state.waypoints[1]))
-  tu.assert_eq(file_0,  u.buf_path(state.waypoints[1].bufnr))
+  tu.assert_eq(file_0,  u.path_from_buf(state.waypoints[1].bufnr))
   tu.assert_eq(8,       uw.linenr_from_waypoint(state.waypoints[2]))
-  tu.assert_eq(file_0,  u.buf_path(state.waypoints[2].bufnr))
+  tu.assert_eq(file_0,  u.path_from_buf(state.waypoints[2].bufnr))
   tu.assert_eq(11,      uw.linenr_from_waypoint(state.waypoints[3]))
-  tu.assert_eq(file_1,  u.buf_path(state.waypoints[3].bufnr))
+  tu.assert_eq(file_1,  u.path_from_buf(state.waypoints[3].bufnr))
 
+  -- TODO: finish
   vim.api.nvim_buf_delete(vim.fn.bufnr(file_0), { force = true })
 
   -- assert waypoints are in deleted state

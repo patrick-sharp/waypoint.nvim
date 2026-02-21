@@ -261,7 +261,7 @@ end
 
 ---@param bufnr integer
 ---@return string
-function M.buf_path(bufnr)
+function M.path_from_buf(bufnr)
   local path = vim.api.nvim_buf_get_name(bufnr)
   return vim.fn.fnamemodify(path, ":.")
 end
@@ -311,6 +311,11 @@ function M.switch_visual()
   vim.cmd.normal({args={"o"}, bang=true})
 end
 
+---@param bufnr integer
+---@param linenr integer one-indexed line number
+---@return string
+function M.get_line_text(bufnr, linenr)
+  return vim.api.nvim_buf_get_lines(bufnr, linenr - 1, linenr, true)[1]
+end
+
 return M
-
-

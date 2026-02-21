@@ -204,6 +204,7 @@
     - [ ] filter on only part of the buffer
     - [ ] test the vanilla highlighter
     - [ ] test the treesitter highlighter
+    - [ ] loading bad state from json file
 - [ ] write docs
     - [ ] drawn vs not drawn waypoints
     - [ ] undo and file changes
@@ -225,9 +226,12 @@
 - [ ] add ability to see soft-deleted waypoints in waypoint window (maybe a toggle)
     - [ ] refactor the drawn wpi functions to be clearer
 - [ ] refactor several things for cleanliness
-    - [ ] make the state in floating window that persists after the render more clear
     - [x] consolidate split_by_drawn and get_drawn_waypoints
+    - [ ] make the state in floating window that persists after the render more clear
+    - [ ] investigate extmark_from_id vs buf_get_extmark
 - [ ] make a better experience for the non-telescope "locate waypoints within file" command
+- [ ] think about using bufleave to prevent editing another file in the waypoint window with :edit
+- [ ] remove unused vars (use lsp warnings)
 
 ### ADVANCED FEATURES:
 
@@ -273,7 +277,7 @@
     - [x] make the cursor behave better at undo (i.e. move to last change even if change didn't affect the wpi)
     - [ ] fix bugs with undo
         - [x] bug when you run sort test, delete, undo
-        - [ ] when you undo/redo, make sure to convert extmarks to buffered/bufferless
+        - [x] when you undo/redo, convert waypoints to UndoNodeWaypoints
 - [x] add soft deletes for waypoints
     - [x] handle the case where the extmark gets invalidated (hide the waypoint, but allow it to be brought back if they undo the extmark deletion)
     - [ ] when you undo and that causes a soft delete (i.e. waypoint in new state has existing, but invalid extmark), display a message that waypoint is not shown because its extmark was deleted

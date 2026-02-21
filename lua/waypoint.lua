@@ -110,7 +110,13 @@ function M.setup(opts)
   -- waypoints to the new path.
   -- If someone actually wants to all this programatically, they can use the floating_window.move_waypoints_to_file function directly
   vim.api.nvim_create_user_command(
-    'MoveWaypointsToFile',
+    constants.command_relocate,
+    floating_window.move_waypoints_to_file_command,
+    {nargs = 1}
+  )
+
+  vim.api.nvim_create_user_command(
+    constants.command_reset,
     floating_window.move_waypoints_to_file_command,
     {nargs = 1}
   )

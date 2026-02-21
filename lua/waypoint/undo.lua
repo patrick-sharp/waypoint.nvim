@@ -4,11 +4,11 @@ local config = require"waypoint.config"
 local message = require"waypoint.message"
 local ring_buffer = require"waypoint.ring_buffer"
 local state = require"waypoint.state"
+local u = require"waypoint.utils"
 local uw = require"waypoint.utils_waypoint"
-local constants = require"waypoint.constants"
 
 ---@class waypoint.UndoNode
----@field waypoints waypoint.Waypoint[]
+---@field waypoints waypoint.UndoNodeWaypoint[]
 ---@field wpi integer | nil
 ---@field undo_msg string
 ---@field redo_msg string
@@ -23,17 +23,65 @@ local constants = require"waypoint.constants"
 -- no next state
 M.states = ring_buffer.new(config.max_msg_history)
 
+---@return waypoint.UndoNodeWaypoint[]
+function M.undo_node_waypoints_from_waypoints()
+  ---@type waypoint.UndoNodeWaypoint[]
+  local result = {}
+
+  for _,wp in ipairs(state.waypoints) do
+    local linenr = wp.linenr or uw.linenr_from_waypoint(wp)
+    assert(linenr)
+
+    result[#result+1] = {
+      indent     = wp.indent,
+      annotation = wp.annotation,
+      bufnr      = wp.bufnr,
+      extmark_id = wp.extmark_id,
+      filepath   = wp.filepath or u.path_from_buf(wp.bufnr),
+      text       = wp.text or u.get_line_text(wp.bufnr, linenr),
+      linenr     = linenr,
+    }
+  end
+
+  return result
+end
+
+---@param undo_node_waypoints waypoint.UndoNodeWaypoint[]
+---@return waypoint.Waypoint[]
+function M.waypoints_from_undo_node_waypoints(undo_node_waypoints)
+  ---@type waypoint.Waypoint[]
+  local result = {}
+
+  for _, wp in ipairs(undo_node_waypoints) do
+    local linenr = wp.linenr or uw.linenr_from_extmark_id(wp.extmark_id)
+    assert(linenr)
+
+    local has_buffer = u.is_buffer_valid(wp.bufnr)
+
+    result[#result+1] = {
+      has_buffer = has_buffer,
+      indent     = wp.indent,
+      annotation = wp.annotation,
+      bufnr      = has_buffer and wp.bufnr or nil,
+      extmark_id = has_buffer and wp.extmark_id or nil,
+      filepath   = (not has_buffer) and wp.filepath or nil,
+      text       = (not has_buffer) and wp.text or nil,
+      linenr     = (not has_buffer) and linenr or nil,
+    }
+  end
+
+  return result
+end
+
 ---@param undo_msg string
 ---@param redo_msg string
 ---@param change_wpi integer | nil
 function M.save_state(undo_msg, redo_msg, change_wpi)
   message.notify(redo_msg, vim.log.levels.INFO)
 
-  local waypoints = vim.deepcopy(state.waypoints)
-
   ---@type waypoint.UndoNode
   local undo_node = {
-    waypoints = waypoints,
+    waypoints = M.undo_node_waypoints_from_waypoints(),
     wpi = change_wpi or state.wpi,
     undo_msg = undo_msg,
     redo_msg = redo_msg,
@@ -83,7 +131,7 @@ function M.undo()
   prev_state, ok = ring_buffer.peek(M.states)
   assert(ok)
 
-  state.waypoints = vim.deepcopy(prev_state.waypoints)
+  state.waypoints = M.waypoints_from_undo_node_waypoints(prev_state.waypoints)
   state.wpi = prev_state.wpi
   uw.make_sorted_waypoints()
   M.set_extmarks_for_state()
@@ -99,7 +147,7 @@ function M.redo()
     return false
   end
   local next_state, _ = ring_buffer.peek(M.states)
-  state.waypoints = vim.deepcopy(next_state.waypoints)
+  state.waypoints = M.waypoints_from_undo_node_waypoints(next_state.waypoints)
   state.wpi = next_state.wpi
   uw.make_sorted_waypoints()
   M.set_extmarks_for_state()

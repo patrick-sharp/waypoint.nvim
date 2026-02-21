@@ -180,6 +180,9 @@ local function load_decoded_state_into_state(decoded)
         else
           waypoint.extmark_id = -1
         end
+        waypoint.filepath = nil
+        waypoint.linenr = nil
+        waypoint.text = nil
       else
         waypoint.has_buffer = false
         waypoint.extmark_id = nil

@@ -12,15 +12,29 @@
 -- when a buffer with waypoints is closed, we hook onto the BufUnload autocmd to convert buffer waypoints into bufferless waypoints
 
 ---@class waypoint.Waypoint
----@field has_buffer  boolean
----@field extmark_id  integer | nil the id of the extmark within the buffer. Note that these are not unique globally. Can become stale if extmark is deleted for any reason (e.g. the buffer is closed)
----@field bufnr       integer | nil the buffer number the waypoint is in. can become stale if the file is deleted and reopened.
+---@field has_buffer  boolean whether this waypoint is located in an open buffer.
+--fields used by buffered and bufferless waypoints
+---@field indent      integer
+---@field error       string | nil
+---@field annotation  string | nil
+-- fields used by buffered waypoints
+---@field bufnr       integer | nil the buffer number the waypoint is in.
+---@field extmark_id  integer | nil the id of the extmark within the buffer. Note that these are not unique globally.
+-- fields used by bufferless waypoints
+---@field filepath    string | nil relative path to file the waypoint is in. Does NOT start with ./, i.e. a path to ./lua/myfile.lua would be stored as lua/myfile.lua
+---@field linenr      integer | nil the one-indexed line number the waypoint is on.
+---@field text        string | nil text of the line the waypoint is on.
+
+-- This class exists because we want to be able to restore a waypoint's state from the undo stack either using an open buffer or from a file
+-- It has the fields of both bufferless and buffered waypoints
+---@class waypoint.UndoNodeWaypoint
 ---@field indent      integer
 ---@field annotation  string | nil
+---@field bufnr       integer | nil the buffer number the waypoint is in.
+---@field extmark_id  integer | nil the id of the extmark within the buffer. Note that these are not unique globally.
 ---@field filepath    string | nil relative path to file the waypoint is in. Does NOT start with ./, i.e. a path to ./lua/myfile.lua would be stored as lua/myfile.lua
----@field text        string | nil
----@field linenr      integer | nil the one-indexed line number the waypoint is on. Can become stale if a buffer edit causes the extmark to move.
----@field error       string | nil
+---@field text        string | nil text of the line the waypoint is on.
+---@field linenr      integer | nil the one-indexed line number the waypoint is on.
 
 ---@class waypoint.State
 ---@field load_error            string | nil if there was an error loading the file. if so, we show it in the waypoint window

@@ -19,6 +19,9 @@ local bg_bufnr
 local help_bufnr
 local winnr
 local bg_winnr
+
+-- we persist some data about the previous draw here so that we can access it in autocmd calbacks.
+-- e.g. in CursorMoved:
 -- if the user does something to move the cursor to another line, we want to set
 -- the new selected waypoint to whatever waypoint the cursor is currently on
 local line_to_waypoint
@@ -26,21 +29,21 @@ local longest_line_len
 
 -- vis_cursor means last position of cursor in visual mode
 -- vis_v means last position of other side of visual selection
----@type integer | nil
+---@type integer?
 local vis_cursor_wpi = nil
----@type integer | nil
+---@type integer?
 local vis_cursor_col = nil
----@type integer | nil
+---@type integer?
 local vis_cursor_offset = nil
 
----@type integer | nil
+---@type integer?
 local vis_v_wpi = nil
----@type integer | nil
+---@type integer?
 local vis_v_col = nil
----@type integer | nil
+---@type integer?
 local vis_v_offset = nil
 
----@type string | nil
+---@type string?
 local last_visual_mode = nil
 
 local function keymap_opts(bufnr)
@@ -230,7 +233,7 @@ local function draw_waypoint_window(action)
     vim.api.nvim_buf_set_lines(wp_bufnr, 0, -1, true, {
       state.load_error,
       -- TODO: fix this
-      "Press <TBD> to delete the file and clear all waypoint state"
+      "Run :WaypointReset to delete saved waypoints and clear all waypoint state"
     })
     set_modifiable(wp_bufnr, false)
     return
@@ -1515,19 +1518,22 @@ end
 function M.set_quickfix_list()
   local qflist = {}
   for _,waypoint in pairs(state.waypoints) do
-    local bufnr = vim.fn.bufnr(waypoint.filepath)
+    local bufnr = waypoint.bufnr or vim.fn.bufnr(waypoint.filepath)
+    local filepath = waypoint.filepath or u.path_from_buf(bufnr)
+    u.log(bufnr, waypoint)
     local extmark = uw.buf_get_extmark(bufnr, waypoint.extmark_id)
     if extmark then
       local lnum = extmark[1]
       local line = vim.api.nvim_buf_get_lines(bufnr, lnum - 1, lnum, false)[1]
       table.insert(qflist, {
-        filename = waypoint.filepath,
+        filename = filepath,
         lnum = lnum,
         col = 0,
         text = line,
       })
     end
   end
+  u.log(qflist)
   vim.fn.setqflist(qflist, 'r')
   vim.cmd('copen')
 end
@@ -1660,7 +1666,6 @@ function M.close()
   winnr = nil
   bg_winnr = nil
   help_bufnr = nil
-  -- state.vis_wpi = nil -- since the mode_change autocomd won't fire when we leave, we have to reset this now
 end
 
 function M.clear_state()

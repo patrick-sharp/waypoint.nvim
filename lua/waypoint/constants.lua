@@ -65,6 +65,8 @@ local M = {
   background_window_vpadding = 1,
   background_window_hpadding = 2,
   int_32_max = 2147483647,
+  command_reset = "WaypointReset",
+  command_relocate = "WaypointRelocate",
 }
 
 -- candidate indentation styles

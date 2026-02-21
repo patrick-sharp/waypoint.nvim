@@ -15,21 +15,35 @@ function M.bufnr_from_waypoint(waypoint)
   return bufnr, u.is_buffer_valid(bufnr)
 end
 
+---@return vim.api.keyset.get_extmark_item_by_id | nil
+function M.extmark_from_id(bufnr, id)
+  --- @type vim.api.keyset.get_extmark_item_by_id
+  local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, id, {details=true})
+  if #extmark == 0 then
+    return nil
+  end
+  return extmark
+end
+
+---@param bufnr integer
+---@param extmark_id integer?
+---@return integer?
+function M.linenr_from_extmark_id(bufnr, extmark_id)
+  local extmark = M.extmark_from_id(bufnr, extmark_id)
+  if not extmark then return nil end
+  return extmark[1] + 1 -- convert from zero-indexed to one-indexed
+end
+
 -- also returns values from bufnr_from_waypoint to avoid redundancy
 ---@param waypoint waypoint.Waypoint
----@return vim.api.keyset.get_extmark_item_by_id | nil
+---@return vim.api.keyset.get_extmark_item_by_id?
 function M.extmark_from_waypoint(waypoint)
   local bufnr, ok = M.bufnr_from_waypoint(waypoint)
   if not ok or waypoint.extmark_id == -1 or waypoint.extmark_id == nil then
     return nil
   end
 
-  --- @type vim.api.keyset.get_extmark_item_by_id
-  local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, waypoint.extmark_id, {details=true})
-  if #extmark == 0 then
-    return nil
-  end
-  return extmark
+  return M.extmark_from_id(bufnr, waypoint.extmark_id)
 end
 
 ---@param waypoint waypoint.Waypoint
@@ -39,11 +53,11 @@ function M.filepath_from_waypoint(waypoint)
     return waypoint.filepath
   end
   assert(u.is_buffer_valid(waypoint.bufnr), "bufnr of " .. tostring(waypoint.bufnr) .. " is invalid")
-  return u.buf_path(waypoint.bufnr)
+  return u.path_from_buf(waypoint.bufnr)
 end
 
 ---@param waypoint waypoint.Waypoint
----@return integer | nil the one-indexed line number a waypoint's extmark is on, or nil if it doesn't have one
+---@return integer? the one-indexed line number a waypoint's extmark is on, or nil if it doesn't have one
 function M.linenr_from_waypoint(waypoint)
   local extmark = M.extmark_from_waypoint(waypoint)
   if not extmark then return nil end
@@ -361,10 +375,15 @@ end
 ---@param a waypoint.Waypoint
 ---@param b waypoint.Waypoint
 local function waypoint_compare(a, b)
-  if a.filepath == b.filepath then
-    return a.linenr < b.linenr
+  local a_filepath = a.has_buffer and u.path_from_buf(a.bufnr) or a.filepath
+  local a_linenr = a.has_buffer and M.linenr_from_waypoint(a) or a.linenr
+  local b_filepath = b.has_buffer and u.path_from_buf(b.bufnr) or b.filepath
+  local b_linenr = b.has_buffer and M.linenr_from_waypoint(b) or b.linenr
+
+  if a_filepath == b_filepath then
+    return a_linenr < b_linenr
   end
-  return a.filepath < b.filepath
+  return a_filepath < b_filepath
 end
 
 function M.make_sorted_waypoints()
@@ -682,6 +701,5 @@ function M.recombine_drawn_split(split)
   state.waypoints = waypoints
   M.make_sorted_waypoints()
 end
-
 
 return M
