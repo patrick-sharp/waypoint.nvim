@@ -133,6 +133,7 @@
 - [x] remove inner/outer/top-level/whatever stuff
 - [x] implement some kind of thing to handle errors and rollback state if you encounter them
 - [x] get rid of the rest of the global lua functions in floating_window, replacing them with module-scoped functions
+- [x] increase ability to recover from erroneous state (grep for <TBD>)
 - [ ] increase the performance of highlights and draw calls in general
 - [ ] think about persisting waypoints on every waypoint state change. maybe every time the waypoint window closes
     - [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
@@ -142,7 +143,6 @@
 - [ ] switch to making new state for saving / loading instead of mutating existing state to get there
 - [ ] create better error handling and reporting
     - [ ] if highlighting fails for some reason, just show an error message and turn off highlighting
-- [ ] increase ability to recover from erroneous state (grep for <TBD>)
 - [ ] remove all asserts from the code
     - [ ] replace them with something that will only panic in debug mode, and just log in release mode
     - [ ] make this function use error with level 2 (or 3 or whatev) to keep the traceback clean

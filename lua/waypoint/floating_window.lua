@@ -232,8 +232,7 @@ local function draw_waypoint_window(action)
   if state.load_error then
     vim.api.nvim_buf_set_lines(wp_bufnr, 0, -1, true, {
       state.load_error,
-      -- TODO: fix this
-      "Run :WaypointReset to delete saved waypoints and clear all waypoint state"
+      "Run " .. constants.command_reset .. " to delete saved waypoints and clear all waypoint state"
     })
     set_modifiable(wp_bufnr, false)
     return
