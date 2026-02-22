@@ -135,12 +135,16 @@
 - [x] get rid of the rest of the global lua functions in floating_window, replacing them with module-scoped functions
 - [x] increase ability to recover from erroneous state (grep for <TBD>)
 - [x] when you change directory, reload waypoints from file (DirChanged autocmd)
+- [x] add ability to completely reset state
+- [x] fix it so that you can't edit other buffers in the waypoint window
 - [ ] increase the performance of highlights and draw calls in general
+    - [ ] add perf logging for each function (use require('jit.p'))
+    - [ ] only highlight text that is currently on screen to save perf
+    - [ ] make resize callback redraw the window so it will re-highlight
 - [ ] think about persisting waypoints on every waypoint state change. maybe every time the waypoint window closes
     - [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
         - https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua
         - maybe use vim.schedule to do it async if worried about perf?
-- [ ] add perf logging for each function (use require('jit.p'))
 - [ ] create better error handling and reporting
     - [ ] if highlighting fails for some reason, just show an error message and turn off highlighting
     - [ ] think about adding some kind of error handling to draw_waypoint_window that will just display an error if pcall happens, so you don't have to fight through cumulative errors to close the window
@@ -168,9 +172,6 @@
         - only supports one mark per file
         - can't reorder/indent
         - can't see context around mark
-- [ ] only highlight text that is currently on screen to save perf
-    - [ ] make resize callback redraw the window so it will re-highlight
-- [ ] add ability to completely reset state
 - [ ] write tests
     - [x] don't affect state of deleted waypoints 
     - [x] reselect visual after deleting waypoints
@@ -202,6 +203,7 @@
     - [ ] test the vanilla highlighter
     - [ ] test the treesitter highlighter
     - [ ] loading bad state from json file
+    - [ ] DirChanged callbacks
 - [ ] write docs
     - [ ] drawn vs not drawn waypoints
     - [ ] undo and file changes
@@ -216,9 +218,10 @@
     - [ ] think about optional dependencies like telescope
 - [ ] rename functions with new vocab:
       cursor_to: move the cursor
-      move_to:   move waypoints
+      swap_to:   move waypoints
+      relocate:  transfer waypoints from one file to another
       goto:      jump to location in file of waypoint
-- [ ] double check undo/redo messages for anything
+- [ ] double check undo/redo messages for everything
     - [ ] maybe think about making them dynamic (e.g. show message if an un-deleted waypoint isn't shown because its extmark is gone)
 - [ ] add ability to see soft-deleted waypoints in waypoint window (maybe a toggle)
     - [ ] refactor the drawn wpi functions to be clearer
@@ -229,7 +232,6 @@
 - [ ] make a better experience for the non-telescope "locate waypoints within file" command
 - [ ] think about using bufleave to prevent editing another file in the waypoint window with :edit
 - [ ] remove unused vars (use lsp warnings)
-- [ ] fix it so that waypoint window auto-exits when you try to edit a file in it
 
 ### ADVANCED FEATURES:
 
@@ -305,49 +307,7 @@ require('jit.p').start('fsri1', '/tmp/nvim_profile.txt')
 -- Stop the session and write the profile
 require('jit.p').stop()
 
-for undo:
-if you undo a change and the extmark doesn't exist, recreate it at its old line number.
-if it does exist, just point at that extmark. 
-this could easily be stale, but I think that's fine. I don't want to disorient
-with use of the levenshtein match finder on simple actions like undo, and I
-think it's fine if the extmark is gone for the line number to be stale
-otherwise, would have to always keep phantom extmarks for every state in the undo history. not reasonable.
-
-extmark recap:
-extmark id of nil means bufferless waypoint
-extmark id of -1 means out of bounds
-extmark id that should be valid but has no extmark = don't show the waypoint, its mark was deleted.
-
-normal file undo test
-make 3 waypoints
-delete one extmark by editing file
-should not show in window
-undo file edit
-should show in window again
-
-weird file undo test
-make 3 waypoints
-delete one waypoint in waypoint window
-edit file, erasing the line where the waypoint was
-undo deletion of waypoint in waypoint window
-should show as error: can't locate file with text \<text\>
-    should try to locate un-deleted waypoint with nonexistent extmark same way as in loaded file
-
-weird file undo test #2
-make 3 waypoints
-delete waypoint #1 in waypoint window
-delete waypoint #2 by erasing its extmark
-edit file, erasing the line where waypoint #1 was
-undo deletion of waypoint in waypoint window
-how to disambiguate between intentional delete/undo vs just waypoint with stale extmark?
-    have to retain some state somewhere I guess
-
-
 how to segfault neovim
 local ffi = require'ffi'
 local p = ffi.new("int *", nil)  -- Pointer to null
 print(p[0])  -- This will crash the program
-
-
-make redo/undo messages show if the redo/undo is displayed (e.g. undo deletion of waypoint without extmark any more)
-when you delete a waypoint, set the extmark to be invisible, but not invalid

@@ -136,6 +136,13 @@ function M.setup(opts)
     floating_window.clear_state_with_confirmation,
     {nargs = 0}
   )
+
+  -- vim.api.nvim_create_user_command(
+  --   "PATRICK",
+  --   function(arg) p(arg) end,
+  --   {nargs = '*'}
+  -- )
+
 end
 
 return M

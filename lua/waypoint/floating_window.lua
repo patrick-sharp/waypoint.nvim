@@ -185,7 +185,6 @@ local function get_bg_win_opts(win_opts, split)
   bg_win_opts.height = win_opts.height + vpadding * 2
   bg_win_opts.border = "rounded"
   bg_win_opts.title = {{" Waypoints ", "FloatBorder"}}
-  -- todo: make the background of this equal to window background
   -- between the A, B, and C indicators
   local sep = {" ─── ", 'FloatBorder' } -- give it the background of the rest of the floating window
   local a = {"A: " .. state.after_context, constants.hl_footer_after_context }
@@ -227,6 +226,11 @@ end
 
 ---@param action waypoint.window_actions | nil
 local function draw_waypoint_window(action)
+  if not wp_bufnr or not bg_bufnr or not winnr or not bg_winnr then
+    M.close()
+    return
+  end
+
   set_modifiable(wp_bufnr, true)
 
   if state.load_error then
@@ -1010,7 +1014,9 @@ local function open_help()
     callback = M.close,
   })
 
+  vim.wo[winnr].winfixbuf = false
   vim.api.nvim_win_set_buf(winnr, help_bufnr)
+  vim.wo[winnr].winfixbuf = true
 
   set_help_keybinds()
   draw_help()
@@ -1539,7 +1545,9 @@ end
 
 function M.toggle_help()
   if help_bufnr then
+    vim.wo[winnr].winfixbuf = false
     vim.api.nvim_win_set_buf(winnr, wp_bufnr)
+    vim.wo[winnr].winfixbuf = true
     help_bufnr = nil
     draw_waypoint_window()
   else
@@ -1629,6 +1637,9 @@ function M.open()
   -- Create the window
   winnr = vim.api.nvim_open_win(wp_bufnr, true, win_opts)
 
+  vim.wo[winnr].winfixbuf = true
+  vim.wo[bg_winnr].winfixbuf = true
+
   -- account for some color schemes having ridiculous colors for 
   -- the default floating window background.
   if u.hl_background_distance("Normal", "NormalFloat") > 300 then
@@ -1653,11 +1664,20 @@ function M.close()
   -- put this first so we don't call this function again through autocmds by deleting the window
   vim.api.nvim_del_augroup_by_name(constants.window_augroup)
 
-  vim.api.nvim_buf_clear_namespace(wp_bufnr, constants.ns, 0, -1)
-  vim.api.nvim_win_close(bg_winnr, true)
-  vim.api.nvim_win_close(winnr, true)
-  vim.api.nvim_buf_delete(wp_bufnr, {})
-  vim.api.nvim_buf_delete(bg_bufnr, {})
+  -- ideally all of these should be non-nil, but this helps with catching cases where something has gone wrong and recovering gracefully
+  if bg_winnr then
+    vim.api.nvim_win_close(bg_winnr, true)
+  end
+  if winnr then
+    vim.api.nvim_win_close(winnr, true)
+  end
+  if wp_bufnr then
+    vim.api.nvim_buf_clear_namespace(wp_bufnr, constants.ns, 0, -1)
+    vim.api.nvim_buf_delete(wp_bufnr, {})
+  end
+  if bg_bufnr then
+    vim.api.nvim_buf_delete(bg_bufnr, {})
+  end
 
   is_open = false
   wp_bufnr = nil

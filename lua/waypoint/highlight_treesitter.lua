@@ -3,14 +3,6 @@ local highlighter = vim.treesitter.highlighter
 local constants = require("waypoint.constants")
 local u = require("waypoint.utils")
 
--- -- resolve hl links
--- ---@param hl_group string
--- local function resolve_hl(hl_group)
---   local hlid = vim.api.nvim_get_hl_id_by_name(hl_group)
---   local name = vim.fn.synIDattr(vim.fn.synIDtrans(hlid), 'name')
---   return name
--- end
-
 --- @class waypoint.TreesitterHighlight
 --- @field hl_id   integer
 --- @field hl_name string 
