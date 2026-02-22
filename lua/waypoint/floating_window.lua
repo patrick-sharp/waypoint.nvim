@@ -224,6 +224,9 @@ local function get_bg_win_opts(win_opts, split)
   return bg_win_opts
 end
 
+local num_draws = 0
+local nanos = vim.uv.hrtime()
+
 ---@param action waypoint.window_actions | nil
 local function draw_waypoint_window(action)
   if not wp_bufnr or not bg_bufnr or not winnr or not bg_winnr then
@@ -242,6 +245,9 @@ local function draw_waypoint_window(action)
     return
   end
 
+  num_draws = num_draws + 1
+  u.log(num_draws, (vim.uv.hrtime() - nanos) / 1e6)
+
   vim.api.nvim_buf_clear_namespace(wp_bufnr, constants.ns, 0, -1)
   local rows = {}
   local indents = {}
@@ -251,9 +257,9 @@ local function draw_waypoint_window(action)
   ---@type integer | nil
   local cursor_line -- zero indexed
   ---@type integer | nil
-  local waypoint_topline
+  local cursor_waypoint_topline
   ---@type integer | nil
-  local waypoint_bottomline
+  local cursor_waypoint_bottomline
 
   -- all of these are zero-indexed
   ---@type integer | nil
@@ -297,12 +303,22 @@ local function draw_waypoint_window(action)
     state.vis_wpi = wpi_from_drawn_i[cursor_vis_i]
   end
 
+  local view = vim.fn.winsaveview()
+  local winheight = vim.fn.winheight(0)
+
+
   for i, waypoint in ipairs(drawn) do
+    local waypoint_topline = #rows + 1
+    local waypoint_bottomline = #rows + num_lines_before + 1 + num_lines_after
+    local view_bottomline = view.topline + winheight - 1
+    local is_in_view = view.topline <= waypoint_bottomline and waypoint_topline <= view_bottomline
+
     --- @type waypoint.WaypointContext
     local waypoint_file_text = uw.get_waypoint_context(
       waypoint,
       num_lines_before,
-      num_lines_after
+      num_lines_after,
+      is_in_view
     )
     local extmark_lines = waypoint_file_text.lines
     local extmark_line = waypoint_file_text.waypoint_linenr -- zero-indexed
@@ -314,8 +330,8 @@ local function draw_waypoint_window(action)
 
     if i == cursor_i then
       ctx_start = #rows
-      waypoint_topline = #rows + 1
-      waypoint_bottomline = #rows + #extmark_lines
+      cursor_waypoint_topline = #rows + 1
+      cursor_waypoint_bottomline = #rows + #extmark_lines
       cursor_line = #rows + extmark_line
     end
     if i == cursor_vis_i then
@@ -409,6 +425,7 @@ local function draw_waypoint_window(action)
     has_context = has_context or state.context ~= 0
     has_context = has_context or state.after_context ~= 0
     if state.show_context and has_context and i < #drawn then
+      -- insert a blank line as a separator between waypoints
       table.insert(rows, "")
       table.insert(indents, 0)
       -- if the user somehow moves to a blank space, just treat that as 
@@ -516,8 +533,8 @@ local function draw_waypoint_window(action)
     assert(ctx_start)
     assert(ctx_end)
     assert(cursor_line)
-    assert(waypoint_topline)
-    assert(waypoint_bottomline)
+    assert(cursor_waypoint_topline)
+    assert(cursor_waypoint_bottomline)
     if action == M.WINDOW_ACTIONS.reselect_visual then
       local has_spacer = u.any({
         state.before_context > 0,
@@ -606,16 +623,16 @@ local function draw_waypoint_window(action)
       u.goto_line(cursor_line + 1)
     end
 
-    -- if need be, scroll up/down to make the whole waypoint context visible
-    local view = vim.fn.winsaveview()
-    local winheight = vim.fn.winheight(0)
+    -- if need be, scroll up/down to make the whole waypoint context visible.
+    -- have to re-get the view because it could change after setting the lines in the waypoint buffer
+    view = vim.fn.winsaveview()
     if waypoint_context_lines >= winheight then
       vim.api.nvim_command("normal! zz")
-    elseif view.topline > waypoint_topline then
-      view.topline = waypoint_topline
+    elseif view.topline > cursor_waypoint_topline then
+      view.topline = cursor_waypoint_topline
       vim.fn.winrestview(view)
-    elseif view.topline + winheight - 1 < waypoint_bottomline then
-      view.topline = waypoint_bottomline - winheight + 1
+    elseif view.topline + winheight - 1 < cursor_waypoint_bottomline then
+      view.topline = cursor_waypoint_bottomline - winheight + 1
       vim.fn.winrestview(view)
     end
 
@@ -1505,7 +1522,7 @@ function M.resize()
   local bg_win_opts = get_bg_win_opts(win_opts, split)
   vim.api.nvim_win_set_config(winnr, win_opts)
   vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
-  -- TODO: once you add perf optimization, redraw here
+  draw_waypoint_window()
 end
 
 function M.delete_curr()
@@ -1525,7 +1542,6 @@ function M.set_quickfix_list()
   for _,waypoint in pairs(state.waypoints) do
     local bufnr = waypoint.bufnr or vim.fn.bufnr(waypoint.filepath)
     local filepath = waypoint.filepath or u.path_from_buf(bufnr)
-    u.log(bufnr, waypoint)
     local extmark = uw.buf_get_extmark(bufnr, waypoint.extmark_id)
     if extmark then
       local lnum = extmark[1]
@@ -1538,7 +1554,6 @@ function M.set_quickfix_list()
       })
     end
   end
-  u.log(qflist)
   vim.fn.setqflist(qflist, 'r')
   vim.cmd('copen')
 end

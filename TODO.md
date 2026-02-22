@@ -137,10 +137,10 @@
 - [x] when you change directory, reload waypoints from file (DirChanged autocmd)
 - [x] add ability to completely reset state
 - [x] fix it so that you can't edit other buffers in the waypoint window
-- [ ] increase the performance of highlights and draw calls in general
-    - [ ] add perf logging for each function (use require('jit.p'))
-    - [ ] only highlight text that is currently on screen to save perf
-    - [ ] make resize callback redraw the window so it will re-highlight
+- [x] increase the performance of highlights and draw calls in general
+    - [x] only highlight text that is currently on screen to save perf
+    - [x] make resize callback redraw the window so it will re-highlight
+- [x] think about using bufleave to prevent editing another file in the waypoint window with :edit
 - [ ] think about persisting waypoints on every waypoint state change. maybe every time the waypoint window closes
     - [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
         - https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua
@@ -204,6 +204,7 @@
     - [ ] test the treesitter highlighter
     - [ ] loading bad state from json file
     - [ ] DirChanged callbacks
+    - [ ] telescope integration
 - [ ] write docs
     - [ ] drawn vs not drawn waypoints
     - [ ] undo and file changes
@@ -217,10 +218,10 @@
 - [ ] test waypoint (manual + test suite) on a fresh neovim install
     - [ ] think about optional dependencies like telescope
 - [ ] rename functions with new vocab:
-      cursor_to: move the cursor
-      swap_to:   move waypoints
-      relocate:  transfer waypoints from one file to another
-      goto:      jump to location in file of waypoint
+      cursor_to:   move the cursor
+      swap_to:     move waypoints within the waypoint list
+      navigate_to: set buffer and cursor to the location of a waypoint
+      relocate:    transfer waypoints from one file to another
 - [ ] double check undo/redo messages for everything
     - [ ] maybe think about making them dynamic (e.g. show message if an un-deleted waypoint isn't shown because its extmark is gone)
 - [ ] add ability to see soft-deleted waypoints in waypoint window (maybe a toggle)
@@ -230,8 +231,6 @@
     - [ ] make the state in floating window that persists after the render more clear
     - [ ] investigate extmark_from_id vs buf_get_extmark
 - [ ] make a better experience for the non-telescope "locate waypoints within file" command
-- [ ] think about using bufleave to prevent editing another file in the waypoint window with :edit
-- [ ] remove unused vars (use lsp warnings)
 
 ### ADVANCED FEATURES:
 

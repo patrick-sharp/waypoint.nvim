@@ -100,8 +100,9 @@ end
 --- @param waypoint waypoint.Waypoint
 --- @param num_lines_before integer
 --- @param num_lines_after integer
+--- @param is_in_view boolean? whether the waypoint is visible in the current view of the waypoint window (false/nil if offscreen)
 --- @return waypoint.WaypointContext
-function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
+function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after, is_in_view)
   local bufnr, ok = M.bufnr_from_waypoint(waypoint)
   local maybe_extmark = M.extmark_from_waypoint(waypoint)
 
@@ -179,13 +180,13 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
   --- @type waypoint.HighlightRange[][]
   local hlranges = {}
 
-  local has_highlights = u.any({
+  local has_highlights = is_in_view and u.any({
     constants.highlights_on,
     config.enable_highlight,
     waypoint.annotation,
   })
 
-  if has_highlights then
+  if true or has_highlights then
     local file_uses_treesitter = vim.treesitter.highlighter.active[bufnr]
     if file_uses_treesitter then
       hlranges = highlight_treesitter.get_treesitter_syntax_highlights(bufnr, lines, start_line_nr - 1, end_line_nr - 1)
