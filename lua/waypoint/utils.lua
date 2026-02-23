@@ -3,15 +3,15 @@ local log = require("waypoint.log")
 local M = {}
 local u = M
 
---- @class waypoint.HighlightRange
---- col_start and col_end values are byte indexed because that's what 
---- nvim_buf_add_highlight uses. That is unlike vim.fn.virtcol, which is column
---- index (i.e. it accounts for unicode chars being multiple bytes long and tabs
---- being multiple columns long).
---- @field nsid integer
---- @field hl_group string | integer   if the range comes from treesitter, it will be an id. If it comes from vanilla vim, it will be a name.
---- @field col_start integer one-indexed inclusive column start for highlight
---- @field col_end integer one-indexed inclusive column end for highlight.
+---@class waypoint.HighlightRange
+---col_start and col_end values are byte indexed because that's what 
+---nvim_buf_add_highlight uses. That is unlike vim.fn.virtcol, which is column
+---index (i.e. it accounts for unicode chars being multiple bytes long and tabs
+---being multiple columns long).
+---@field nsid integer
+---@field hl_group string | integer   if the range comes from treesitter, it will be an id. If it comes from vanilla vim, it will be a name.
+---@field col_start integer one-indexed inclusive column start for highlight
+---@field col_end integer one-indexed inclusive column end for highlight.
 
 function M.log(...)
   log(...)
@@ -105,9 +105,9 @@ local function split_rgb(color)
   return red, green, blue
 end
 
---- @param a string the first hl_group
---- @param b string the first hl_group
---- @return integer # the sum of the absolute differences between the rgb values of the hl_groups' background colors
+---@param a string the first hl_group
+---@param b string the first hl_group
+---@return integer # the sum of the absolute differences between the rgb values of the hl_groups' background colors
 function M.hl_background_distance(a, b)
   local bg_a = vim.api.nvim_get_hl(0, {name = a, link = false}).bg
   local bg_b = vim.api.nvim_get_hl(0, {name = b, link = false}).bg
@@ -141,10 +141,10 @@ function M.union_validator(types)
 end
 
 -- NOTE: this does not handle unions (values that can have multiple types) or variable-length tables
---- @param t                       table
---- @param schema                  table
---- @param forbid_extra_properties boolean
---- @return boolean, any, any, string whether it matches, the first non-matching key, the first non-matching value, and the expected type
+---@param t                       table
+---@param schema                  table
+---@param forbid_extra_properties boolean
+---@return boolean, any, any, string whether it matches, the first non-matching key, the first non-matching value, and the expected type
 function M.validate(t, schema, forbid_extra_properties)
   if forbid_extra_properties then
     for k,v in pairs(t) do

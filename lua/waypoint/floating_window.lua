@@ -137,7 +137,7 @@ local function get_win_opts()
   return win_opts
 end
 
----@return waypoint.Waypoint | nil
+---@return waypoint.Waypoint?
 function M.get_current_waypoint()
   if state.wpi == nil then
     return nil
@@ -228,7 +228,7 @@ end
 local num_draws = 0
 local total_draw_time = 0
 
----@param action waypoint.window_actions | nil
+---@param action waypoint.window_actions?
 local function draw_waypoint_window(action)
   if not wp_bufnr or not bg_bufnr or not winnr or not bg_winnr then
     M.close()
@@ -255,28 +255,28 @@ local function draw_waypoint_window(action)
   ---@type integer[]
   line_to_waypoint = {}
 
-  ---@type integer | nil
+  ---@type integer?
   local cursor_line -- zero indexed
-  ---@type integer | nil
+  ---@type integer?
   local cursor_waypoint_topline
-  ---@type integer | nil
+  ---@type integer?
   local cursor_waypoint_bottomline
 
   -- all of these are zero-indexed
-  ---@type integer | nil
+  ---@type integer?
   local ctx_start -- one-indexed start line of current waypoint context start
-  ---@type integer | nil
+  ---@type integer?
   local ctx_end -- one-indexed start line of current waypoint context end
-  ---@type integer | nil
+  ---@type integer?
   local vis_ctx_start -- one-indexed start line of other end of visual selection's waypoint context start
-  ---@type integer | nil
+  ---@type integer?
   local vis_ctx_end  -- one-indexed start line of other end of visual selection's waypoint context end
 
-  --- @type (string | waypoint.HighlightRange[])[][]
-  --- first index is the line number, second is the column index. each column 
-  --- highlight is either a string or a table of highlight ranges. if string, 
-  --- highlight the whole column using the group whose name is the string. 
-  --- Otherwise, apply each highlight in the table.
+  ---@type (string | waypoint.HighlightRange[])[][]
+  ---first index is the line number, second is the column index. each column 
+  ---highlight is either a string or a table of highlight ranges. if string, 
+  ---highlight the whole column using the group whose name is the string. 
+  ---Otherwise, apply each highlight in the table.
   local hlranges = {}
 
   local num_lines_before
@@ -313,7 +313,7 @@ local function draw_waypoint_window(action)
     local view_bottomline = view.topline + winheight - 1
     local is_in_view = view.topline <= waypoint_bottomline and waypoint_topline <= view_bottomline
 
-    --- @type waypoint.WaypointContext
+    ---@type waypoint.WaypointContext
     local waypoint_file_text = uw.get_waypoint_context(
       waypoint,
       num_lines_before,
@@ -340,7 +340,7 @@ local function draw_waypoint_window(action)
 
     for j, line_text in ipairs(extmark_lines) do
       local line_hlranges = {}
-      --- @type waypoint.HighlightRange[]
+      ---@type waypoint.HighlightRange[]
       local line_extmark_hlranges = extmark_hlranges[j]
       table.insert(indents, waypoint.indent * config.indent_width)
       table.insert(line_to_waypoint, wpi_from_drawn_i[i])
@@ -691,10 +691,10 @@ M.draw_waypoint_window = draw_waypoint_window
 M.bound_keys = {}
 
 -- binds the keybinding (or keybindings) to the given action 
---- @param keybindings table<string, waypoint.Keybinding>
---- @param modes string[]
---- @param action string
---- @param fn string | function the vim mapping string that this keybind should perform
+---@param keybindings table<string, waypoint.Keybinding>
+---@param modes string[]
+---@param action string
+---@param fn string | function the vim mapping string that this keybind should perform
 local function bind_key(bufnr, modes, keybindings, action, fn)
   if not keybindings[action] then
     error(action .. " is not a key in the provided keybindings table")
@@ -842,7 +842,7 @@ local kb_separator = " or "
 ---@param keybindings_description table
 ---@param keybindings_group_title string
 ---@param keybindings_group_name string
----@param width_override (integer | nil)[] | nil
+---@param width_override (integer?)[]?
 local function insert_lines_for_keybindings(lines, highlights, keybindings_group, keybindings_description, keybindings_group_title, keybindings_group_name, width_override)
   table.insert(lines, "")
   table.insert(lines, "")
@@ -1442,7 +1442,7 @@ function M.move_waypoints_to_file(source_file_path, dest_file_path)
   ---@type waypoint.Waypoint[]
   local waypoints_in_file = {}
   source_file_path = vim.fs.normalize(source_file_path)
-  ---@type integer | nil
+  ---@type integer?
   local change_wpi = nil
   for i,waypoint in pairs(state.waypoints) do
     if uw.filepath_from_waypoint(waypoint) == source_file_path then

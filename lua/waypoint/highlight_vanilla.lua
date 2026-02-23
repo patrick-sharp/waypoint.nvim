@@ -1,26 +1,26 @@
 local M = {}
 
---- @param bufnr integer
---- @param line integer one-indexed line number to get the synid at
---- @param col integer one-indexed column number to get the synid at
---- @return integer the id of the highlight group at this position in the buffer with number bufnr
+---@param bufnr integer
+---@param line integer one-indexed line number to get the synid at
+---@param col integer one-indexed column number to get the synid at
+---@return integer the id of the highlight group at this position in the buffer with number bufnr
 local function get_highlight_id_at_pos(bufnr, line, col)
-  --- @type integer
+  ---@type integer
   local synid
 
   vim.api.nvim_buf_call(bufnr, function()
     synid = vim.fn.synID(line, col, 1)
   end)
 
-  --- @type integer
+  ---@type integer
   local hl_id = vim.fn.synIDtrans(synid)
   return hl_id
 end
 
---- @param bufnr      integer
---- @param lines      string[]
---- @param start_line integer zero-indexed
---- @return waypoint.HighlightRange[][] length of returned table is equal to number of lines.
+---@param bufnr      integer
+---@param lines      string[]
+---@param start_line integer zero-indexed
+---@return waypoint.HighlightRange[][] length of returned table is equal to number of lines.
 function M.get_vanilla_syntax_highlights(bufnr, lines, start_line)
   local hlranges = {}
   for i,line in pairs(lines) do

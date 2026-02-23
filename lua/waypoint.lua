@@ -13,7 +13,7 @@ local test = require("waypoint.test")
 local global_keybindings = require("waypoint.global_keybindings")
 local buffer_callbacks = require("waypoint.buffer_callbacks")
 
---- @param opts waypoint.ConfigOverride
+---@param opts waypoint.ConfigOverride
 function M.setup(opts)
   -- set up config
 

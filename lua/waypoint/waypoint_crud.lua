@@ -13,7 +13,7 @@ M.make_sorted_waypoints = uw.make_sorted_waypoints
 
 ---@param filepath   string
 ---@param line_nr    integer one-indexed line number
----@param annotation string | nil
+---@param annotation string?
 function M.append_waypoint(filepath, line_nr, annotation)
   if not u.is_file_buffer() then return end
   local bufnr = vim.fn.bufnr(filepath)
@@ -45,7 +45,7 @@ end
 
 ---@param filepath   string
 ---@param line_nr    integer one-indexed line number
----@param annotation string | nil
+---@param annotation string?
 function M.insert_waypoint(filepath, line_nr, annotation)
   if not u.is_file_buffer() then return end
   local bufnr = vim.fn.bufnr(filepath)
@@ -105,7 +105,7 @@ function M.insert_waypoint_wrapper()
   M.insert_waypoint(filepath, cur_line_nr, nil)
 end
 
----@param annotation string | nil
+---@param annotation string?
 function M.append_annotated_waypoint(annotation)
   if not u.is_file_buffer() then return end
   local filepath = vim.fn.expand("%")
@@ -116,7 +116,7 @@ function M.append_annotated_waypoint(annotation)
   M.append_waypoint(filepath, cur_line_nr, annotation)
 end
 
----@param annotation string | nil
+---@param annotation string?
 function M.insert_annotated_waypoint(annotation)
   if not u.is_file_buffer() then return end
   local filepath = vim.fn.expand("%")
@@ -170,9 +170,9 @@ function M.reset_all_indent()
   end
 end
 
---- @param filepath string the path of the file to find the waypoint in
---- @param linenr integer the one-indexed line number to look for the waypoint on
---- @return integer the one-indexed index of the waypoint if found, or -1 if not
+---@param filepath string the path of the file to find the waypoint in
+---@param linenr integer the one-indexed line number to look for the waypoint on
+---@return integer the one-indexed index of the waypoint if found, or -1 if not
 function M.find_waypoint(filepath, linenr)
   local bufnr = vim.fn.bufnr(filepath)
   for i = #state.waypoints, 1, -1 do
@@ -203,7 +203,7 @@ function M.remove_waypoint(existing_waypoint_i)
     uw.set_wp_extmark_visible(existing_waypoint, false)
   end
 
-  --- @type waypoint.Waypoint[]
+  ---@type waypoint.Waypoint[]
   local waypoints_new = {}
   for _, waypoint in pairs(state.waypoints) do
     if waypoint ~= existing_waypoint then

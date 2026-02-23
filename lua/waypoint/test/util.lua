@@ -54,7 +54,7 @@ function M.get_waypoint_buffer_lines_trimmed()
   return result
 end
 
----@return string | nil
+---@return string?
 function M.get_last_message()
   local res, ok = ring_buffer.peek(message.messages)
   if ok then
@@ -64,7 +64,7 @@ function M.get_last_message()
   end
 end
 
----@return string | nil
+---@return string?
 function M.nvim_get_last_message()
   local msgs = vim.split(vim.fn.execute(":messages"), "\n")
   if #msgs == nil then

@@ -3,18 +3,18 @@ local highlighter = vim.treesitter.highlighter
 local constants = require("waypoint.constants")
 local u = require("waypoint.utils")
 
---- @class waypoint.TreesitterHighlight
---- @field hl_id   integer
---- @field hl_name string 
---- keep in mind that this range is a raw range from treesitter, so the column
---- is 0 indexed. nvim_buf_add_extmark expects 1-indexed, so we adjust it when 
---- we actually return highlight ranges. we don't adjust the column because 0 
---- indexed exclusive is the same 1 indexed inclusive, except when the col is 0
---- @field range { [1]: integer, [2]: integer, [3]: integer, [4]: integer }
+---@class waypoint.TreesitterHighlight
+---@field hl_id   integer
+---@field hl_name string 
+---keep in mind that this range is a raw range from treesitter, so the column
+---is 0 indexed. nvim_buf_add_extmark expects 1-indexed, so we adjust it when 
+---we actually return highlight ranges. we don't adjust the column because 0 
+---indexed exclusive is the same 1 indexed inclusive, except when the col is 0
+---@field range { [1]: integer, [2]: integer, [3]: integer, [4]: integer }
 
---- @param start_line integer zero-indexed, inclusive
---- @param end_line   integer zero-indexed, exclusive
---- @return waypoint.TreesitterHighlight[]
+---@param start_line integer zero-indexed, inclusive
+---@param end_line   integer zero-indexed, exclusive
+---@return waypoint.TreesitterHighlight[]
 function M.get_nodes_with_highlights(bufnr, start_line, end_line)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   -- zero-indexed, inclusive
@@ -25,7 +25,7 @@ function M.get_nodes_with_highlights(bufnr, start_line, end_line)
   local self = highlighter.active[bufnr]
   if not self then return {} end
 
-  --- @type waypoint.TreesitterHighlight[]
+  ---@type waypoint.TreesitterHighlight[]
   local results = {}
 
   local buf_highlighter = vim.treesitter.highlighter.active[bufnr]
@@ -62,15 +62,15 @@ function M.get_nodes_with_highlights(bufnr, start_line, end_line)
 end
 
 
---- @param bufnr      integer
---- @param lines      string[] the lines of text in the file that we're getting the highlights for
---- @param start_line integer zero-indexed, inclusive
---- @param end_line   integer zero-indexed, exclusive
---- @return waypoint.HighlightRange[][]
+---@param bufnr      integer
+---@param lines      string[] the lines of text in the file that we're getting the highlights for
+---@param start_line integer zero-indexed, inclusive
+---@param end_line   integer zero-indexed, exclusive
+---@return waypoint.HighlightRange[][]
 function M.get_treesitter_syntax_highlights(bufnr, lines, start_line, end_line)
-  --- @type waypoint.TreesitterHighlight[]
+  ---@type waypoint.TreesitterHighlight[]
   local treesitter_highlights = M.get_nodes_with_highlights(bufnr, start_line, end_line)
-  --- @type waypoint.HighlightRange[]
+  ---@type waypoint.HighlightRange[]
   local hlranges = {}
   for _=1, #lines do
     table.insert(hlranges, {})

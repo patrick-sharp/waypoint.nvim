@@ -25,7 +25,7 @@ M.missing_file_err_msg = table.concat(missing_file_err_msg_table)
 M.at_earliest_change = "At earliest change"
 M.at_latest_change = "At latest change"
 
----@param file string | nil
+---@param file string?
 function M.restored_before_load(file)
   return "Restored waypoints to before load from file " .. (file or config.file)
 end
@@ -87,14 +87,14 @@ function M.remove_waypoint(position)
   return "Removed waypoint at position " .. tostring(position)
 end
 
----@param position_1 integer | nil
----@param position_2 integer | nil
+---@param position_1 integer?
+---@param position_2 integer?
 function M.move_waypoint(position_1, position_2)
   return "Moved waypoint at position " .. tostring(position_1 or "_") .. " to position " .. tostring(position_2 or "_")
 end
 
 ---@param msg string
----@param level integer | nil
+---@param level integer?
 function M.notify(msg, level)
   level = level or vim.log.levels.INFO
   ring_buffer.push(M.messages, {msg = msg, level = level})

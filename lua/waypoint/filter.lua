@@ -10,11 +10,11 @@ local state = require("waypoint.state")
 local uw = require("waypoint.utils_waypoint")
 
 -- before the filter, we save the file contents as a string so we can diff them with the new file contents
----@type string[] | nil
+---@type string[]?
 local pre_filter_buf_lines = nil
 
 -- before the filter, we save the waypoint locations so we can put them back in the right place after the filter
----@type (integer|nil)[] | nil
+---@type (integer?)[]?
 local waypoint_linenrs = nil
 
 ---@param a waypoint.Waypoint

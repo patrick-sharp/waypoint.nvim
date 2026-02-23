@@ -15,31 +15,31 @@
 ---@field has_buffer  boolean whether this waypoint is located in an open buffer.
 --fields used by buffered and bufferless waypoints
 ---@field indent      integer
----@field error       string | nil
----@field annotation  string | nil
+---@field error       string?
+---@field annotation  string?
 -- fields used by buffered waypoints
----@field bufnr       integer | nil the buffer number the waypoint is in.
----@field extmark_id  integer | nil the id of the extmark within the buffer. Note that these are not unique globally.
+---@field bufnr       integer? the buffer number the waypoint is in.
+---@field extmark_id  integer? the id of the extmark within the buffer. Note that these are not unique globally.
 -- fields used by bufferless waypoints
----@field filepath    string | nil relative path to file the waypoint is in. Does NOT start with ./, i.e. a path to ./lua/myfile.lua would be stored as lua/myfile.lua
----@field linenr      integer | nil the one-indexed line number the waypoint is on.
----@field text        string | nil text of the line the waypoint is on.
+---@field filepath    string? relative path to file the waypoint is in. Does NOT start with ./, i.e. a path to ./lua/myfile.lua would be stored as lua/myfile.lua
+---@field linenr      integer? the one-indexed line number the waypoint is on.
+---@field text        string? text of the line the waypoint is on.
 
 -- This class exists because we want to be able to restore a waypoint's state from the undo stack either using an open buffer or from a file
 -- It has the fields of both bufferless and buffered waypoints
 ---@class waypoint.UndoNodeWaypoint
 ---@field indent      integer
----@field annotation  string | nil
----@field bufnr       integer | nil the buffer number the waypoint is in.
----@field extmark_id  integer | nil the id of the extmark within the buffer. Note that these are not unique globally.
----@field filepath    string | nil relative path to file the waypoint is in. Does NOT start with ./, i.e. a path to ./lua/myfile.lua would be stored as lua/myfile.lua
----@field text        string | nil text of the line the waypoint is on.
----@field linenr      integer | nil the one-indexed line number the waypoint is on.
+---@field annotation  string?
+---@field bufnr       integer? the buffer number the waypoint is in.
+---@field extmark_id  integer? the id of the extmark within the buffer. Note that these are not unique globally.
+---@field filepath    string? relative path to file the waypoint is in. Does NOT start with ./, i.e. a path to ./lua/myfile.lua would be stored as lua/myfile.lua
+---@field text        string? text of the line the waypoint is on.
+---@field linenr      integer? the one-indexed line number the waypoint is on.
 
 ---@class waypoint.State
----@field load_error            string | nil if there was an error loading the file. if so, we show it in the waypoint window
----@field wpi                   integer | nil the index of the currently selected waypoint.
----@field vis_wpi               integer | nil the index of the other side of the visual selection. to deal with "o" (i.e. moving to the other end of highlighted text), it can check where the cursor is on the CursorMoved callback and update wpi/vis_wpi accordingly.
+---@field load_error            string? if there was an error loading the file. if so, we show it in the waypoint window
+---@field wpi                   integer? the index of the currently selected waypoint.
+---@field vis_wpi               integer? the index of the other side of the visual selection. to deal with "o" (i.e. moving to the other end of highlighted text), it can check where the cursor is on the CursorMoved callback and update wpi/vis_wpi accordingly.
 ---@field waypoints             waypoint.Waypoint[] all the waypoints in this session.
 ---@field sorted_waypoints      waypoint.Waypoint[] all the waypoints in this session, sorted by file and line number. tables in this array are pointers to the same tables in state.waypoints, just in a different order
 ---@field context               integer the number of lines above and below the waypoint that will also appear in the waypoint window. adds with before_context and after_context.

@@ -18,7 +18,7 @@ local undo = require "waypoint.undo"
 ---@class waypoint.SavedWaypoint
 ---@field indent   integer
 ---@field filepath string used as a backup if the bufnr becomes stale.
----@field text     string | nil
+---@field text     string?
 ---@field linenr   integer the one-indexed line number the waypoint is on. Can become stale if a buffer edit causes the extmark to move.
 
 local function write_file(path, content)
@@ -238,7 +238,7 @@ end
 
 ---@param bufnr integer
 ---@param waypoint waypoint.Waypoint | waypoint.SavedWaypoint
----@param linenr integer | nil overrides waypoint linenr if non-nil
+---@param linenr integer? overrides waypoint linenr if non-nil
 local function create_extmark(bufnr, waypoint, linenr)
   -- one-indexed line number
   local extmark_linenr = linenr or waypoint.linenr
@@ -252,7 +252,7 @@ end
 ---@param src_filepath string
 ---@param dest_filepath string
 ---@param waypoints (waypoint.SavedWaypoint | waypoint.Waypoint)[]
----@param change_wpi integer | nil
+---@param change_wpi integer?
 function M.locate_waypoints_in_file(src_filepath, dest_filepath, waypoints, change_wpi)
   local bufnr = vim.fn.bufnr(dest_filepath)
   ---@type boolean

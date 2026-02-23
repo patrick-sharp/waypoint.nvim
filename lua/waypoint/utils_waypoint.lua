@@ -15,9 +15,9 @@ function M.bufnr_from_waypoint(waypoint)
   return bufnr, u.is_buffer_valid(bufnr)
 end
 
----@return vim.api.keyset.get_extmark_item_by_id | nil
+---@return vim.api.keyset.get_extmark_item_by_id?
 function M.extmark_from_id(bufnr, id)
-  --- @type vim.api.keyset.get_extmark_item_by_id
+  ---@type vim.api.keyset.get_extmark_item_by_id
   local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, id, {details=true})
   if #extmark == 0 then
     return nil
@@ -88,28 +88,28 @@ function M.wp_set_extmark(waypoint)
   return true
 end
 
---- @class waypoint.WaypointContext
---- @field extmark              vim.api.keyset.get_extmark_item_by_id the zero-indexed row,col coordinates of the extmark corresponding to this waypoint
---- @field lines                string[] the lines of text from the file the waypoint is in. Includes the line the waypoint is on and the lines in the context around the waypoint.
---- @field waypoint_linenr      integer the zero-indexed line number the waypoint is on within the file.
---- @field context_start_linenr integer the zero-indexed line number within the file of the first line of the context
---- @field highlight_ranges     waypoint.HighlightRange[][] the syntax highlights for each line in lines. This table will have the same number of elements as lines.
---- @field file_start_idx       integer index within lines where the start of the file is, or 1 if the file starts before the context
---- @field file_end_idx         integer index within lines where the end of the file is, or #lines + 1 if the file ends after the context
+---@class waypoint.WaypointContext
+---@field extmark              vim.api.keyset.get_extmark_item_by_id the zero-indexed row,col coordinates of the extmark corresponding to this waypoint
+---@field lines                string[] the lines of text from the file the waypoint is in. Includes the line the waypoint is on and the lines in the context around the waypoint.
+---@field waypoint_linenr      integer the zero-indexed line number the waypoint is on within the file.
+---@field context_start_linenr integer the zero-indexed line number within the file of the first line of the context
+---@field highlight_ranges     waypoint.HighlightRange[][] the syntax highlights for each line in lines. This table will have the same number of elements as lines.
+---@field file_start_idx       integer index within lines where the start of the file is, or 1 if the file starts before the context
+---@field file_end_idx         integer index within lines where the end of the file is, or #lines + 1 if the file ends after the context
 
---- @param waypoint waypoint.Waypoint
---- @param num_lines_before integer
---- @param num_lines_after integer
---- @param is_in_view boolean? whether the waypoint is visible in the current view of the waypoint window (false/nil if offscreen)
---- @return waypoint.WaypointContext
+---@param waypoint waypoint.Waypoint
+---@param num_lines_before integer
+---@param num_lines_after integer
+---@param is_in_view boolean? whether the waypoint is visible in the current view of the waypoint window (false/nil if offscreen)
+---@return waypoint.WaypointContext
 function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after, is_in_view)
   local bufnr, ok = M.bufnr_from_waypoint(waypoint)
   local maybe_extmark = M.extmark_from_waypoint(waypoint)
 
   if not maybe_extmark then
-    --- @type string[]
+    ---@type string[]
     local lines = {}
-    --- @type waypoint.HighlightRange[][]
+    ---@type waypoint.HighlightRange[][]
     local hlranges = {}
 
     for _=1, num_lines_before do
@@ -147,7 +147,7 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after, is_
     }
   end
 
-  --- @type vim.api.keyset.get_extmark_item_by_id
+  ---@type vim.api.keyset.get_extmark_item_by_id
   local extmark = maybe_extmark
 
   -- one-indexed line number
@@ -177,7 +177,7 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after, is_
   end
 
   -- figure out how each line is highlighted
-  --- @type waypoint.HighlightRange[][]
+  ---@type waypoint.HighlightRange[][]
   local hlranges = {}
 
   local has_highlights = is_in_view and u.any({
@@ -238,17 +238,17 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after, is_
 end
 
 
---- @class waypoint.AlignTableOpts
---- @field column_separator string | nil if present, add as a separator between each column
---- @field win_width integer | nil if this is non-nil, add spaces to the right of each row to pad to this width
---- @field indents integer[] | nil if this is non-nil, add indent[i] levels of indentation waypoint[i]
---- @field width_override (integer | nil)[] | nil if this is non-nil, override column i's width with width_override[i] if non-nil
+---@class waypoint.AlignTableOpts
+---@field column_separator string? if present, add as a separator between each column
+---@field win_width integer? if this is non-nil, add spaces to the right of each row to pad to this width
+---@field indents integer[]? if this is non-nil, add indent[i] levels of indentation waypoint[i]
+---@field width_override (integer?)[]? if this is non-nil, override column i's width with width_override[i] if non-nil
 
---- @param t string[][] rows x columns x content
---- @param table_cell_types string[] type of each column
---- @param highlights (string | waypoint.HighlightRange[])[][] rows x columns x (optionally) multiple highlights for a given column. This parameter is mutated to adjust the highlights of each line so they will work after the alignment.
---- @param opts waypoint.AlignTableOpts | nil
---- @return string[]
+---@param t string[][] rows x columns x content
+---@param table_cell_types string[] type of each column
+---@param highlights (string | waypoint.HighlightRange[])[][] rows x columns x (optionally) multiple highlights for a given column. This parameter is mutated to adjust the highlights of each line so they will work after the alignment.
+---@param opts waypoint.AlignTableOpts?
+---@return string[]
 function M.align_waypoint_table(t, table_cell_types, highlights, opts)
   if #t == 0 then
     return {}
@@ -395,14 +395,14 @@ function M.make_sorted_waypoints()
   table.sort(state.sorted_waypoints, waypoint_compare)
 end
 
---- @class waypoint.Extmark
---- @field [1] integer row -- one-indexed, unlike base extmark value
---- @field [2] integer col
---- @field [3] vim.api.keyset.extmark_details
+---@class waypoint.Extmark
+---@field [1] integer row -- one-indexed, unlike base extmark value
+---@field [2] integer col
+---@field [3] vim.api.keyset.extmark_details
 
 ---@param bufnr integer
 ---@param extmark_id integer
----@return waypoint.Extmark | nil
+---@return waypoint.Extmark?
 function M.buf_get_extmark(bufnr, extmark_id)
   local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, extmark_id, {details=true})
   local details = extmark[3]
@@ -493,7 +493,7 @@ function M.get_drawn_wpi()
   assert(state.wpi)
   assert(u.is_in_visual_mode() == (nil ~= state.vis_wpi))
 
-  ---@type integer | nil
+  ---@type integer?
   local result_wpi_top = nil
   ---@type integer
   local result_wpi_bottom = nil
@@ -506,9 +506,9 @@ function M.get_drawn_wpi()
     waypoints = state.waypoints
   end
 
-  ---@type integer | nil
+  ---@type integer?
   local result_top = nil
-  ---@type integer | nil
+  ---@type integer?
   local result_bottom = nil
   for i = 1, #waypoints do
     if M.should_draw_waypoint(waypoints[i]) then
@@ -536,7 +536,7 @@ function M.get_drawn_wpi()
     -- check to see if everything is the visual selection is undrawable
     local should_draw_any_in_selection = false
 
-    ---@type integer | nil
+    ---@type integer?
     local top_drawable = nil
     for i = top, bottom do
       if M.should_draw_waypoint(waypoints[i]) then

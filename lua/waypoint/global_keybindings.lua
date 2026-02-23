@@ -4,9 +4,9 @@ local M = {}
 M.global_keybindings = {}
 
 -- binds the keybinding (or keybindings) to the given function 
---- @param keybindings table<string, waypoint.Keybinding>
---- @param action string
---- @param fn function
+---@param keybindings table<string, waypoint.Keybinding>
+---@param action string
+---@param fn function
 function M.bind_key(keybindings, action, fn)
   if not keybindings[action] then
     error(action .. " is not a key in the provided keybindings table")

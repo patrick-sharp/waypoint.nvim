@@ -9,7 +9,7 @@ local uw = require"waypoint.utils_waypoint"
 
 ---@class waypoint.UndoNode
 ---@field waypoints waypoint.UndoNodeWaypoint[]
----@field wpi integer | nil
+---@field wpi integer?
 ---@field undo_msg string
 ---@field redo_msg string
 
@@ -75,7 +75,7 @@ end
 
 ---@param undo_msg string
 ---@param redo_msg string
----@param change_wpi integer | nil
+---@param change_wpi integer?
 function M.save_state(undo_msg, redo_msg, change_wpi)
   message.notify(redo_msg, vim.log.levels.INFO)
 

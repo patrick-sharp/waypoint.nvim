@@ -9,7 +9,7 @@ local M = {}
 
 local default_capacity = 32
 
----@param capacity integer | nil
+---@param capacity integer?
 ---@return waypoint.RingBuffer
 function M.new(capacity)
   return {

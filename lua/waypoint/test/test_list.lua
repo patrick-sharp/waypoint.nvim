@@ -6,7 +6,7 @@ M.tests = {}
 ---@class waypoint.Test
 ---@field name string
 ---@field fn   function
----@field pass boolean | nil
+---@field pass boolean?
 ---@field err  unknown
 
 ---@param name string
