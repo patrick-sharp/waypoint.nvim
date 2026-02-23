@@ -247,6 +247,24 @@ local function create_extmark(bufnr, waypoint, linenr)
   return extmark_id
 end
 
+---@param path string
+---@return integer bufnr if successful or already open, -1 if error
+function M.open_file(path)
+  local bufnr = vim.fn.bufnr(path)
+  ---@type boolean
+  if bufnr == -1 then
+    local does_file_exist = vim.fn.filereadable(path) ~= 0
+    if does_file_exist then
+      bufnr = vim.fn.bufadd(path)
+      buffer_init(bufnr)
+      return bufnr
+    else
+      return -1
+    end
+  end
+  return bufnr
+end
+
 -- all waypoints are assumed to be in the same file.
 -- mutates the waypoint objects to put them in the new file
 ---@param src_filepath string
@@ -254,23 +272,16 @@ end
 ---@param waypoints (waypoint.SavedWaypoint | waypoint.Waypoint)[]
 ---@param change_wpi integer?
 function M.locate_waypoints_in_file(src_filepath, dest_filepath, waypoints, change_wpi)
-  local bufnr = vim.fn.bufnr(dest_filepath)
-  ---@type boolean
+  local bufnr = M.open_file(dest_filepath)
   if bufnr == -1 then
-    local does_file_exist = vim.fn.filereadable(dest_filepath) ~= 0
-    if does_file_exist then
-      bufnr = vim.fn.bufadd(dest_filepath)
-      buffer_init(bufnr)
-    else
-      message.notify("Error: " .. dest_filepath .. " does not exist")
-      for _, waypoint in ipairs(waypoints) do
-        waypoint.has_buffer = false
-        waypoint.extmark_id = -1
-        waypoint.bufnr      = -1
-      end
-
-      return
+    message.notify("Error: " .. dest_filepath .. " does not exist")
+    for _, waypoint in ipairs(waypoints) do
+      waypoint.has_buffer = false
+      waypoint.extmark_id = -1
+      waypoint.bufnr      = -1
     end
+
+    return
   end
 
   local line_count = vim.api.nvim_buf_line_count(bufnr)

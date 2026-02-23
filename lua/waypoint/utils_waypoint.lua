@@ -189,7 +189,7 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after, is_
   if true or has_highlights then
     local file_uses_treesitter = vim.treesitter.highlighter.active[bufnr]
     if file_uses_treesitter then
-      hlranges = highlight_treesitter.get_treesitter_syntax_highlights(bufnr, lines, start_line_nr - 1, end_line_nr - 1)
+      hlranges = highlight_treesitter.get_treesitter_syntax_highlights(bufnr, lines, start_line_nr, end_line_nr)
     elseif pcall(vim.api.nvim_buf_get_var, bufnr, "current_syntax") then
       hlranges = highlight_vanilla.get_vanilla_syntax_highlights(bufnr, lines, start_line_nr - 1)
     else
