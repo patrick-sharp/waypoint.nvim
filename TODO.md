@@ -182,7 +182,6 @@
         - open vim
         - error opening file
         - waypoint should still be in "persisted mode"
-        - waypoint should be restored
     - [ ] write test for:
         - have waypoint in file
         - delete region of text with waypoint's extmark

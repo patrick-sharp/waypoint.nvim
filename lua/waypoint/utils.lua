@@ -317,4 +317,23 @@ function M.get_line_text(bufnr, linenr)
   return vim.api.nvim_buf_get_lines(bufnr, linenr - 1, linenr, true)[1]
 end
 
+---@type number?
+local start_time_millis = nil
+
+function M.start_timer()
+  assert(start_time_millis == nil)
+  start_time_millis = vim.uv.hrtime() / 1e6
+end
+
+---@return number
+function M.end_timer()
+  assert(start_time_millis ~= nil)
+  local end_time_millis = vim.uv.hrtime() / 1e6
+  local result = end_time_millis - start_time_millis
+  start_time_millis = nil
+  return result
+end
+
+
+
 return M

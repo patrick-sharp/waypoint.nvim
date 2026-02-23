@@ -4,10 +4,11 @@ local M = {}
 M.tests = {}
 
 ---@class waypoint.Test
----@field name string
----@field fn   function
----@field pass boolean?
----@field err  unknown
+---@field name   string
+---@field fn     function
+---@field pass   boolean?
+---@field err    unknown
+---@field millis number duration of test in milliseconds
 
 ---@param name string
 ---@param fn   function
@@ -16,6 +17,7 @@ function M.describe(name, fn)
     name = name,
     fn = fn,
     pass = nil,
+    millis = -1.0,
   })
 end
 

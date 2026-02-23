@@ -677,10 +677,10 @@ local function draw_waypoint_window(action)
   local draw_duration = (draw_end_time - draw_start_time) / 1e6
   total_draw_time = total_draw_time + draw_duration
 
-  -- u.log(
-  --   "draw time in millis for draw " .. num_draws .. ": " .. draw_duration
-  --   .. "(total for all draws: " .. total_draw_time .. ")"
-  -- )
+  u.log(
+    "draw time in millis for draw " .. num_draws .. ": " .. draw_duration
+    .. "(total for all draws: " .. total_draw_time .. ")"
+  )
 end
 
 -- in certain tests, I need to ability to force the waypoint window to draw,

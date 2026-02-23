@@ -14,6 +14,7 @@ local _ = require'waypoint.test.tests.context'
 local _ = require'waypoint.test.tests.delete'
 local _ = require'waypoint.test.tests.filter'
 local _ = require'waypoint.test.tests.help'
+local _ = require'waypoint.test.tests.highlight_treesitter'
 local _ = require'waypoint.test.tests.indent'
 local _ = require'waypoint.test.tests.levenshtein'
 local _ = require'waypoint.test.tests.missing_file'
@@ -49,7 +50,11 @@ local function log_test_output()
   local pass = {}
   ---@type waypoint.Test[]
   local fail = {}
+  local test_name_length = 0
+  local test_time_length = 0
   for _,test in ipairs(test_list.tests) do
+    test_name_length = math.max(test_name_length, u.vislen(test.name))
+    test_time_length = math.max(test_time_length, math.ceil(math.log(test.millis, 10)))
     if test.pass then
       table.insert(pass, test)
     else
@@ -74,8 +79,9 @@ local function log_test_output()
   if #pass > 0 then
     file:write("\n")
   end
+  local format_string = "%s %-" .. test_name_length .. "s %" .. test_time_length + 4 .. ".3fms\n"
   for _,test in ipairs(pass) do
-    file:write(PASS .. " " .. test.name .. "\n")
+    file:write(string.format(format_string, PASS, test.name, test.millis))
   end
 
   if #fail > 0 then
@@ -130,7 +136,9 @@ function M.run_tests()
   for _,test in ipairs(test_list.tests) do
     floating_window.clear_and_close()
     state.should_notify = false
+    u.start_timer()
     _, test.err = xpcall(test.fn, debug.traceback)
+    test.millis = u.end_timer()
     test.pass = not test.err
     floating_window.clear_and_close()
     state.should_notify = false
