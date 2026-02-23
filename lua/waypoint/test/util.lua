@@ -131,7 +131,7 @@ end
 
 function M.switch_visual()
   u.switch_visual()
-  floating_window.set_waypoint_for_cursor(true)
+  floating_window.set_waypoint_for_cursor(nil, true)
 end
 
 

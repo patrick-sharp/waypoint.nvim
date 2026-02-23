@@ -113,6 +113,7 @@ function M.get_floating_window_height()
   return math.ceil(get_total_height() * config.window_height)
 end
 
+---@return vim.api.keyset.win_config
 local function get_win_opts()
   -- Get editor width and height
   local width = get_total_width()
@@ -168,7 +169,7 @@ local function get_toggle_hl(option)
   return constants.hl_toggle_off
 end
 
----@param win_opts
+---@param win_opts vim.api.keyset.win_config
 ---@param split waypoint.DrawnSplit
 local function get_bg_win_opts(win_opts, split)
   assert(win_opts, "win_opts required arg to get_bg_win_opts")
@@ -225,7 +226,7 @@ local function get_bg_win_opts(win_opts, split)
 end
 
 local num_draws = 0
-local nanos = vim.uv.hrtime()
+local total_draw_time = 0
 
 ---@param action waypoint.window_actions | nil
 local function draw_waypoint_window(action)
@@ -246,7 +247,7 @@ local function draw_waypoint_window(action)
   end
 
   num_draws = num_draws + 1
-  u.log(num_draws, (vim.uv.hrtime() - nanos) / 1e6)
+  local draw_start_time = vim.uv.hrtime()
 
   vim.api.nvim_buf_clear_namespace(wp_bufnr, constants.ns, 0, -1)
   local rows = {}
@@ -305,7 +306,6 @@ local function draw_waypoint_window(action)
 
   local view = vim.fn.winsaveview()
   local winheight = vim.fn.winheight(0)
-
 
   for i, waypoint in ipairs(drawn) do
     local waypoint_topline = #rows + 1
@@ -627,7 +627,10 @@ local function draw_waypoint_window(action)
     -- have to re-get the view because it could change after setting the lines in the waypoint buffer
     view = vim.fn.winsaveview()
     if waypoint_context_lines >= winheight then
-      vim.api.nvim_command("normal! zz")
+      -- vim.api.nvim_command("normal! zz")
+      -- since we limit context size depending on window height, this should only happen when the context fills up the whole window
+      view.topline = cursor_waypoint_topline
+      vim.fn.winrestview(view)
     elseif view.topline > cursor_waypoint_topline then
       view.topline = cursor_waypoint_topline
       vim.fn.winrestview(view)
@@ -669,6 +672,15 @@ local function draw_waypoint_window(action)
   if action ~= M.WINDOW_ACTIONS.set_waypoint_for_cursor then
     ignore_next_cursormoved = true
   end
+
+  local draw_end_time = vim.uv.hrtime()
+  local draw_duration = (draw_end_time - draw_start_time) / 1e6
+  total_draw_time = total_draw_time + draw_duration
+
+  -- u.log(
+  --   "draw time in millis for draw " .. num_draws .. ": " .. draw_duration
+  --   .. "(total for all draws: " .. total_draw_time .. ")"
+  -- )
 end
 
 -- in certain tests, I need to ability to force the waypoint window to draw,
@@ -1242,12 +1254,29 @@ function M.go_to_last_waypoint()
   M.go_to_current_waypoint()
 end
 
+local function reduce_context_to_fit_window()
+  assert(is_open)
+  local winheight = vim.fn.winheight(0)
+  local total_context = state.before_context + state.context + 1 + state.context + state.after_context
+  local factor = winheight / total_context
+  if factor < 1.0 then
+    state.before_context = math.floor(state.before_context * factor)
+    state.context = math.floor(state.context * factor)
+    state.after_context = math.floor(state.after_context * factor)
+  end
+  total_context = state.before_context + state.context + 1 + state.context + state.after_context
+  assert(total_context <= winheight)
+end
+
 local function increase_context(increment)
+  assert(is_open)
+  local winheight = vim.fn.winheight(0)
+  local max_context = math.floor((winheight - state.before_context - 1 - state.after_context) / 2)
   for _=1, vim.v.count1 do
-    state.context = u.clamp(state.context + increment, 0, config.max_context)
+    state.context = u.clamp(state.context + increment, 0, max_context)
   end
 
-  draw_waypoint_window("context")
+  draw_waypoint_window(M.WINDOW_ACTIONS.context)
 end
 
 function M.increase_context()
@@ -1259,11 +1288,13 @@ function M.decrease_context()
 end
 
 local function increase_before_context(increment)
+  assert(is_open)
+  local winheight = vim.fn.winheight(0)
+  local max_before_context = math.floor(winheight - state.context - 1 - state.context - state.after_context)
   for _=1, vim.v.count1 do
-    state.before_context = u.clamp(state.before_context + increment, 0, config.max_context)
+    state.before_context = u.clamp(state.before_context + increment, 0, max_before_context)
   end
-
-  draw_waypoint_window("context")
+  draw_waypoint_window(M.WINDOW_ACTIONS.context)
 end
 
 function M.increase_before_context()
@@ -1275,8 +1306,11 @@ function M.decrease_before_context()
 end
 
 local function increase_after_context(increment)
+  assert(is_open)
+  local winheight = vim.fn.winheight(0)
+  local max_after_context = math.floor(winheight - state.before_context - state.context - 1 - state.context)
   for _=1, vim.v.count1 do
-    state.after_context = u.clamp(state.after_context + increment, 0, config.max_context)
+    state.after_context = u.clamp(state.after_context + increment, 0, max_after_context)
   end
 
   draw_waypoint_window(M.WINDOW_ACTIONS.context)
@@ -1488,8 +1522,9 @@ end
 -- override_ignore is used to make sure this gets called during tests, where the
 -- autocmd normally doesn't trigger until the test is over, and so has to be
 -- triggered manually.
+---@param _ any
 ---@param override_ignore boolean?
-local function set_waypoint_for_cursor(override_ignore)
+local function set_waypoint_for_cursor(_, override_ignore)
   if not override_ignore and ignore_next_cursormoved then
     ignore_next_cursormoved = false
     return
@@ -1511,7 +1546,7 @@ local function set_waypoint_for_cursor(override_ignore)
     end
   end
   state.wpi = cursor_wpi
-  draw_waypoint_window(M.WINDOW_ACTIONS.set_waypoint_for_cursor)
+  draw_waypoint_window()
 end
 
 M.set_waypoint_for_cursor = set_waypoint_for_cursor
@@ -1522,7 +1557,9 @@ function M.resize()
   local bg_win_opts = get_bg_win_opts(win_opts, split)
   vim.api.nvim_win_set_config(winnr, win_opts)
   vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
-  draw_waypoint_window()
+  reduce_context_to_fit_window()
+  ignore_next_cursormoved = true
+  draw_waypoint_window(M.WINDOW_ACTIONS.context)
 end
 
 function M.delete_curr()

@@ -205,6 +205,16 @@
     - [ ] loading bad state from json file
     - [ ] DirChanged callbacks
     - [ ] telescope integration
+    - [ ] context test
+        - after context clamps properly
+        - context clamps properly
+        - before context clamps properly
+    - [ ] resize test
+        - context responds properly to resize
+    - [ ] load test
+        - 1000 waypoints
+        - all max context
+        - <= 10ms draw time
 - [ ] write docs
     - [ ] drawn vs not drawn waypoints
     - [ ] undo and file changes
@@ -231,6 +241,8 @@
     - [ ] make the state in floating window that persists after the render more clear
     - [ ] investigate extmark_from_id vs buf_get_extmark
 - [ ] make a better experience for the non-telescope "locate waypoints within file" command
+- [ ] get rid of separators in border if window is too small
+- [ ] think about splitting the help window into its own file
 
 ### ADVANCED FEATURES:
 
