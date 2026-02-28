@@ -82,6 +82,7 @@ M.WINDOW_ACTIONS = {
 -- the count is 0.
 local ignore_next_cursormoved = false
 local ignore_next_modechanged = false
+local most_recent_draw_succeeded = true
 
 local function set_modifiable(bufnr, is_modifiable)
   if bufnr == nil then error("Should not be called before initializing window") end
@@ -245,6 +246,12 @@ local function draw_waypoint_window(action)
     set_modifiable(wp_bufnr, false)
     return
   end
+
+  -- set this to false at the beginning.
+  -- I do this because if the draw fails, then the autocommands usually do to,
+  -- which creates a terrible experience where doing anything prints a nasty
+  -- error message. this allows the draw calls to fail more gracefully.
+  most_recent_draw_succeeded = false
 
   num_draws = num_draws + 1
   local draw_start_time = vim.uv.hrtime()
@@ -681,6 +688,7 @@ local function draw_waypoint_window(action)
     "draw time in millis for draw " .. num_draws .. ": " .. draw_duration
     .. "(total for all draws: " .. total_draw_time .. ")"
   )
+  most_recent_draw_succeeded = true
 end
 
 -- in certain tests, I need to ability to force the waypoint window to draw,
@@ -1525,7 +1533,8 @@ end
 ---@param _ any
 ---@param override_ignore boolean?
 local function set_waypoint_for_cursor(_, override_ignore)
-  if not override_ignore and ignore_next_cursormoved then
+  local should_ignore = not most_recent_draw_succeeded or (not override_ignore and ignore_next_cursormoved)
+  if should_ignore then
     ignore_next_cursormoved = false
     return
   end
@@ -1608,7 +1617,8 @@ function M.toggle_help()
 end
 
 function M.on_mode_change(arg)
-  if arg ~= true and ignore_next_modechanged then
+  local should_ignore = not most_recent_draw_succeeded or (arg ~= true and ignore_next_modechanged)
+  if should_ignore then
     ignore_next_modechanged = false
     return
   end

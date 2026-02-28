@@ -141,6 +141,7 @@
     - [x] only highlight text that is currently on screen to save perf
     - [x] make resize callback redraw the window so it will re-highlight
 - [x] think about using bufleave to prevent editing another file in the waypoint window with :edit
+- [x] see if you can fix the markdown header treesitter highlight bug
 - [ ] think about persisting waypoints on every waypoint state change. maybe every time the waypoint window closes
     - [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
         - https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua
@@ -151,7 +152,6 @@
 - [ ] remove all asserts from the code
     - [ ] replace them with something that will only panic in debug mode, and just log in release mode
     - [ ] make this function use error with level 2 (or 3 or whatev) to keep the traceback clean
-- [ ] see if you can fix the markdown header treesitter highlight bug
 - [ ] write documentation
     - [ ] quickstart workflow
     - [ ] video
@@ -177,6 +177,7 @@
     - [x] reselect visual after deleting waypoints
     - [x] bulk delete, undo, redo
     - [x] many existing tests, but with deleted waypoints everywhere
+    - [x] test the treesitter highlighter
     - [ ] the following:
         - have waypoint saved in json file
         - open vim
@@ -200,7 +201,6 @@
     - [ ] filter breaking and vomiting garbage into the buffer
     - [ ] filter on only part of the buffer
     - [ ] test the vanilla highlighter
-    - [ ] test the treesitter highlighter
     - [ ] loading bad state from json file
     - [ ] DirChanged callbacks
     - [ ] telescope integration
@@ -226,6 +226,7 @@
     - [ ] tutorial
 - [ ] test waypoint (manual + test suite) on a fresh neovim install
     - [ ] think about optional dependencies like telescope
+    - Use nvim -u /path/to/file
 - [ ] rename functions with new vocab:
       cursor_to:   move the cursor
       swap_to:     move waypoints within the waypoint list

@@ -66,22 +66,23 @@ end
 ---@param lines      string[] the lines of text in the file that we're getting the highlights for
 ---@param start_line integer one-indexed, inclusive
 ---@param end_line   integer one-indexed, exclusive
----@return waypoint.HighlightRange[][]
+---@return waypoint.HighlightRange[][] hlranges array of all syntax highlights on each line.
 function M.get_treesitter_syntax_highlights(bufnr, lines, start_line, end_line)
+  assert(#lines == end_line - start_line)
   -- convert to zero-indexed
-  start_line = start_line - 1
-  end_line = end_line - 1
+  -- start_line = start_line - 1
+  -- end_line = end_line - 1
 
   ---@type waypoint.TreesitterHighlight[]
-  local treesitter_highlights = M.get_nodes_with_highlights(bufnr, start_line, end_line)
+  local treesitter_highlights = M.get_nodes_with_highlights(bufnr, start_line - 1, end_line - 1) -- this function takes zero-indexed parameters
   ---@type waypoint.HighlightRange[]
   local hlranges = {}
   for _=1, #lines do
     table.insert(hlranges, {})
   end
-  for _,ts_highlight in pairs(treesitter_highlights) do
-    local hl_start_line = ts_highlight.range[1]
-    local hl_end_line = ts_highlight.range[3]
+  for _,ts_highlight in ipairs(treesitter_highlights) do
+    local hl_start_line = ts_highlight.range[1] + 1 -- one-indexed
+    local hl_end_line = ts_highlight.range[3] + 1   -- one-indexed
     -- one-indexed index into the highlight ranges table.
     -- e.g. if you're getting highlights where start_line is 20 and end_line is
     -- 23, then line 21 (0-based indexing) will have a hlrange_idx of 2
@@ -94,74 +95,56 @@ function M.get_treesitter_syntax_highlights(bufnr, lines, start_line, end_line)
         col_end = ts_highlight.range[4],
       })
     else
-      -- all are zero indexed. lower bound inclusive, upper bound exclusive
-      local range_start_line = math.max(ts_highlight.range[1], start_line) -- make sure we only add highlight ranges for lines in the context, not before
-      local range_start_col = ts_highlight.range[2]
-      local range_end_line = math.min(ts_highlight.range[3], end_line + 1) -- make sure we only add highlight ranges for lines in the context, not after
-      local range_end_col = ts_highlight.range[4]
-      u.log(hl_start_line, hl_end_line, vim.fn.synIDattr(ts_highlight.hl_id, "name"),
-        "RANGE",
-        ts_highlight.range,
-        "ME",
-        range_start_line,
-        range_start_col ,
-        range_end_line,
-        range_end_col,
-        "FILE LINES",
-        start_line, end_line
-      )
-      if range_end_col == 0 then
-        -- since treesitter highlight range upper bound is exclusive, if a
-        -- highlight range ends at col 0, treat that ending at the end of the
-        -- previous line
-        range_end_line = range_end_line - 1
-        -- need to use vislen because this is a column length, not a byte length
-        range_end_col = u.vislen(lines[range_end_line - start_line + 1])
+      ---@type integer
+      local range_start_line
+      ---@type integer
+      local range_start_col
+      ---@type integer
+      local range_end_line
+      ---@type integer
+      local range_end_col
+
+      if ts_highlight.range[1] + 1 < start_line then
+        range_start_line = start_line
+        range_start_col = 0
+      else
+        range_start_line = ts_highlight.range[1] + 1
+        range_start_col = ts_highlight.range[2]
       end
-      -- these are both one-indexed inclusive
-      -- local start_i = range_start_line - start_line + 1
-      -- local end_i = range_end_line - start_line
-      local start_i = range_start_line - start_line + 1
-      local end_i = range_end_line - start_line
 
-      u.log(hl_start_line, hl_end_line, vim.fn.synIDattr(ts_highlight.hl_id, "name"),
-        "RANGE",
-        ts_highlight.range,
-        "ME",
-        range_start_line,
-        range_start_col ,
-        range_end_line,
-        range_end_col
-      )
+      if end_line <= ts_highlight.range[3] + 1 then
+        range_end_line = end_line - 1
+        range_end_col = u.vislen(lines[#lines])
+      else
+        if ts_highlight.range[4] == 0 then
+          range_end_line = ts_highlight.range[3] -- remember end_line is exclusive, and the ts_highlight.range fields are zero-indexed
+          local line_i =  ts_highlight.range[3] - ts_highlight.range[1]
+          range_end_col = u.vislen(lines[line_i])
+        else
+          range_end_line = ts_highlight.range[3] + 1 -- remember end_line is exclusive, and the ts_highlight.range fields are zero-indexed
+          range_end_col = ts_highlight.range[4]
+        end
+      end
 
-      u.log(start_i, end_i)
-
-      u.log(lines)
-
-      -- for i = start_i, end_i do
       for i = range_start_line, range_end_line do
+        local line_i = i - start_line + 1
         local col_start
-        -- if i == start_i then
-        if i == range_start_line then
+        if line_i == 1 then
           col_start = range_start_col
         else
           col_start = 0
         end
         local col_end
-        local line_i = range_start_line + start_line + 1
-        u.log(line_i)
         -- if i == end_i then
-        if i == range_end_line then
+        if line_i == #lines then
           -- for some reason, some treesitter highlights have their end column
           -- past the end of the line. This will cause an "end_col out of range"
           -- error when you try to make an extmark make an extmark.
           -- col_end = math.min(range_end_col, u.vislen(lines[i]))
           col_end = math.min(range_end_col, u.vislen(lines[line_i]))
         else
-          -- col_end = u.vislen(lines[i])
           col_end = u.vislen(lines[line_i])
         end
-        -- table.insert(hlranges[i], {
         table.insert(hlranges[line_i], {
           ns = constants.ns,
           hl_group = ts_highlight.hl_id,
@@ -171,6 +154,7 @@ function M.get_treesitter_syntax_highlights(bufnr, lines, start_line, end_line)
       end
     end
   end
+  assert(#hlranges == end_line - start_line)
   return hlranges
 end
 
