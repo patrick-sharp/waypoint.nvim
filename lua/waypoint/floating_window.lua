@@ -222,6 +222,16 @@ local function get_bg_win_opts(win_opts, split)
     path, num, text, sep, full_path, context, sort,
     { " ", 'FloatBorder'},
   }
+
+  -- if the footer is two wide for the screen, use a smaller separator
+  local footer_length = 0
+  for _, item in ipairs(bg_win_opts.footer) do
+    footer_length = footer_length + u.vislen(item[1])
+  end
+  if footer_length > bg_win_opts.width then
+    sep[1] = " "
+  end
+
   bg_win_opts.title_pos = "center"
   return bg_win_opts
 end
