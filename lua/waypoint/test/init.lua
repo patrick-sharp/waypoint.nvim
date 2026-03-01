@@ -53,9 +53,11 @@ local function log_test_output()
   local fail = {}
   local test_name_length = 0
   local test_time_length = 0
+  local total_millis = 0
   for _,test in ipairs(test_list.tests) do
     test_name_length = math.max(test_name_length, u.vislen(test.name))
     test_time_length = math.max(test_time_length, math.ceil(math.log(test.millis, 10)))
+    total_millis = total_millis + test.millis
     if test.pass then
       table.insert(pass, test)
     else
@@ -65,14 +67,15 @@ local function log_test_output()
 
   local summary
   local passed_fraction = "Passed " .. tostring(#pass) .. "/" .. tostring(#pass + #fail) .. " tests"
+  local total_millis_msg = string.format(" in %.3fms", total_millis)
   if #pass == 0 and #fail == 0 then
     summary = "NO TESTS RUN"
   elseif #fail == 0 then
-    summary = "✓ ALL TESTS PASSED\n" .. passed_fraction
+    summary = "✓ ALL TESTS PASSED\n" .. passed_fraction .. total_millis_msg
   elseif #pass > 0 then
-    summary = "𐄂 SOME TESTS FAILED\n" .. passed_fraction
+    summary = "𐄂 SOME TESTS FAILED\n" .. passed_fraction .. total_millis_msg
   else
-    summary = "𐄂 ALL TESTS FAILED\n" .. passed_fraction
+    summary = "𐄂 ALL TESTS FAILED\n" .. passed_fraction .. total_millis_msg
   end
   file:write(summary .. "\n")
   file:write(border)
