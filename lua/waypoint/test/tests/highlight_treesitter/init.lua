@@ -64,6 +64,10 @@ describe('Highlight treesitter', function()
   local lua_bufnr = file.open_file(file_0)
   local markdown_bufnr = file.open_file(markdown_file)
 
+  -- treesitter is on by default, this is out of an abundance of caution for previous leftover state
+  vim.treesitter.start(lua_bufnr)
+  vim.treesitter.start(markdown_bufnr)
+
   ---@type integer
   local start_line
   ---@type integer
