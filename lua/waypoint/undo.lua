@@ -12,6 +12,7 @@ local uw = require"waypoint.utils_waypoint"
 ---@field wpi integer?
 ---@field undo_msg string
 ---@field redo_msg string
+---@field affected_wpis integer[]
 
 -- we will always keep at least one state in this ring buffer.
 -- when you undo, load the previous state and previous wpi.
@@ -76,7 +77,8 @@ end
 ---@param undo_msg string
 ---@param redo_msg string
 ---@param change_wpi integer?
-function M.save_state(undo_msg, redo_msg, change_wpi)
+---@param affected_wpis integer[]?
+function M.save_state(undo_msg, redo_msg, change_wpi, affected_wpis)
   message.notify(redo_msg, vim.log.levels.INFO)
 
   ---@type waypoint.UndoNode
@@ -85,6 +87,7 @@ function M.save_state(undo_msg, redo_msg, change_wpi)
     wpi = change_wpi or state.wpi,
     undo_msg = undo_msg,
     redo_msg = redo_msg,
+    affected_wpis = affected_wpis or {},
   }
 
   ring_buffer.push(M.states, undo_node)

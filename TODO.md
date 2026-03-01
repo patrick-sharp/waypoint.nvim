@@ -147,14 +147,14 @@
         - https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua
         - maybe use vim.schedule to do it async if worried about perf?
 - [ ] create better error handling and reporting
+    - [x] think about adding some kind of error handling to draw_waypoint_window that will just display an error if pcall happens, so you don't have to fight through cumulative errors to close the window
     - [ ] if highlighting fails for some reason, just show an error message and turn off highlighting
-    - [ ] think about adding some kind of error handling to draw_waypoint_window that will just display an error if pcall happens, so you don't have to fight through cumulative errors to close the window
 - [ ] remove all asserts from the code
     - [ ] replace them with something that will only panic in debug mode, and just log in release mode
     - [ ] make this function use error with level 2 (or 3 or whatev) to keep the traceback clean
 - [ ] write documentation
     - [ ] quickstart workflow
-    - [ ] video
+    - [ ] screenshot tutorial
 - [ ] write alternatives
     - [ ] vim marks
         - can't reorder/indent
@@ -243,6 +243,10 @@
 - [ ] make a better experience for the non-telescope "locate waypoints within file" command
 - [ ] get rid of separators in border if window is too small
 - [ ] think about splitting the help window into its own file
+- [ ] clean up weird module shenanigans
+    - e.g. M.make_sorted_waypoints = uw.make_sorted_waypoints
+- [ ] refactor using more ergonomic split functions
+    - [ ] rewrite move_curr
 
 ### ADVANCED FEATURES:
 

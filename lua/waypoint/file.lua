@@ -1,16 +1,15 @@
--- This file contains functions for saving and loading state from files
+-- This file contains functions for saving and loading waypoint state from files
 
 local M = {}
 
-local config = require("waypoint.config")
-local constants = require("waypoint.constants")
-local highlight = require("waypoint.highlight")
+local config = require "waypoint.config"
+local constants = require "waypoint.constants"
+local highlight = require "waypoint.highlight"
 local levenshtein   = require "waypoint.levenshtein"
 local pretty = require "waypoint.prettyjson"
-local state = require("waypoint.state")
-local u = require("waypoint.utils")
-local uw = require("waypoint.utils_waypoint")
-local waypoint_crud = require "waypoint.waypoint_crud"
+local state = require "waypoint.state"
+local u = require "waypoint.utils"
+local uw = require "waypoint.utils_waypoint"
 local message = require "waypoint.message"
 local undo = require "waypoint.undo"
 
@@ -195,7 +194,7 @@ local function load_decoded_state_into_state(decoded)
   for state_k,state_v in pairs(decoded) do
     state[state_k] = state_v
   end
-  waypoint_crud.make_sorted_waypoints()
+  uw.make_sorted_waypoints()
 end
 
 -- this is only called on startup. we want the first entry in the undo history
