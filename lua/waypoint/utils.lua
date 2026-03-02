@@ -9,7 +9,7 @@ local u = M
 ---index (i.e. it accounts for unicode chars being multiple bytes long and tabs
 ---being multiple columns long).
 ---@field nsid integer
----@field hl_group string | integer   if the range comes from treesitter, it will be an id. If it comes from vanilla vim, it will be a name.
+---@field hl_group integer
 ---@field col_start integer one-indexed inclusive column start for highlight
 ---@field col_end integer one-indexed inclusive column end for highlight.
 

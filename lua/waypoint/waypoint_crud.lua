@@ -19,7 +19,7 @@ M.was_most_recent_change_saved = false
 ---@param affected_wpis integer[]?
 function M.save_change(undo_msg, redo_msg, change_wpi, affected_wpis)
   M.was_most_recent_change_saved = false
-  undo.save_state(undo_msg, redo_msg, change_wpi)
+  undo.save_state(undo_msg, redo_msg, change_wpi, affected_wpis)
   uw.make_sorted_waypoints()
 
   -- asynchronously schedule saving to file to not block user interaction

@@ -134,5 +134,49 @@ function M.switch_visual()
   floating_window.set_waypoint_for_cursor(nil, true)
 end
 
+---@param hlranges waypoint.HighlightRange[]
+function M.inspect_hlranges(hlranges)
+  for _,hlrange in ipairs(hlranges) do
+    local hl_group = hlrange.hl_group
+    M.assert_eq("number", type(hl_group))
+
+    local name = vim.fn.synIDattr(hl_group, "name")
+    ---@cast hlrange any
+    hlrange.name = name
+  end
+  return vim.inspect(hlranges)
+end
+
+---@param hlrange waypoint.HighlightRange
+---@return string
+function M.get_hl_name(hlrange)
+  local hl_group = hlrange.hl_group
+  M.assert_eq("number", type(hl_group))
+  ---@cast hl_group integer
+  return vim.fn.synIDattr(hl_group, "name")
+end
+
+---@param hlranges waypoint.HighlightRange[] highlight ranges for a single row
+---@param name string
+---@param col_start integer
+---@param col_end integer
+function M.assert_has_hl(hlranges, name, col_start, col_end)
+  local counter = 0
+  for _, hlrange in ipairs(hlranges) do
+    local range_name = M.get_hl_name(hlrange)
+    if range_name == name then
+      counter = counter + 1
+      if col_start == hlrange.col_start and col_end == hlrange.col_end then
+        return
+      end
+    end
+  end
+  local hlranges_msg = M.inspect_hlranges(hlranges)
+  if counter == 0 then
+    error("hlranges has no range with name " .. name .. "\nhlranges = " .. hlranges_msg)
+  else
+    error("hlranges has " .. counter .. " ranges with name " .. name .. ", but none are over the right columns" .. "\nhlranges = " .. hlranges_msg)
+  end
+end
 
 return M

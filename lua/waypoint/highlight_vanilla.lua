@@ -19,9 +19,13 @@ end
 
 ---@param bufnr      integer
 ---@param lines      string[]
----@param start_line integer zero-indexed
+---@param start_line integer one-indexed
+---@param end_line   integer one-indexed, exclusive
 ---@return waypoint.HighlightRange[][] length of returned table is equal to number of lines.
-function M.get_vanilla_syntax_highlights(bufnr, lines, start_line)
+function M.get_vanilla_syntax_highlights(bufnr, lines, start_line, end_line)
+  start_line = start_line - 1 -- convert to zero-indexed
+  end_line = end_line - 1 -- convert to zero-indexed
+  assert(#lines == end_line - start_line)
   local hlranges = {}
   for i,line in pairs(lines) do
     local line_hlranges = {}
