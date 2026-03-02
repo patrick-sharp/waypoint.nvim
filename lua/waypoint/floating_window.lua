@@ -701,10 +701,6 @@ local function draw_waypoint_window(action)
   most_recent_draw_succeeded = true
 end
 
--- in certain tests, I need to ability to force the waypoint window to draw,
--- so this has to be accessible publicly
-M.draw_waypoint_window = draw_waypoint_window
-
 ---@type table<integer, table<string, boolean>>
 M.bound_keys = {}
 
@@ -1543,6 +1539,7 @@ end
 ---@param _ any
 ---@param override_ignore boolean?
 local function set_waypoint_for_cursor(_, override_ignore)
+  assert(is_open)
   local should_ignore = not most_recent_draw_succeeded or (not override_ignore and ignore_next_cursormoved)
   if should_ignore then
     ignore_next_cursormoved = false
@@ -1626,13 +1623,18 @@ function M.toggle_help()
   end
 end
 
-function M.on_mode_change(arg)
-  local should_ignore = not most_recent_draw_succeeded or (arg ~= true and ignore_next_modechanged)
+---@param arg table?
+---@param override_arg table?
+function M.on_mode_change(arg, override_arg)
+  assert(is_open)
+  arg = override_arg or arg
+  assert(arg)
+  local should_ignore = not most_recent_draw_succeeded or (override_arg == nil and ignore_next_modechanged)
   if should_ignore then
     ignore_next_modechanged = false
     return
   end
-  if arg == true then
+  if override_arg == true then
     arg = {match="n:v"}
   end
   assert(line_to_waypoint)

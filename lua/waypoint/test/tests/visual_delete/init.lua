@@ -29,7 +29,7 @@ describe('Visual delete', function()
   tu.assert_eq(num_waypoints, u.len(lines))
 
   -- delete one waypoint
-  u.enter_visual_mode()
+  tu.enter_visual_mode()
   floating_window.delete_curr()
   lines = tu.get_waypoint_buffer_lines_trimmed()
   num_deleted = 1
@@ -44,7 +44,7 @@ describe('Visual delete', function()
   end
 
   -- delete two waypoints
-  u.enter_visual_mode()
+  tu.enter_visual_mode()
   floating_window.next_waypoint()
   floating_window.delete_curr()
   lines = tu.get_waypoint_buffer_lines_trimmed()
@@ -57,7 +57,7 @@ describe('Visual delete', function()
   end
 
   -- delete remaining waypoints
-  u.enter_visual_mode()
+  tu.enter_visual_mode()
   floating_window.move_to_last_waypoint()
   floating_window.delete_curr()
   lines = tu.get_waypoint_buffer_lines_trimmed()

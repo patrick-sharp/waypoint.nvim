@@ -134,6 +134,22 @@ function M.switch_visual()
   floating_window.set_waypoint_for_cursor(nil, true)
 end
 
+function M.enter_visual_mode()
+  u.enter_visual_mode()
+  floating_window.on_mode_change(nil, {match="n:v"})
+end
+
+function M.exit_visual_mode()
+  u.exit_visual_mode()
+  floating_window.on_mode_change(nil, {match="v:n"})
+end
+
+---@param col integer
+function M.goto_char_col(col)
+  u.goto_char_col(col)
+  floating_window.set_waypoint_for_cursor(nil, true)
+end
+
 ---@param hlranges waypoint.HighlightRange[]
 function M.inspect_hlranges(hlranges)
   for _,hlrange in ipairs(hlranges) do

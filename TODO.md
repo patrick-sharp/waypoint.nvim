@@ -178,6 +178,7 @@
     - [x] bulk delete, undo, redo
     - [x] many existing tests, but with deleted waypoints everywhere
     - [x] test the treesitter highlighter
+    - [x] test the vanilla highlighter
     - [ ] the following:
         - have waypoint saved in json file
         - open vim
@@ -200,7 +201,6 @@
     - [ ] waypoints being moved after a filter
     - [ ] filter breaking and vomiting garbage into the buffer
     - [ ] filter on only part of the buffer
-    - [ ] test the vanilla highlighter
     - [ ] loading bad state from json file
     - [ ] DirChanged callbacks
     - [ ] telescope integration

@@ -42,9 +42,7 @@ describe('Visual move top', function()
 
   tu.assert_eq(4, #lines)
 
-  u.enter_visual_mode()
-  floating_window.on_mode_change(true)
-  floating_window.draw_waypoint_window()
+  tu.enter_visual_mode()
   floating_window.next_waypoint()
   floating_window.next_waypoint()
   tu.assert_eq(5, state.wpi)

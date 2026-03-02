@@ -50,13 +50,12 @@ local function reselect_beginning_line(test_type)
   elseif test_type == "reselect_after_expand" then
     line_a, line_b = adjust_expand_lines(line_a, line_b)
   end
-  u.enter_visual_mode()
-  u.goto_char_col(col_a)
+  tu.enter_visual_mode()
+  tu.goto_char_col(col_a)
   tu.switch_visual()
-  u.goto_char_col(col_b)
-  floating_window.draw_waypoint_window() -- have to put this in here to give the waypoint window a chance to save the visual position
-  u.exit_visual_mode()
-  u.goto_char_col(1)
+  tu.goto_char_col(col_b)
+  tu.exit_visual_mode()
+  tu.goto_char_col(1)
   if test_type == "reselect_after_shrink" then
     floating_window.reset_context()
   elseif test_type == "reselect_after_expand" then
@@ -80,14 +79,14 @@ local function reselect_beginning_two_lines(test_type)
   elseif test_type == "reselect_after_expand" then
     line_a, line_b = adjust_expand_lines(line_a, line_b)
   end
-  u.enter_visual_mode()
-  u.goto_char_col(col_a)
+  tu.enter_visual_mode()
+  tu.goto_char_col(col_a)
   tu.switch_visual()
-  u.goto_char_col(col_b)
+  tu.goto_char_col(col_b)
   floating_window.next_waypoint()
-  u.exit_visual_mode()
+  tu.exit_visual_mode()
   floating_window.next_waypoint()
-  u.goto_char_col(1)
+  tu.goto_char_col(1)
 
   if test_type == "reselect_after_shrink" then
     floating_window.reset_context()
@@ -115,12 +114,11 @@ local function reselect_interior_line(test_type)
   floating_window.next_waypoint()
   floating_window.next_waypoint()
   floating_window.next_waypoint()
-  u.enter_visual_mode()
-  u.goto_char_col(col_a)
+  tu.enter_visual_mode()
+  tu.goto_char_col(col_a)
   tu.switch_visual()
-  u.goto_char_col(col_b)
-  floating_window.draw_waypoint_window() -- have to put this in here to give the waypoint window a chance to save the visual position
-  u.exit_visual_mode()
+  tu.goto_char_col(col_b)
+  tu.exit_visual_mode()
   floating_window.prev_waypoint()
   u.goto_char_col(1)
 
@@ -131,8 +129,8 @@ local function reselect_interior_line(test_type)
   end
   floating_window.reselect_visual()
   tu.assert_vis_char_pos(line_b, col_b, line_a, col_a)
-  u.exit_visual_mode()
-  u.goto_char_col(1)
+  tu.exit_visual_mode()
+  tu.goto_char_col(1)
   floating_window.move_to_first_waypoint()
   floating_window.reset_context()
 end
@@ -149,14 +147,13 @@ local function reselect_two_interior_lines(test_type)
   end
   floating_window.next_waypoint()
   floating_window.next_waypoint()
-  u.enter_visual_mode()
-  u.goto_char_col(col_a)
+  tu.enter_visual_mode()
+  tu.goto_char_col(col_a)
   tu.switch_visual()
   floating_window.next_waypoint()
-  u.goto_char_col(col_b)
-  floating_window.draw_waypoint_window() -- have to put this in here to give the waypoint window a chance to save the visual position
-  u.exit_visual_mode()
-  u.goto_char_col(1)
+  tu.goto_char_col(col_b)
+  tu.exit_visual_mode()
+  tu.goto_char_col(1)
   floating_window.prev_waypoint()
 
   if test_type == "reselect_after_shrink" then
@@ -166,8 +163,8 @@ local function reselect_two_interior_lines(test_type)
   end
   floating_window.reselect_visual()
   tu.assert_vis_char_pos(line_b, col_b, line_a, col_a)
-  u.exit_visual_mode()
-  u.goto_char_col(1)
+  tu.exit_visual_mode()
+  tu.goto_char_col(1)
   floating_window.move_to_first_waypoint()
   floating_window.reset_context()
 end
@@ -181,16 +178,15 @@ local function reselect_all_lines(test_type)
   elseif test_type == "reselect_after_expand" then
     line_a, line_b = adjust_expand_lines(line_a, line_b)
   end
-  u.enter_visual_mode()
-  u.goto_char_col(col_a)
+  tu.enter_visual_mode()
+  tu.goto_char_col(col_a)
   tu.switch_visual()
   floating_window.move_to_last_waypoint()
-  u.goto_char_col(col_b)
-  floating_window.draw_waypoint_window() -- have to put this in here to give the waypoint window a chance to save the visual position
-  u.exit_visual_mode()
+  tu.goto_char_col(col_b)
+  tu.exit_visual_mode()
   floating_window.prev_waypoint()
   floating_window.prev_waypoint()
-  u.goto_char_col(1)
+  tu.goto_char_col(1)
 
   if test_type == "reselect_after_shrink" then
     floating_window.reset_context()
@@ -199,8 +195,8 @@ local function reselect_all_lines(test_type)
   end
   floating_window.reselect_visual()
   tu.assert_vis_char_pos(line_b, col_b, line_a, col_a)
-  u.exit_visual_mode()
-  u.goto_char_col(1)
+  tu.exit_visual_mode()
+  tu.goto_char_col(1)
   floating_window.move_to_first_waypoint()
   floating_window.reset_context()
 end
@@ -247,7 +243,7 @@ describe('Visual reselect deleted', function()
 
   floating_window.open()
   floating_window.move_to_last_waypoint()
-  u.enter_visual_mode()
+  tu.enter_visual_mode()
   floating_window.prev_waypoint()
   floating_window.delete_curr()
   floating_window.move_to_first_waypoint()
@@ -267,10 +263,9 @@ describe('Visual reselect invisible', function()
 
   floating_window.open()
   floating_window.move_to_last_waypoint()
-  u.enter_visual_mode()
+  tu.enter_visual_mode()
   floating_window.prev_waypoint()
-  u.exit_visual_mode()
-  floating_window.draw_waypoint_window() -- force redraw so waypoint tracks that we exited visual mode
+  tu.exit_visual_mode()
   floating_window.leave()
 
   tu.edit_file(file_1)
