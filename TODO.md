@@ -142,6 +142,8 @@
     - [x] make resize callback redraw the window so it will re-highlight
 - [x] think about using bufleave to prevent editing another file in the waypoint window with :edit
 - [x] see if you can fix the markdown header treesitter highlight bug
+- [x] get rid of separators in border if window is too small
+- [x] clean up weird module shenanigans
 - [ ] think about persisting waypoints on every waypoint state change. maybe every time the waypoint window closes
     - [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
         - https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua
@@ -241,10 +243,7 @@
     - [ ] make the state in floating window that persists after the render more clear
     - [ ] investigate extmark_from_id vs buf_get_extmark
 - [ ] make a better experience for the non-telescope "locate waypoints within file" command
-- [ ] get rid of separators in border if window is too small
 - [ ] think about splitting the help window into its own file
-- [ ] clean up weird module shenanigans
-    - e.g. M.make_sorted_waypoints = uw.make_sorted_waypoints
 - [ ] refactor using more ergonomic split functions
     - [ ] rewrite move_curr
 

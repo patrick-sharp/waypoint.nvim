@@ -1538,7 +1538,7 @@ end
 -- triggered manually.
 ---@param _ any
 ---@param override_ignore boolean?
-local function set_waypoint_for_cursor(_, override_ignore)
+function M.set_waypoint_for_cursor(_, override_ignore)
   assert(is_open)
   local should_ignore = not most_recent_draw_succeeded or (not override_ignore and ignore_next_cursormoved)
   if should_ignore then
@@ -1564,8 +1564,6 @@ local function set_waypoint_for_cursor(_, override_ignore)
   state.wpi = cursor_wpi
   draw_waypoint_window()
 end
-
-M.set_waypoint_for_cursor = set_waypoint_for_cursor
 
 function M.resize()
   local win_opts = get_win_opts()
@@ -1688,7 +1686,7 @@ function M.open()
   vim.api.nvim_create_autocmd("CursorMoved", {
     group = constants.window_augroup,
     buffer = wp_bufnr,
-    callback = set_waypoint_for_cursor,
+    callback = M.set_waypoint_for_cursor,
   })
 
   vim.api.nvim_create_autocmd("VimResized", {
