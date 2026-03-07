@@ -48,7 +48,7 @@ local function encode()
   state_to_encode.waypoints = {}
   state_to_encode.sort_by_file_and_line = state.sort_by_file_and_line
   state_to_encode.show_context = state.show_context
-  state_to_encode.show_file_text = state.show_file_text
+  state_to_encode.show_waypoint_text = state.show_waypoint_text
   state_to_encode.show_full_path = state.show_full_path
   state_to_encode.show_path = state.show_path
   state_to_encode.show_line_num = state.show_line_num
@@ -128,7 +128,7 @@ local file_schema = {
   show_path = "boolean",
   show_full_path = "boolean",
   show_line_num = "boolean",
-  show_file_text = "boolean",
+  show_waypoint_text = "boolean",
   show_context = "boolean",
   after_context = "number",
   before_context = "number",

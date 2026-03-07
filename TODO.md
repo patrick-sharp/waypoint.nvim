@@ -147,8 +147,8 @@
 - [x] think about splitting the help window into its own file (decided not to)
 - [x] refactor using more ergonomic split functions
     - [x] rewrite move_curr
-- [ ] think about persisting waypoints on every waypoint state change. maybe every time the waypoint window closes
-    - [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
+- [x] think about persisting waypoints on every waypoint state change. maybe every time the waypoint window closes
+    - [x] take inspiration from harpoon and bookmarks about when the file gets saved and where
         - https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua
         - maybe use vim.schedule to do it async if worried about perf?
 - [ ] create better error handling and reporting
@@ -244,12 +244,11 @@
       navigate_to: set buffer and cursor to the location of a waypoint
       relocate:    transfer waypoints from one file to another
 - [ ] double check undo/redo messages for everything
-    - [ ] maybe think about making them dynamic (e.g. show message if an un-deleted waypoint isn't shown because its extmark is gone)
+    - [ ] in message, show which waypoints are restored to be visible
 - [ ] add ability to see soft-deleted waypoints in waypoint window (maybe a toggle)
     - [ ] refactor the drawn wpi functions to be clearer
 - [ ] refactor several things for cleanliness
     - [x] consolidate split_by_drawn and get_drawn_waypoints
-    - [ ] make the state in floating window that persists after the render more clear
     - [ ] investigate extmark_from_id vs buf_get_extmark
 - [ ] make a better experience for the non-telescope "locate waypoints within file" command
 

@@ -2,7 +2,7 @@
 	"wpi": 1,
 	"sort_by_file_and_line": false,
 	"show_context": true,
-	"show_file_text": true,
+	"show_waypoint_text": true,
 	"show_full_path": true,
 	"show_path": true,
 	"show_line_num": true,

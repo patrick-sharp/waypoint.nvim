@@ -48,7 +48,7 @@
 ---@field show_path              boolean
 ---@field show_full_path         boolean
 ---@field show_line_num          boolean
----@field show_file_text         boolean
+---@field show_waypoint_text     boolean
 ---@field show_context           boolean whether or not to show the context around the waypoint instead of just the line of text the waypoint is on
 ---@field sort_by_file_and_line  boolean whether or not to show the context around the waypoint instead of just the line of text the waypoint is on
 ---@field should_notify          boolean whether or not to actually print when message.notify is called
@@ -67,7 +67,7 @@ local M = {
   show_path        = true,
   show_full_path   = false,
   show_line_num    = true,
-  show_file_text   = true,
+  show_waypoint_text   = true,
   show_context     = true,
 
   sort_by_file_and_line = false,

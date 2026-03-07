@@ -197,7 +197,7 @@ local function get_bg_win_opts(win_opts, split)
   local num =        {"N", get_toggle_hl(state.show_line_num) }
   local path =       {"P", get_toggle_hl(state.show_path) }
   local full_path =  {"F", get_toggle_hl(state.show_full_path) }
-  local text =       {"T", get_toggle_hl(state.show_file_text) }
+  local text =       {"T", get_toggle_hl(state.show_waypoint_text) }
   local context =    {"C", get_toggle_hl(state.show_context) }
   local sort =       {"S", get_toggle_hl(state.sort_by_file_and_line) }
 
@@ -425,7 +425,7 @@ local function draw_waypoint_window(action)
       end
 
       -- file text
-      if state.show_file_text then
+      if state.show_waypoint_text then
         table.insert(row, line_text)
         table.insert(line_hlranges, line_extmark_hlranges)
       end
@@ -464,7 +464,7 @@ local function draw_waypoint_window(action)
   if state.show_line_num then
     table.insert(table_cell_types, "number")
   end
-  if state.show_file_text then
+  if state.show_waypoint_text then
     table.insert(table_cell_types, "string")
   end
 
@@ -972,8 +972,10 @@ local function draw_help()
   -- info about state
   local prop_names = {
     {"show_path", "Show file path:"},
+    {"show_line_num", "Show line number:"},
+    {"show_waypoint_text", "Show waypoint text:"},
+    "",
     {"show_full_path", "Show full file path:"},
-    {"show_file_text", "Show file text:"},
     {"show_context", "Show context:"},
     {"sort_by_file_and_line", "Sort by file and line number:"},
   }
@@ -982,29 +984,36 @@ local function draw_help()
   local toggles = {}
   ---@type waypoint.HighlightRange[][][]
   local toggle_highlights = {}
-  for _,key_name in pairs(prop_names) do
-    local key = key_name[1]
-    local name = key_name[2]
-    local on_off
-    local hl_group
-    if state[key] then
-      on_off = "ON"
-      hl_group = constants.hl_toggle_on
+  for _,key_name in ipairs(prop_names) do
+    if key_name == "" then
+      table.insert(toggles, {"", ""})
+      table.insert(toggle_highlights, {{}, {}})
     else
-      on_off = "OFF"
-      hl_group = constants.hl_toggle_off
+      local key = key_name[1]
+      local name = key_name[2]
+      local on_off
+      local hl_group
+      if state[key] then
+        on_off = "ON"
+        hl_group = constants.hl_toggle_on
+      else
+        on_off = "OFF"
+        hl_group = constants.hl_toggle_off
+      end
+      table.insert(toggles, { name, on_off })
+      table.insert(toggle_highlights,
+        {{}, {{
+          nsid = constants.ns,
+          hl_group = hl_group,
+          col_start = 1,
+          col_end = #on_off,
+        }}}
+      )
     end
-    table.insert(toggles, { name, on_off })
-    table.insert(toggle_highlights,
-      {{}, {{
-        nsid = constants.ns,
-        hl_group = hl_group,
-        col_start = 1,
-        col_end = #on_off,
-      }}}
-    )
   end
   local aligned_toggles = uw.align_waypoint_table(toggles, {"string", "string"}, toggle_highlights)
+  u.log(#aligned_toggles, #toggles)
+  u.log(aligned_toggles)
   table.insert(lines, "Toggles")
   table.insert(lines, "")
   table.insert(highlights, {})
@@ -1375,7 +1384,7 @@ function M.toggle_line_number()
 end
 
 function M.toggle_text()
-  state.show_file_text = not state.show_file_text
+  state.show_waypoint_text = not state.show_waypoint_text
   if help_bufnr then
     draw_help()
   else
@@ -1792,7 +1801,7 @@ function M.clear_state()
   state.show_path        = true
   state.show_full_path   = false
   state.show_line_num    = true
-  state.show_file_text   = true
+  state.show_waypoint_text   = true
   state.show_context     = true
 
   state.sort_by_file_and_line = false
