@@ -19,7 +19,6 @@ local function log(...)
   table.insert(inspected, "\n")
 
   local time = os.date("%Y-%m-%d %H:%M:%S")
-  ---@diagnostic disable: undefined-field
   local nanos = vim.uv.hrtime()
   local millis = math.floor(nanos % 1e9 / 1e6)
   local message = table.concat({

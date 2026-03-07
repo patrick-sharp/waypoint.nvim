@@ -129,6 +129,12 @@ function M.edit_file(file)
   vim.cmd.edit({args = {file}, bang=true})
 end
 
+---@param col integer
+function M.goto_char_col(col)
+  u.goto_char_col(col)
+  floating_window.set_waypoint_for_cursor(nil, true)
+end
+
 function M.switch_visual()
   u.switch_visual()
   floating_window.set_waypoint_for_cursor(nil, true)
@@ -142,12 +148,6 @@ end
 function M.exit_visual_mode()
   u.exit_visual_mode()
   floating_window.on_mode_change(nil, {match="v:n"})
-end
-
----@param col integer
-function M.goto_char_col(col)
-  u.goto_char_col(col)
-  floating_window.set_waypoint_for_cursor(nil, true)
 end
 
 ---@param hlranges waypoint.HighlightRange[]

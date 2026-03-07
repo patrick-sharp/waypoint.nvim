@@ -60,7 +60,7 @@ end
 ---@return integer? the one-indexed line number a waypoint's extmark is on, or nil if it doesn't have one
 function M.linenr_from_waypoint(waypoint)
   local extmark = M.extmark_from_waypoint(waypoint)
-  if not extmark then return nil end
+  if not extmark then return waypoint.linenr end
   return extmark[1] + 1 -- convert from zero-indexed to one-indexed
 end
 
@@ -122,7 +122,7 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after, is_
     elseif not ok then
       table.insert(lines, message.missing_file_err_msg)
     else
-      table.insert(lines, constants.line_oob_error)
+      table.insert(lines, constants.error_line_oob)
     end
     table.insert(hlranges, {{
       nsid = constants.ns,

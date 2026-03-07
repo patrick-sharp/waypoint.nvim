@@ -306,7 +306,7 @@ function M.locate_waypoints_in_file(src_filepath, dest_filepath, waypoints, chan
       local new_linenr = levenshtein.find_best_match(waypoint, lines)
       waypoint.filepath = dest_filepath
       if new_linenr == -1 then
-        waypoint.error = constants.no_matching_waypoint_error
+        waypoint.error = constants.error_no_matching_waypoint
       else
         waypoint.has_buffer = true
         waypoint.linenr = new_linenr

@@ -623,8 +623,8 @@ end
 function M.delete_waypoint()
   if not u.is_file_buffer() then return end
   local filepath = vim.fn.expand("%")
-  local cur_line_nr = vim.api.nvim_win_get_cursor(0)[1] -- Get current line number (one-indexed)
-  local existing_waypoint_i = M.find_waypoint(filepath, cur_line_nr)
+  local curr_linenr = vim.api.nvim_win_get_cursor(0)[1] -- Get current line number (one-indexed)
+  local existing_waypoint_i = M.find_waypoint(filepath, curr_linenr)
   if existing_waypoint_i == -1 then return end
 
   M.remove_waypoint(existing_waypoint_i)

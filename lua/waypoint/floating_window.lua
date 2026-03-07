@@ -264,7 +264,6 @@ local function draw_waypoint_window(action)
   most_recent_draw_succeeded = false
 
   num_draws = num_draws + 1
-  ---@diagnostic disable: undefined-field
   local draw_start_time = vim.uv.hrtime()
 
   vim.api.nvim_buf_clear_namespace(wp_bufnr, constants.ns, 0, -1)
@@ -691,7 +690,6 @@ local function draw_waypoint_window(action)
     ignore_next_cursormoved = true
   end
 
-  ---@diagnostic disable: undefined-field
   local draw_end_time = vim.uv.hrtime()
   local draw_duration = (draw_end_time - draw_start_time) / 1e6
   total_draw_time = total_draw_time + draw_duration
@@ -1241,7 +1239,7 @@ function M.go_to_current_waypoint()
 
   local extmark = uw.extmark_from_waypoint(waypoint)
   if not extmark then
-    message.notify(constants.line_oob_error, vim.log.levels.ERROR)
+    message.notify(constants.error_line_oob, vim.log.levels.ERROR)
     return
   end
 

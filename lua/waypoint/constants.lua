@@ -23,18 +23,19 @@ local window_augroup = "waypoint.window"
 ---@field debug_file string
 ---@field test_output_file string
 ---@field is_release boolean
----@field file_dne_error string
----@field line_oob_error string
----@field no_matching_waypoint_error string
+---@field error_file_dne string
+---@field error_line_oob string
+---@field error_no_matching_waypoint string
 local M = {
   augroup = augroup,
-  window_augroup = window_augroup,
   background_window_hpadding = 2,
   background_window_vpadding = 1,
   command_relocate = "WaypointRelocate",
   command_reset =    "WaypointReset",
   debug_file = "./debug.log",
-  file_dne_error = "Error: file does not exist",
+  error_file_dne =             "Error: file does not exist",
+  error_line_oob =             "Error: line number is out of bounds",
+  error_no_matching_waypoint = "Error: could not find a close enough match for this waypoint",
   highlights_on = true,
   hl_directory =             "waypoint_hl_directory",
   hl_footer_after_context =  "waypoint_hl_footer_a",
@@ -49,12 +50,11 @@ local M = {
   hl_toggle_off =            "waypoint_hl_toggle_off",
   hl_toggle_on =             "waypoint_hl_toggle_on",
   is_release = false,
-  line_oob_error = "Error: line number is out of bounds",
   max_indent = 16,
-  no_matching_waypoint_error = "Error: could not find a close enough match for this waypoint",
   ns = vim.api.nvim_create_namespace(augroup),
   table_separator = '│',
   test_output_file = "./test_output.txt",
+  window_augroup = window_augroup,
 }
 
 return M

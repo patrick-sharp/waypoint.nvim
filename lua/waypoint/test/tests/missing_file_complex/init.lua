@@ -21,7 +21,7 @@ describe('Missing file complex', function()
   local lines
 
   local has_file_dne = function(str)
-    return string.sub(str, 1, #constants.file_dne_error) == constants.file_dne_error
+    return string.sub(str, 1, #constants.error_file_dne) == constants.error_file_dne
   end
 
   lines = tu.get_waypoint_buffer_lines_trimmed()
