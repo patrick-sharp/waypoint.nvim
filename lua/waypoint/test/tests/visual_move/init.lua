@@ -59,7 +59,7 @@ describe('Visual move', function()
   tu.assert_eq(6, state.wpi)
 
   -- select last three
-  u.enter_visual_mode()
+  tu.enter_visual_mode()
   floating_window.prev_waypoint()
   floating_window.prev_waypoint()
 
@@ -100,7 +100,7 @@ describe('Visual move', function()
   tu.assert_waypoints_eq(waypoints[7], state.waypoints[7])
 
   -- undo
-  u.exit_visual_mode()
+  tu.exit_visual_mode()
   floating_window.undo()
   tu.assert_waypoints_eq(waypoints[1], state.waypoints[1])
   tu.assert_waypoints_eq(waypoints[3], state.waypoints[2])

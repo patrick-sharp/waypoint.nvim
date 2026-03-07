@@ -137,19 +137,23 @@ function M.run_tests()
 
   clear_buffers()
   state.should_notify = false
+  state.should_ignore_autocmds = true
   for _,test in ipairs(test_list.tests) do
     floating_window.clear_and_close()
     state.should_notify = false
+    state.should_ignore_autocmds = true
     u.start_timer()
     _, test.err = xpcall(test.fn, debug.traceback)
     test.millis = u.end_timer()
     test.pass = not test.err
     floating_window.clear_and_close()
     state.should_notify = false
+    state.should_ignore_autocmds = true
     clear_buffers()
     vim.cmd.normal(vim.api.nvim_replace_termcodes('<C-c>', true, false, true)) -- this resets vim.v.count and vim.v.count1, which can persist between tests otherwise
   end
   state.should_notify = true
+  state.should_ignore_autocmds = false
 
   log_test_output()
   vim.cmd.edit({args = {constants.test_output_file}, bang=true})

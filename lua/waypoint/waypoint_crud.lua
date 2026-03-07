@@ -307,6 +307,76 @@ end
 -- -1 for up, 1 for down
 ---@param direction -1 | 1
 function M.move_curr(direction)
+  local split = uw.split_by_drawn()
+  local drawn = split.drawn
+
+  local old_wpi = split.cursor_i
+
+  local should_return = u.any({
+    state.sort_by_file_and_line,
+    #drawn < 2,
+    direction == -1 and (split.cursor_i == 1 or split.cursor_vis_i == 1),
+    direction == 1 and (split.cursor_i == #drawn or split.cursor_vis_i == #drawn),
+  })
+
+  if state.sort_by_file_and_line then
+    message.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
+  end
+  if should_return then return end
+
+  if u.is_in_visual_mode() then
+    local front = split.top
+    if direction == 1 then
+      front = split.bottom
+    end
+
+    local new_front = u.clamp(front + direction * vim.v.count1, 1, #drawn)
+    local new_top = u.clamp(split.top + direction * vim.v.count1, 1, #drawn)
+
+    local front_delta = new_front - front
+
+    local selection = {}
+    for i = split.top, split.bottom  do
+      selection[#selection+1] = drawn[i]
+    end
+
+    -- move non-selected waypoints
+    for i = new_front, front + direction, -direction do
+      drawn[i + #selection * -direction] = drawn[i]
+    end
+
+    -- move selection to new location
+    for i, wp in ipairs(selection) do
+      drawn[new_top + i - 1] = wp
+    end
+
+    split.cursor_i = split.cursor_i + front_delta
+    if split.cursor_vis_i then
+      split.cursor_vis_i = split.cursor_vis_i + front_delta
+    end
+  else
+    local new_cursor_i = u.clamp(split.cursor_i + direction * vim.v.count1, 1, #drawn)
+    local temp = drawn[split.cursor_i]
+    for i = split.cursor_i, new_cursor_i - direction, direction do
+      drawn[i] = drawn[i + direction]
+    end
+    drawn[new_cursor_i] = temp
+    split.cursor_i = new_cursor_i
+  end
+
+  uw.recombine_drawn_split(split)
+
+  local redo_msg = message.move_waypoint(old_wpi, state.wpi)
+  local undo_msg = message.move_waypoint(state.wpi, old_wpi)
+
+  undo.save_state(undo_msg, redo_msg)
+  uw.make_sorted_waypoints()
+end
+
+-- move current waypoint or selection of waypoints
+-- -1 for up, 1 for down
+---@param direction -1 | 1
+function M.move_curr_old(direction)
   local should_return = (
     #state.waypoints <= 1
     or state.sort_by_file_and_line

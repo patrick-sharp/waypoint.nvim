@@ -264,6 +264,7 @@ local function draw_waypoint_window(action)
   most_recent_draw_succeeded = false
 
   num_draws = num_draws + 1
+  ---@diagnostic disable: undefined-field
   local draw_start_time = vim.uv.hrtime()
 
   vim.api.nvim_buf_clear_namespace(wp_bufnr, constants.ns, 0, -1)
@@ -690,6 +691,7 @@ local function draw_waypoint_window(action)
     ignore_next_cursormoved = true
   end
 
+  ---@diagnostic disable: undefined-field
   local draw_end_time = vim.uv.hrtime()
   local draw_duration = (draw_end_time - draw_start_time) / 1e6
   total_draw_time = total_draw_time + draw_duration
@@ -1540,7 +1542,13 @@ end
 ---@param override_ignore boolean?
 function M.set_waypoint_for_cursor(_, override_ignore)
   assert(is_open)
-  local should_ignore = not most_recent_draw_succeeded or (not override_ignore and ignore_next_cursormoved)
+  local should_ignore = u.any({
+    not most_recent_draw_succeeded,
+    not override_ignore and u.any{
+      ignore_next_cursormoved,
+      state.should_ignore_autocmds,
+    }
+  })
   if should_ignore then
     ignore_next_cursormoved = false
     return
@@ -1627,7 +1635,14 @@ function M.on_mode_change(arg, override_arg)
   assert(is_open)
   arg = override_arg or arg
   assert(arg)
-  local should_ignore = not most_recent_draw_succeeded or (override_arg == nil and ignore_next_modechanged)
+  local should_ignore = u.any({
+    -- state.should_ignore_autocmds,
+    not most_recent_draw_succeeded,
+    override_arg == nil and u.any{
+      ignore_next_modechanged,
+      state.should_ignore_autocmds,
+    }
+  })
   if should_ignore then
     ignore_next_modechanged = false
     return

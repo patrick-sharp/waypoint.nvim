@@ -63,8 +63,8 @@ local function reselect_beginning_line(test_type)
   end
   floating_window.reselect_visual()
   tu.assert_vis_char_pos(line_b, col_b, line_a, col_a)
-  u.exit_visual_mode()
-  u.goto_char_col(1)
+  tu.exit_visual_mode()
+  tu.goto_char_col(1)
   floating_window.move_to_first_waypoint()
   floating_window.reset_context()
 end
@@ -95,8 +95,8 @@ local function reselect_beginning_two_lines(test_type)
   end
   floating_window.reselect_visual()
   tu.assert_vis_char_pos(line_b, col_b, line_a, col_a)
-  u.exit_visual_mode()
-  u.goto_char_col(1)
+  tu.exit_visual_mode()
+  tu.goto_char_col(1)
   floating_window.move_to_first_waypoint()
   floating_window.reset_context()
 end
@@ -120,7 +120,7 @@ local function reselect_interior_line(test_type)
   tu.goto_char_col(col_b)
   tu.exit_visual_mode()
   floating_window.prev_waypoint()
-  u.goto_char_col(1)
+  tu.goto_char_col(1)
 
   if test_type == "reselect_after_shrink" then
     floating_window.reset_context()

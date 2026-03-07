@@ -67,10 +67,12 @@ function M.setup(opts)
     group = constants.augroup,
     callback = filter.fix_waypoint_positions,
   })
-  -- vim.api.nvim_create_autocmd("FileChangedShell", {
-  --   group = constants.augroup,
-  --   callback = function() end
-  -- })
+  vim.api.nvim_create_autocmd("FileChangedShellPost", {
+    group = constants.augroup,
+    callback = function(arg)
+      floating_window.move_waypoints_to_file(arg.file, arg.file)
+    end
+  })
   vim.api.nvim_create_autocmd("DirChangedPre", {
     group = constants.augroup,
     callback = function(arg)

@@ -144,6 +144,9 @@
 - [x] see if you can fix the markdown header treesitter highlight bug
 - [x] get rid of separators in border if window is too small
 - [x] clean up weird module shenanigans
+- [x] think about splitting the help window into its own file (decided not to)
+- [x] refactor using more ergonomic split functions
+    - [x] rewrite move_curr
 - [ ] think about persisting waypoints on every waypoint state change. maybe every time the waypoint window closes
     - [ ] take inspiration from harpoon and bookmarks about when the file gets saved and where
         - https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua
@@ -216,6 +219,12 @@
         - 1000 waypoints
         - all max context
         - <= 10ms draw time
+    - [ ] weird state
+        - open file with 2 lines
+        - add waypoint at 2nd line
+        - echo line > file.txt
+        - close vim
+        - open file.txt in vim
 - [ ] write docs
     - [ ] drawn vs not drawn waypoints
     - [ ] undo and file changes
@@ -243,9 +252,6 @@
     - [ ] make the state in floating window that persists after the render more clear
     - [ ] investigate extmark_from_id vs buf_get_extmark
 - [ ] make a better experience for the non-telescope "locate waypoints within file" command
-- [ ] think about splitting the help window into its own file
-- [ ] refactor using more ergonomic split functions
-    - [ ] rewrite move_curr
 
 ### ADVANCED FEATURES:
 
@@ -299,10 +305,6 @@
 still got some weird treesitter behavior
 it seems like in the skhd repo I'm using, it will only properly highlight some highlights if the highlight is onscreen or close to it
 some, like header 2, appear to never work
-
-FileChangedShell file changed by something besides vim
-    locate_waypoints_in_file as if new load
-    covers delete and external rename case
 
 how to use luajit profiler
 https://luajit.org/ext_profiler.html

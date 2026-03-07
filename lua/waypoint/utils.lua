@@ -235,6 +235,24 @@ function M.any(t)
   return false
 end
 
+-- function M.any(...)
+--   local args = {...}
+--
+--   -- Check if there is at least one argument
+--   if select("#", ...) == 0 then
+--     return false
+--   end
+--
+--   -- Iterate through args to find a truthy value
+--   for i = 1, select("#", ...) do
+--     if args[i] then
+--       return true
+--     end
+--   end
+--
+--   return false
+-- end
+
 -- checks for falsy values in table.
 -- return false for empty table, because a table full of nils is considered empty.
 ---@param t table
@@ -322,12 +340,14 @@ local start_time_millis = nil
 
 function M.start_timer()
   assert(start_time_millis == nil)
+  ---@diagnostic disable: undefined-field
   start_time_millis = vim.uv.hrtime() / 1e6
 end
 
 ---@return number
 function M.end_timer()
   assert(start_time_millis ~= nil)
+  ---@diagnostic disable: undefined-field
   local end_time_millis = vim.uv.hrtime() / 1e6
   local result = end_time_millis - start_time_millis
   start_time_millis = nil

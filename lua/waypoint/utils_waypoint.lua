@@ -595,8 +595,8 @@ end
 ---@class waypoint.DrawnSplit
 ---@field cursor_i           integer?
 ---@field cursor_vis_i       integer?
----@field top                integer?
----@field bottom             integer?
+---@field top                integer? the index of the topmost part of the visual selection
+---@field bottom             integer? the index of the bottommost poart of the visual selection
 ---@field drawn              waypoint.Waypoint[]
 ---@field undrawn            waypoint.Undrawn[]
 ---@field wpi_from_drawn_i   integer[]
