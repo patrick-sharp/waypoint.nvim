@@ -114,30 +114,6 @@ function M.get_floating_window_height()
   return math.ceil(get_total_height() * config.window_height)
 end
 
----@return vim.api.keyset.win_config
-local function get_win_opts()
-  -- Get editor width and height
-  local width = get_total_width()
-  local height = get_total_height()
-
-  -- Calculate floating window size
-  local win_width = M.get_floating_window_width()
-  local win_height = M.get_floating_window_height()
-
-  -- Calculate starting position
-  local row = math.ceil((height - win_height) / 2)
-  local col = math.ceil((width - win_width) / 2)
-  local win_opts = {
-    relative = "editor",
-    width = win_width,
-    height = win_height,
-    row = row,
-    col = col,
-    style = "minimal",
-  }
-  return win_opts
-end
-
 ---@return waypoint.Waypoint?
 function M.get_current_waypoint()
   if state.wpi == nil then
@@ -170,23 +146,47 @@ local function get_toggle_hl(option)
   return constants.hl_toggle_off
 end
 
----@param win_opts vim.api.keyset.win_config
----@param split waypoint.DrawnSplit
-local function get_bg_win_opts(win_opts, split)
-  assert(win_opts, "win_opts required arg to get_bg_win_opts")
-  local bg_win_opts = u.shallow_copy(win_opts)
+---@param split waypoint.DrawnSplit?
+---@return vim.api.keyset.win_config, vim.api.keyset.win_config
+local function get_win_opts(split)
+  split = split or uw.split_by_drawn()
+  -- Get editor width and height
+  local width = get_total_width()
+  local height = get_total_height()
 
-  local num_drawn_waypoints = #split.drawn
+  -- Calculate floating window size
+  local win_width = math.max(math.ceil(width * config.window_width), 1)
+  local win_height = math.max(math.ceil(height * config.window_height), 1)
+
+  -- Calculate row and column of lower right corner
+  local row = math.max(math.ceil((height - win_height) / 2), 1)
+  local col = math.max(math.ceil((width - win_width) / 2), 1)
+
+  local bg_win_opts = {
+    relative = "editor",
+    width = win_width,
+    height = win_height,
+    row = row,
+    col = col,
+    style = "minimal",
+    border = "rounded",
+    title = {{" Waypoints ", "FloatBorder"}},
+  }
 
   local hpadding = constants.background_window_hpadding
   local vpadding = constants.background_window_vpadding
 
-  bg_win_opts.row = win_opts.row - vpadding - 1
-  bg_win_opts.col = win_opts.col - hpadding - 1
-  bg_win_opts.width = win_opts.width + hpadding * 2
-  bg_win_opts.height = win_opts.height + vpadding * 2
-  bg_win_opts.border = "rounded"
-  bg_win_opts.title = {{" Waypoints ", "FloatBorder"}}
+  local win_opts = {
+    relative = "editor",
+    width = math.max(bg_win_opts.width - hpadding * 2, 1),
+    height = math.max(win_height - vpadding * 2, 1),
+    row = bg_win_opts.row + vpadding + 1,
+    col = col + hpadding + 1,
+    style = "minimal",
+  }
+
+  local num_drawn_waypoints = #split.drawn
+
   -- between the A, B, and C indicators
   local sep = {" ─── ", 'FloatBorder' } -- give it the background of the rest of the floating window
   local a = {"A: " .. state.after_context, constants.hl_footer_after_context }
@@ -233,11 +233,8 @@ local function get_bg_win_opts(win_opts, split)
   end
 
   bg_win_opts.title_pos = "center"
-  return bg_win_opts
+  return win_opts, bg_win_opts
 end
-
-local num_draws = 0
-local total_draw_time = 0
 
 ---@param action waypoint.window_actions?
 local function draw_waypoint_window(action)
@@ -262,9 +259,6 @@ local function draw_waypoint_window(action)
   -- which creates a terrible experience where doing anything prints a nasty
   -- error message. this allows the draw calls to fail more gracefully.
   most_recent_draw_succeeded = false
-
-  num_draws = num_draws + 1
-  local draw_start_time = vim.uv.hrtime()
 
   vim.api.nvim_buf_clear_namespace(wp_bufnr, constants.ns, 0, -1)
   local rows = {}
@@ -680,8 +674,7 @@ local function draw_waypoint_window(action)
   end
 
   -- update window config, used to update the footer a/b/c indicators and the size of the window
-  local win_opts = get_win_opts()
-  local bg_win_opts = get_bg_win_opts(win_opts, split)
+  local win_opts, bg_win_opts = get_win_opts(split)
   vim.api.nvim_win_set_config(winnr, win_opts)
   vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
 
@@ -690,14 +683,6 @@ local function draw_waypoint_window(action)
     ignore_next_cursormoved = true
   end
 
-  local draw_end_time = vim.uv.hrtime()
-  local draw_duration = (draw_end_time - draw_start_time) / 1e6
-  total_draw_time = total_draw_time + draw_duration
-
-  u.log(
-    "draw time in millis for draw " .. num_draws .. ": " .. draw_duration
-    .. "(total for all draws: " .. total_draw_time .. ")"
-  )
   most_recent_draw_succeeded = true
 end
 
@@ -961,9 +946,7 @@ local function draw_help()
   local highlights = {}
 
   -- update window config, used to update the footer a/b/c indicators and the size of the window
-  local win_opts = get_win_opts()
-  local split = uw.split_by_drawn()
-  local bg_win_opts = get_bg_win_opts(win_opts, split)
+  local win_opts, bg_win_opts = get_win_opts()
   vim.api.nvim_win_set_config(winnr, win_opts)
   vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
 
@@ -1010,8 +993,6 @@ local function draw_help()
     end
   end
   local aligned_toggles = uw.align_waypoint_table(toggles, {"string", "string"}, toggle_highlights)
-  u.log(#aligned_toggles, #toggles)
-  u.log(aligned_toggles)
   table.insert(lines, "Toggles")
   table.insert(lines, "")
   table.insert(highlights, {})
@@ -1580,10 +1561,9 @@ function M.set_waypoint_for_cursor(_, override_ignore)
   draw_waypoint_window()
 end
 
-function M.resize()
-  local win_opts = get_win_opts()
-  local split = uw.split_by_drawn()
-  local bg_win_opts = get_bg_win_opts(win_opts, split)
+function M.resize(arg)
+  u.log(arg)
+  local win_opts, bg_win_opts = get_win_opts()
   vim.api.nvim_win_set_config(winnr, win_opts)
   vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
   reduce_context_to_fit_window()
@@ -1721,9 +1701,7 @@ function M.open()
     callback = M.on_mode_change,
   })
 
-  local win_opts = get_win_opts()
-  local split = uw.split_by_drawn()
-  local bg_win_opts = get_bg_win_opts(win_opts, split)
+  local win_opts, bg_win_opts = get_win_opts()
 
   -- Create the background
   bg_winnr = vim.api.nvim_open_win(bg_bufnr, false, bg_win_opts)

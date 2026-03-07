@@ -109,3 +109,8 @@ test's file. For example, the name of the test in
 ./lua/test/tests/missing_file is "Missing file". To run that
 test, run the command `:WaypointRunTest Missing file`. I use
 this to debug individual tests. 
+
+Keep in mind that somethings are difficult to test from within vim.
+For example, testing the VimResized autocmd callback without mocking out the
+window size requires resizing your terminal emulator, which can't be triggered
+from within vim.

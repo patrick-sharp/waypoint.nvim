@@ -184,6 +184,8 @@
     - [x] many existing tests, but with deleted waypoints everywhere
     - [x] test the treesitter highlighter
     - [x] test the vanilla highlighter
+    - [x] write a test for a file getting renamed while open
+    - [x] rename file and make sure waypoints in that file are updated
     - [ ] the following:
         - have waypoint saved in json file
         - open vim
@@ -198,11 +200,9 @@
     - [ ] undone deletions should re-show extmark
     - [ ] undone deletions should not re-show invalid extmark
     - [ ] have waypoints, delete one, delete text to make extmarks invalid, undo, check num waypoints
-    - [ ] write a test for a file getting renamed while open (use BufFilePost autocmd)
     - [ ] navigations outside the waypoint window (next/previous etc.)
     - [ ] doing normal crud operations with waypoints in missing files or outside file range
     - [ ] multiple waypoints getting moved onto the same line by a filter
-    - [ ] rename file and make sure waypoints in that file are updated
     - [ ] waypoints being moved after a filter
     - [ ] filter breaking and vomiting garbage into the buffer
     - [ ] filter on only part of the buffer
