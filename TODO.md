@@ -186,6 +186,7 @@
     - [x] test the vanilla highlighter
     - [x] write a test for a file getting renamed while open
     - [x] rename file and make sure waypoints in that file are updated
+    - [x] DirChanged callbacks
     - [ ] the following:
         - have waypoint saved in json file
         - open vim
@@ -206,7 +207,6 @@
     - [ ] filter breaking and vomiting garbage into the buffer
     - [ ] filter on only part of the buffer
     - [ ] loading bad state from json file
-    - [ ] DirChanged callbacks
     - [ ] telescope integration
     - [ ] load test
         - 1000 waypoints
