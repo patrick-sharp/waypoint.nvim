@@ -197,10 +197,9 @@
         - waypoint should be deleted
         - undo text change
         - waypoint should be restored
-    - [ ] undone deletions should re-show extmark
+    - [ ] undone deletions in waypoint window should re-show extmark in file
     - [ ] undone deletions should not re-show invalid extmark
     - [ ] have waypoints, delete one, delete text to make extmarks invalid, undo, check num waypoints
-    - [ ] navigations outside the waypoint window (next/previous etc.)
     - [ ] doing normal crud operations with waypoints in missing files or outside file range
     - [ ] multiple waypoints getting moved onto the same line by a filter
     - [ ] waypoints being moved after a filter
