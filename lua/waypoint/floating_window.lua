@@ -785,11 +785,6 @@ M.global_keybindings_description = {
   {"insert_annotated_waypoint",  "Create an annotated waypoint on the current line, and add it immediately after the current waypoint"},
   {"delete_waypoint"          ,  "Delete the waypoint on the current line"}                                                            ,
   {"open_waypoint_window"     ,  "Show the waypoint window"}                                                                           ,
-  {"current_waypoint"         ,  "Jump to current waypoint"}                                                                           ,
-  {"prev_waypoint"            ,  "Jump to previous waypoint"}                                                                          ,
-  {"next_waypoint"            ,  "Jump to next waypoint"}                                                                              ,
-  {"first_waypoint"           ,  "Jump to first waypoint"}                                                                             ,
-  {"last_waypoint"            ,  "Jump to last waypoint"}                                                                              ,
 }
 
 M.waypoint_window_keybindings_description = {

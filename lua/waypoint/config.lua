@@ -28,11 +28,6 @@
 ---@alias waypoint.Keybinding string | string[]
 
 ---@class waypoint.GlobalKeybindings
----@field current_waypoint          waypoint.Keybinding
----@field next_waypoint             waypoint.Keybinding
----@field prev_waypoint             waypoint.Keybinding
----@field first_waypoint            waypoint.Keybinding
----@field last_waypoint             waypoint.Keybinding
 ---@field open_waypoint_window      waypoint.Keybinding
 ---@field append_waypoint           waypoint.Keybinding
 ---@field insert_waypoint           waypoint.Keybinding
@@ -111,11 +106,6 @@
 ---@field help_keybindings            waypoint.HelpKeybindingsOverride?
 ---
 ---@class waypoint.GlobalKeybindingsOverride
----@field current_waypoint          waypoint.Keybinding?
----@field prev_waypoint             waypoint.Keybinding?
----@field next_waypoint             waypoint.Keybinding?
----@field first_waypoint            waypoint.Keybinding?
----@field last_waypoint             waypoint.Keybinding?
 ---@field open_waypoint_window      waypoint.Keybinding?
 ---@field append_waypoint           waypoint.Keybinding?
 ---@field insert_waypoint           waypoint.Keybinding?
@@ -185,11 +175,6 @@ local M = {
   keybindings = {
     global_keybindings = {
       open_waypoint_window      = {"ms"},
-      current_waypoint          = "mc",
-      prev_waypoint             = "mp",
-      next_waypoint             = "mn",
-      first_waypoint            = "mg",
-      last_waypoint             = "mG",
       append_waypoint           = "ma",
       insert_waypoint           = "mi",
       append_annotated_waypoint = "mA",

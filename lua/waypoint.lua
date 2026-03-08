@@ -98,11 +98,6 @@ function M.setup(opts)
     callback = buffer_callbacks.convert_buffer_waypoints_to_bufferless,
   })
 
-  global_keybindings.bind_key(config.keybindings.global_keybindings, "current_waypoint",          floating_window.go_to_current_waypoint)
-  global_keybindings.bind_key(config.keybindings.global_keybindings, "prev_waypoint",             floating_window.GoToPrevWaypoint)
-  global_keybindings.bind_key(config.keybindings.global_keybindings, "next_waypoint",             floating_window.GoToNextWaypoint)
-  global_keybindings.bind_key(config.keybindings.global_keybindings, "first_waypoint",            floating_window.GoToFirstWaypoint)
-  global_keybindings.bind_key(config.keybindings.global_keybindings, "last_waypoint",             floating_window.go_to_last_waypoint)
   global_keybindings.bind_key(config.keybindings.global_keybindings, "open_waypoint_window",      floating_window.open)
   global_keybindings.bind_key(config.keybindings.global_keybindings, "delete_waypoint",           crud.delete_waypoint)
   global_keybindings.bind_key(config.keybindings.global_keybindings, "append_waypoint",           crud.append_waypoint_wrapper)
