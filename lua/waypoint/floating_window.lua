@@ -95,10 +95,27 @@ local function get_total_width()
   return vim.api.nvim_get_option_value("columns", {})
 end
 
+---@return integer
+local function status_height()
+    local laststatus = vim.opt.laststatus:get()
+
+    if laststatus == 0 then
+        return 0 -- Never visible
+    elseif laststatus >= 2 then
+        return 1 -- Always visible (includes global statusline)
+    elseif laststatus == 1 then
+        -- Check if there is more than one window in the current tab
+        local window_count = #vim.api.nvim_tabpage_list_wins(0)
+        return window_count > 1 and 1 or 0
+    end
+
+    return 0
+end
+
 local function get_total_height()
   local height = vim.api.nvim_get_option_value("lines", {})
   height = height - vim.o.cmdheight
-  height = height - vim.o.laststatus
+  height = height - status_height()
   return height
 end
 
@@ -155,22 +172,23 @@ local function get_win_opts(split)
   local height = get_total_height()
 
   -- Calculate floating window size
-  local win_width = math.max(math.ceil(width * config.window_width), 1)
-  local win_height = math.max(math.ceil(height * config.window_height), 1)
+  -- the minus 2 is for the border
+  local win_width = math.max(math.ceil(width * config.window_width) - 2, 1)
+  local win_height = math.max(math.ceil(height * config.window_height) - 2, 1)
 
-  -- Calculate row and column of lower right corner
-  local row = math.max(math.ceil((height - win_height) / 2), 1)
-  local col = math.max(math.ceil((width - win_width) / 2), 1)
+  -- Calculate row and column of upper left corner
+  local row = math.floor((height - win_height) / 2) - 1
+  local col = math.floor((width - win_width) / 2) - 1
 
   local bg_win_opts = {
     relative = "editor",
-    width = win_width,
-    height = win_height,
-    row = row,
-    col = col,
-    style = "minimal",
-    border = "rounded",
-    title = {{" Waypoints ", "FloatBorder"}},
+    width    = win_width,
+    height   = win_height,
+    row      = row,
+    col      = col,
+    style    = "minimal",
+    border   = "rounded",
+    title    = {{" Waypoints ", "FloatBorder"}},
   }
 
   local hpadding = constants.background_window_hpadding
@@ -178,11 +196,11 @@ local function get_win_opts(split)
 
   local win_opts = {
     relative = "editor",
-    width = math.max(bg_win_opts.width - hpadding * 2, 1),
-    height = math.max(win_height - vpadding * 2, 1),
-    row = bg_win_opts.row + vpadding + 1,
-    col = col + hpadding + 1,
-    style = "minimal",
+    width    = math.max(bg_win_opts.width - hpadding * 2, 1),
+    height   = math.max(win_height - vpadding * 2, 1),
+    row      = bg_win_opts.row + vpadding + 1,
+    col      = col + hpadding + 1,
+    style    = "minimal",
   }
 
   local num_drawn_waypoints = #split.drawn
@@ -1556,8 +1574,7 @@ function M.set_waypoint_for_cursor(_, override_ignore)
   draw_waypoint_window()
 end
 
-function M.resize(arg)
-  u.log(arg)
+function M.resize(_)
   local win_opts, bg_win_opts = get_win_opts()
   vim.api.nvim_win_set_config(winnr, win_opts)
   vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
