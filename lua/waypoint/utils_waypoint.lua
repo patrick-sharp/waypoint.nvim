@@ -84,7 +84,13 @@ function M.wp_set_extmark(waypoint)
   assert(ok)
   assert(waypoint.linenr)
 
-  waypoint.extmark_id = M.buf_set_extmark(bufnr, waypoint.linenr)
+  local extmark = M.buf_get_extmark(bufnr, waypoint.extmark_id)
+  local opts = {}
+  if extmark then
+    opts.extmark_id = waypoint.extmark_id
+  end
+
+  waypoint.extmark_id = M.buf_set_extmark(bufnr, waypoint.linenr, opts)
   return true
 end
 
@@ -437,6 +443,10 @@ function M.set_wp_extmark_visible(wp, is_visible)
     return true
   end
   return false
+end
+
+function M.buf_get_extmarks(bufnr)
+  return vim.api.nvim_buf_get_extmarks(bufnr, constants.ns, 0, -1, {details=true})
 end
 
 -- does not set extmark visibility if none exists
