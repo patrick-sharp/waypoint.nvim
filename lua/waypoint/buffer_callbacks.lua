@@ -28,6 +28,7 @@ function M.convert_buffer_waypoints_to_bufferless(arg)
   for _,waypoint in ipairs(state.waypoints) do
     if waypoint.bufnr == bufnr then
       local linenr = uw.linenr_from_waypoint(waypoint)
+      u.log(waypoint, linenr)
       assert(linenr)
       local line = vim.api.nvim_buf_get_lines(waypoint.bufnr, linenr - 1, linenr, false)[1]
       waypoint.has_buffer = false

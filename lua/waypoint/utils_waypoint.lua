@@ -84,10 +84,12 @@ function M.wp_set_extmark(waypoint)
   assert(ok)
   assert(waypoint.linenr)
 
-  local extmark = M.buf_get_extmark(bufnr, waypoint.extmark_id)
   local opts = {}
-  if extmark then
-    opts.extmark_id = waypoint.extmark_id
+  if waypoint.extmark_id then
+    local extmark = M.buf_get_extmark(bufnr, waypoint.extmark_id)
+    if extmark then
+      opts.extmark_id = waypoint.extmark_id
+    end
   end
 
   waypoint.extmark_id = M.buf_set_extmark(bufnr, waypoint.linenr, opts)
