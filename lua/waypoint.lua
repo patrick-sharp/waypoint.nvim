@@ -58,12 +58,14 @@ function M.setup(opts)
     callback = file.save,
     once = true,
   })
-
   vim.api.nvim_create_autocmd("FilterWritePre", {
     group = constants.augroup,
     callback = filter.save_file_contents,
   })
-  vim.api.nvim_create_autocmd("FilterWritePost", {
+  -- the filter-related autocmd names are misleading.
+  -- FilterWritePost is after neovim has written to a temp file, not after it has written to your current buffer
+  -- ShellFilterPost is what fires after the lines are pulled into the current buffer
+  vim.api.nvim_create_autocmd("ShellFilterPost", {
     group = constants.augroup,
     callback = filter.fix_waypoint_positions,
   })

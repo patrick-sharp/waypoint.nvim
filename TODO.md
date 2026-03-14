@@ -187,6 +187,9 @@
     - [x] write a test for a file getting renamed while open
     - [x] rename file and make sure waypoints in that file are updated
     - [x] DirChanged callbacks
+    - [x] waypoints being moved after a filter
+    - [x] filter on only part of the buffer
+    - [ ] many tests around operations with erroneous waypoints (e.g. malformed, invalid files)
     - [ ] the following:
         - have waypoint saved in json file
         - open vim
@@ -198,14 +201,13 @@
         - waypoint should be deleted
         - undo text change
         - waypoint should be restored
+        - extmark should be visible
     - [ ] undone deletions in waypoint window should re-show extmark in file
     - [ ] undone deletions should not re-show invalid extmark
     - [ ] have waypoints, delete one, delete text to make extmarks invalid, undo, check num waypoints
     - [ ] doing normal crud operations with waypoints in missing files or outside file range
     - [ ] multiple waypoints getting moved onto the same line by a filter
-    - [ ] waypoints being moved after a filter
     - [ ] filter breaking and vomiting garbage into the buffer
-    - [ ] filter on only part of the buffer
     - [ ] loading bad state from json file
     - [ ] telescope integration
     - [ ] load test

@@ -21,7 +21,7 @@
 ---@field bufnr       integer? the buffer number the waypoint is in.
 ---@field extmark_id  integer? the id of the extmark within the buffer. Note that these are not unique globally.
 -- fields used by bufferless waypoints
----@field filepath    string? relative path to file the waypoint is in. Does NOT start with ./, i.e. a path to ./lua/myfile.lua would be stored as lua/myfile.lua
+---@field filepath    string? relative path to file the waypoint is in. Does NOT start with ./, i.e. a path to ./lua/myfile.lua would be stored as lua/myfile.lua. Can be an empty string if the buffer has no filepath
 ---@field linenr      integer? the one-indexed line number the waypoint is on.
 ---@field text        string? text of the line the waypoint is on.
 

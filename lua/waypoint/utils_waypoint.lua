@@ -77,6 +77,7 @@ function M.should_draw_waypoint(waypoint)
   return true
 end
 
+-- sets the extmark for a waypoint. moves the extmark if it already exists, creates a new one otherwise
 ---@param waypoint waypoint.Waypoint
 function M.wp_set_extmark(waypoint)
   local bufnr, ok = M.bufnr_from_waypoint(waypoint)
@@ -385,9 +386,9 @@ end
 ---@param b waypoint.Waypoint
 local function waypoint_compare(a, b)
   local a_filepath = a.has_buffer and u.path_from_buf(a.bufnr) or a.filepath
-  local a_linenr = a.has_buffer and M.linenr_from_waypoint(a) or a.linenr
+  local a_linenr = a.has_buffer and M.linenr_from_waypoint(a) or a.linenr or -1
   local b_filepath = b.has_buffer and u.path_from_buf(b.bufnr) or b.filepath
-  local b_linenr = b.has_buffer and M.linenr_from_waypoint(b) or b.linenr
+  local b_linenr = b.has_buffer and M.linenr_from_waypoint(b) or b.linenr or -1
 
   if a_filepath == b_filepath then
     return a_linenr < b_linenr

@@ -199,7 +199,12 @@ function M.find_waypoint(filepath, linenr)
   local bufnr = vim.fn.bufnr(filepath)
   for i = #state.waypoints, 1, -1 do
     local waypoint = state.waypoints[i]
-    if waypoint.filepath == filepath and waypoint.extmark_id ~= -1 then
+    local is_eligible = u.all({
+      waypoint.filepath == filepath,
+      waypoint.extmark_id ~= -1,
+      uw.should_draw_waypoint(waypoint),
+    })
+    if is_eligible then
       local extmark = uw.buf_get_extmark(bufnr, waypoint.extmark_id)
       if extmark then
         local extmark_row = extmark[1]

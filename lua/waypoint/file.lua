@@ -61,9 +61,8 @@ local function encode()
       if uw.should_draw_waypoint(waypoint) then
         local filepath = uw.filepath_from_waypoint(waypoint)
         local linenr = uw.linenr_from_waypoint(waypoint)
-        assert(linenr)
-        local line = vim.api.nvim_buf_get_lines(waypoint.bufnr, linenr - 1, linenr, false)[1]
         if linenr then
+          local line = vim.api.nvim_buf_get_lines(waypoint.bufnr, linenr - 1, linenr, false)[1]
           waypoint_to_encode = {
             text = line,
             filepath = filepath,

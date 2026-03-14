@@ -7,6 +7,7 @@
 local M = {}
 
 local state = require("waypoint.state")
+local u = require("waypoint.utils")
 local uw = require("waypoint.utils_waypoint")
 
 -- before the filter, we save the file contents as a string so we can diff them with the new file contents
@@ -63,18 +64,16 @@ function M.fix_waypoint_positions()
   table.sort(buf_waypoints, waypoint_compare)
 
   local hunk_i = 1
-  -- the number of lines that formatted file is longer than the original file
+  -- the number of lines that filtered file is longer than the original file
   -- up to this point.
   -- we use this to keep track of where we should put waypoints that are
   -- between hunks in the diff.
-  -- a positive number means the formatted file up to this point is more lines,
-  -- a negative number means the formatted file up to this point is fewer lines,
-  -- zero means the formatted file up to this point is the same number of lines.
+  -- a positive number means the filtered file up to this point is more lines,
+  -- a negative number means the filtered file up to this point is fewer lines,
+  -- zero means the filtered file up to this point is the same number of lines.
   local running_hunk_length_diff = 0
 
   for _, waypoint in ipairs(buf_waypoints) do
-    local waypoint_line = waypoint.linenr
-
     if #diff < hunk_i then
       waypoint.linenr = waypoint.linenr + running_hunk_length_diff
       uw.wp_set_extmark(waypoint)
@@ -82,7 +81,7 @@ function M.fix_waypoint_positions()
       local old_end_line = 0
       local new_end_line = 0
 
-      while old_end_line < waypoint_line do
+      while old_end_line < waypoint.linenr do
         if hunk_i > #diff then
           waypoint.linenr = waypoint.linenr + running_hunk_length_diff
           uw.wp_set_extmark(waypoint)
@@ -99,21 +98,24 @@ function M.fix_waypoint_positions()
         old_end_line = old_start_line + old_num_lines - 1
         new_end_line = new_start_line + new_num_lines - 1
 
-        local is_before_start = waypoint_line < old_start_line
-        local is_after_start = old_start_line <= waypoint_line
-        local is_before_end = waypoint_line <= old_end_line
+        -- where the waypoint is relative to the hunk. e.g. is_before_start is
+        -- whether the waypoint's line is before the start of the hunk
+        local is_before_start = waypoint.linenr < old_start_line
+        local is_after_start = old_start_line <= waypoint.linenr
+        local is_before_end = waypoint.linenr <= old_end_line
 
         local should_break = false
         if is_before_start then
+          -- if the waypoint is before the start 
           waypoint.linenr = waypoint.linenr + running_hunk_length_diff
           uw.wp_set_extmark(waypoint)
           should_break = true
         elseif is_after_start and is_before_end then
           local num_matches_in_old = 0
-          local word = pre_filter_buf_lines[waypoint_line]:gmatch('[%w]+')()
+          local word = pre_filter_buf_lines[waypoint.linenr]:gmatch('[%w]+')()
 
           local old_line = old_start_line
-          while old_line < waypoint_line do
+          while old_line < waypoint.linenr do
             local old_line_content = pre_filter_buf_lines[old_line]
             for _, old_line_word in old_line_content:gmatch('[%w]+') do
               if old_line_word == word then
