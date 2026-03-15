@@ -45,11 +45,11 @@ function M.append_waypoint(filepath, line_nr, annotation)
   local waypoint = {
     has_buffer = true,
     extmark_id = extmark_id,
-    filepath = filepath,
+    -- filepath = filepath,
     indent = 0,
     annotation = annotation,
     bufnr = bufnr,
-    text = vim.api.nvim_buf_get_lines(bufnr, line_nr - 1, line_nr, true)[1],
+    -- text = vim.api.nvim_buf_get_lines(bufnr, line_nr - 1, line_nr, true)[1],
     error = nil,
   }
 
@@ -76,11 +76,9 @@ function M.insert_waypoint(filepath, line_nr, annotation)
   local waypoint = {
     has_buffer = true,
     extmark_id = extmark_id,
-    filepath = filepath,
     indent = 0,
     annotation = annotation,
     bufnr = bufnr,
-    text = vim.api.nvim_buf_get_lines(bufnr, line_nr - 1, line_nr, true)[1],
     error = nil,
   }
 
@@ -190,15 +188,14 @@ function M.reset_all_indent()
   end
 end
 
----@param filepath string the path of the file to find the waypoint in
+---@param bufnr integer the path of the file to find the waypoint in
 ---@param linenr integer the one-indexed line number to look for the waypoint on
 ---@return integer the one-indexed index of the waypoint if found, or -1 if not
-function M.find_waypoint(filepath, linenr)
-  local bufnr = vim.fn.bufnr(filepath)
+function M.find_waypoint(bufnr, linenr)
   for i = #state.waypoints, 1, -1 do
     local waypoint = state.waypoints[i]
     local is_eligible = u.all({
-      waypoint.filepath == filepath,
+      waypoint.bufnr == bufnr,
       waypoint.extmark_id ~= -1,
       uw.should_draw_waypoint(waypoint),
     })
@@ -625,9 +622,8 @@ end
 
 function M.delete_waypoint()
   if not u.is_file_buffer() then return end
-  local filepath = vim.fn.expand("%")
   local curr_linenr = vim.api.nvim_win_get_cursor(0)[1] -- Get current line number (one-indexed)
-  local existing_waypoint_i = M.find_waypoint(filepath, curr_linenr)
+  local existing_waypoint_i = M.find_waypoint(vim.fn.bufnr(), curr_linenr)
   if existing_waypoint_i == -1 then return end
 
   M.remove_waypoint(existing_waypoint_i)
