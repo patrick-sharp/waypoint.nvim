@@ -32,6 +32,10 @@ describe('Missing file', function()
   assert(lines[3][3] == "9")
   assert(has_file_dne(lines[3][4]))
 
+  tu.assert_eq(true, state.waypoints[1].has_buffer)
+  tu.assert_eq(false, state.waypoints[2].has_buffer)
+  tu.assert_eq(false, state.waypoints[3].has_buffer)
+
   local nonexistent_file = "lua/waypoint/test/tests/common/does_not_exist.lua"
   local nonexistent_file_other = "lua/waypoint/test/tests/common/does_not_exist_other.lua"
 

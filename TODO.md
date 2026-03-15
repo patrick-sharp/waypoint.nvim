@@ -189,13 +189,18 @@
     - [x] DirChanged callbacks
     - [x] waypoints being moved after a filter
     - [x] filter on only part of the buffer
-    - [ ] many tests around operations with erroneous waypoints (e.g. malformed, invalid files)
-    - [ ] undo/redo with waypoints that have errors
-    - [ ] the following:
+    - [x] filter breaking and vomiting garbage into the buffer
+    - [x] the following:
         - have waypoint saved in json file
         - open vim
         - error opening file
-        - waypoint should still be in "persisted mode"
+        - waypoint should still be in "bufferless mode"
+    - [ ] doing normal crud operations with waypoints in missing files or outside file range
+    - [ ] many tests around operations with erroneous waypoints (e.g. malformed, invalid files)
+        - undo
+        - sort
+        - delete
+    - [ ] undo/redo with waypoints that have errors
     - [ ] write test for:
         - have waypoint in file
         - delete region of text with waypoint's extmark
@@ -206,9 +211,7 @@
     - [ ] undone deletions in waypoint window should re-show extmark in file
     - [ ] undone deletions should not re-show invalid extmark
     - [ ] have waypoints, delete one, delete text to make extmarks invalid, undo, check num waypoints
-    - [ ] doing normal crud operations with waypoints in missing files or outside file range
     - [ ] multiple waypoints getting moved onto the same line by a filter
-    - [ ] filter breaking and vomiting garbage into the buffer
     - [ ] loading bad state from json file
     - [ ] telescope integration
     - [ ] load test
