@@ -30,7 +30,7 @@ describe('Visual delete', function()
 
   -- delete one waypoint
   tu.enter_visual_mode()
-  floating_window.delete_curr()
+  floating_window.delete()
   lines = tu.get_waypoint_buffer_lines_trimmed()
   num_deleted = 1
   tu.assert_eq(num_waypoints - num_deleted, u.len(lines))
@@ -46,7 +46,7 @@ describe('Visual delete', function()
   -- delete two waypoints
   tu.enter_visual_mode()
   floating_window.next_waypoint()
-  floating_window.delete_curr()
+  floating_window.delete()
   lines = tu.get_waypoint_buffer_lines_trimmed()
   num_deleted = num_deleted + 2
   tu.assert_eq(num_waypoints - num_deleted, u.len(lines))
@@ -59,7 +59,7 @@ describe('Visual delete', function()
   -- delete remaining waypoints
   tu.enter_visual_mode()
   floating_window.move_to_last_waypoint()
-  floating_window.delete_curr()
+  floating_window.delete()
   lines = tu.get_waypoint_buffer_lines_trimmed()
   tu.assert_eq(1, u.len(lines)) -- every buffer has at least one line
   tu.assert_eq(nil, state.wpi)

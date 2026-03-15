@@ -788,7 +788,7 @@ local function set_waypoint_keybinds()
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_top",    M.move_waypoint_to_top)
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_bottom", M.move_waypoint_to_bottom)
 
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "delete_waypoint",         M.delete_curr)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "delete_waypoint",         M.delete)
   bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "move_waypoints_to_file",  M.move_waypoints_to_file_wrapper)
 
   bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "undo",                    M.undo)
@@ -1584,7 +1584,7 @@ function M.resize(_)
   draw_waypoint_window(M.WINDOW_ACTIONS.context)
 end
 
-function M.delete_curr()
+function M.delete()
   crud.delete_curr()
   local action
   if u.is_in_visual_mode() then

@@ -196,11 +196,13 @@
         - error opening file
         - waypoint should still be in "bufferless mode"
     - [x] loading bad state from json file
+    - [x] weird state (tested manually since it's hard to open/close vim)
+        - open file with 2 lines
+        - add waypoint at 2nd line
+        - echo line > file.txt
+        - close vim
+        - open file.txt in vim
     - [ ] doing normal crud operations with waypoints in missing files or outside file range
-    - [ ] many tests around operations with erroneous waypoints (e.g. malformed, invalid files)
-        - undo
-        - sort
-        - delete
     - [ ] undo/redo with waypoints that have errors
     - [ ] undone deletions in waypoint window should re-show extmark in file
     - [ ] have waypoints, delete one, delete text to make extmarks invalid, undo, check num waypoints
@@ -210,12 +212,6 @@
         - 1000 waypoints
         - all max context
         - <= 10ms draw time
-    - [ ] weird state
-        - open file with 2 lines
-        - add waypoint at 2nd line
-        - echo line > file.txt
-        - close vim
-        - open file.txt in vim
 - [ ] write docs
     - [ ] drawn vs not drawn waypoints
     - [ ] undo and file changes

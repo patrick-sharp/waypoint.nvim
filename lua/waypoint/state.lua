@@ -13,9 +13,9 @@
 
 ---@class waypoint.Waypoint
 ---@field has_buffer  boolean whether this waypoint is located in an open buffer.
+---@field error       string?
 --fields used by buffered and bufferless waypoints
 ---@field indent      integer
----@field error       string?
 ---@field annotation  string?
 -- fields used by buffered waypoints
 ---@field bufnr       integer? the buffer number the waypoint is in.
@@ -28,6 +28,7 @@
 -- This class exists because we want to be able to restore a waypoint's state from the undo stack either using an open buffer or from a file
 -- It has the fields of both bufferless and buffered waypoints
 ---@class waypoint.UndoNodeWaypoint
+---@field error       string?
 ---@field indent      integer
 ---@field annotation  string?
 ---@field bufnr       integer? the buffer number the waypoint is in.

@@ -3,7 +3,6 @@ local describe = test_list.describe
 
 local config = require"waypoint.config"
 local crud = require"waypoint.waypoint_crud"
-local floating_window = require"waypoint.floating_window"
 local state = require"waypoint.state"
 local u = require"waypoint.utils"
 local uw = require"waypoint.utils_waypoint"
@@ -18,32 +17,8 @@ local lines_before = {
   "six  ",
   "seven",
   "eight",
-  "nine "
+  "nine ",
 }
-
--- (DONE) first case
--- make three extmarks
--- filter text with grep outside extmark range
--- what happens?
-
--- (DONE) second case
--- make three extmarks
--- filter text with grep inside extmark range
--- what happens?
-
--- third case
--- make three extmarks
--- filter text with grep inside extmark range
--- undo
--- delete marks with md
--- make sure marks are deleted
-
--- fourth case
--- make three extmarks
--- filter text with grep inside extmark range that vomits garbage into the buffer
--- undo
--- delete marks with md
--- make sure marks are deleted
 
 -- I have no idea why the extra space shows up in extmark text
 local visible_extmark_text = config.mark_char .. " "

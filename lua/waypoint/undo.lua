@@ -31,7 +31,16 @@ function M.undo_node_waypoints_from_waypoints()
 
   for _,wp in ipairs(state.waypoints) do
     if wp.error then
-      -- TODO: figure out what to do with erroneous waypoints in undo
+      result[#result+1] = {
+        error      = wp.error,
+        indent     = wp.indent,
+        annotation = wp.annotation,
+        bufnr      = wp.bufnr,
+        extmark_id = wp.extmark_id,
+        filepath   = wp.filepath,
+        text       = wp.text,
+        linenr     = wp.linenr,
+      }
     else
       local linenr = wp.linenr or uw.linenr_from_waypoint(wp)
       assert(linenr)
@@ -51,6 +60,19 @@ function M.undo_node_waypoints_from_waypoints()
   return result
 end
 
+---@param waypoint waypoint.UndoNodeWaypoint
+---@return integer bufnr
+local function get_bufnr(waypoint)
+  if u.is_buffer_valid(waypoint.bufnr) then
+    return waypoint.bufnr
+  end
+  local bufnr = vim.fn.bufnr(waypoint.filepath)
+  if bufnr ~= -1 then
+    return bufnr
+  end
+  return -1
+end
+
 ---@param undo_node_waypoints waypoint.UndoNodeWaypoint[]
 ---@return waypoint.Waypoint[]
 function M.waypoints_from_undo_node_waypoints(undo_node_waypoints)
@@ -58,21 +80,36 @@ function M.waypoints_from_undo_node_waypoints(undo_node_waypoints)
   local result = {}
 
   for _, wp in ipairs(undo_node_waypoints) do
-    local linenr = wp.linenr or uw.linenr_from_extmark_id(wp.extmark_id)
-    assert(linenr)
+    if wp.error then
+      result[#result+1] = {
+        has_buffer = false,
+        error      = wp.error,
+        indent     = wp.indent,
+        annotation = wp.annotation,
+        bufnr      = wp.bufnr,
+        extmark_id = wp.extmark_id,
+        filepath   = wp.filepath,
+        text       = wp.text,
+        linenr     = wp.linenr
+      }
+    else
+      local linenr = wp.linenr or uw.linenr_from_extmark_id(wp.extmark_id)
+      assert(linenr)
 
-    local has_buffer = u.is_buffer_valid(wp.bufnr)
-
-    result[#result+1] = {
-      has_buffer = has_buffer,
-      indent     = wp.indent,
-      annotation = wp.annotation,
-      bufnr      = has_buffer and wp.bufnr or nil,
-      extmark_id = has_buffer and wp.extmark_id or nil,
-      filepath   = (not has_buffer) and wp.filepath or nil,
-      text       = (not has_buffer) and wp.text or nil,
-      linenr     = (not has_buffer) and linenr or nil,
-    }
+      local bufnr = get_bufnr(wp)
+      local has_buffer = bufnr ~= -1
+      result[#result+1] = {
+        has_buffer = has_buffer,
+        error      = wp.error,
+        indent     = wp.indent,
+        annotation = wp.annotation,
+        bufnr      = has_buffer and wp.bufnr or nil,
+        extmark_id = has_buffer and wp.extmark_id or nil,
+        filepath   = (not has_buffer) and wp.filepath or nil,
+        text       = (not has_buffer) and wp.text or nil,
+        linenr     = (not has_buffer) and linenr or nil,
+      }
+    end
   end
 
   return result
