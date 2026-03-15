@@ -137,24 +137,23 @@ end
 -- hide extmarks that don't have a drawn waypoint.
 -- show extmarks that do
 function M.set_extmarks_for_state()
-  ---@type table<integer,waypoint.Waypoint[]>
-  local bufnr_to_waypoints = {}
-  for _,wp in ipairs(state.waypoints) do
-    if wp.bufnr ~= -1 and 0 ~= vim.fn.bufloaded(wp.bufnr) then
-      local waypoints = bufnr_to_waypoints[wp.bufnr] or {}
-      bufnr_to_waypoints[wp.bufnr] = waypoints
-      waypoints[#waypoints+1] = wp
-    else
-      wp.bufnr = -1
+  -- hide waypoint extmarks in all buffers
+  local bufnrs = vim.api.nvim_list_bufs()
+  for _, bufnr in ipairs(bufnrs) do
+    if vim.api.nvim_buf_is_loaded(bufnr) and vim.fn.buflisted(bufnr) == 1 then
+      uw.buf_hide_extmarks(bufnr)
     end
   end
-  -- hide all extmarks, then re-show the ones whose waypoints are in the current state
-  for bufnr,waypoints in pairs(bufnr_to_waypoints) do
-    uw.buf_hide_extmarks(bufnr)
-    for _,waypoint in ipairs(waypoints) do
-      if uw.should_draw_waypoint(waypoint) then
-        uw.set_wp_extmark_visible(waypoint, true)
-      end
+
+  for _,waypoint in ipairs(state.waypoints) do
+    local should_show_extmark = u.all({
+        not waypoint.error,
+        waypoint.has_buffer,
+        0 ~= vim.fn.bufloaded(waypoint.bufnr),
+        uw.should_draw_waypoint(waypoint),
+    })
+    if should_show_extmark then
+      uw.set_wp_extmark_visible(waypoint, true)
     end
   end
 end

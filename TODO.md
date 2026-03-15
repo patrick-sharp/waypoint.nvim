@@ -190,6 +190,7 @@
     - [x] waypoints being moved after a filter
     - [x] filter on only part of the buffer
     - [x] filter breaking and vomiting garbage into the buffer
+    - [x] multiple waypoints getting moved onto the same line by a filter
     - [x] the following:
         - have waypoint saved in json file
         - open vim
@@ -203,9 +204,8 @@
         - close vim
         - open file.txt in vim
     - [x] undo/redo with waypoints that have errors
-    - [ ] undone deletions in waypoint window should re-show extmark in file
+    - [x] undone deletions in waypoint window should re-show extmark in file
     - [ ] have waypoints, delete one, delete text to make extmarks invalid, undo, check num waypoints
-    - [ ] multiple waypoints getting moved onto the same line by a filter
     - [ ] telescope integration
     - [ ] load test
         - 1000 waypoints

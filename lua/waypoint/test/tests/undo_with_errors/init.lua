@@ -6,11 +6,9 @@ local file_1 = test_list.file_1
 local crud = require("waypoint.waypoint_crud")
 local file = require'waypoint.file'
 local floating_window = require("waypoint.floating_window")
-local message = require'waypoint.message'
 local state = require("waypoint.state")
 local u = require("waypoint.utils")
 local tu = require'waypoint.test.util'
-local uw = require'waypoint.utils_waypoint'
 
 local waypoints_json = "lua/waypoint/test/tests/undo_with_errors/waypoints.json"
 
