@@ -196,7 +196,6 @@ local function load_decoded_state_into_state(decoded)
   for state_k,state_v in pairs(decoded) do
     state[state_k] = state_v
   end
-  u.log(state.waypoints)
   uw.make_sorted_waypoints()
 end
 

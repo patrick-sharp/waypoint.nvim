@@ -155,9 +155,7 @@ function M.validate(t, schema, forbid_extra_properties)
   end
   -- check that each property in t matches the schema
   for k,v in pairs(schema) do
-    u.log(k, v, type(v))
     if type(v) == "string" then
-      u.log(v, type(t[k]))
       if (type(t[k]) ~= v) then
         return false, k, type(t[k]), v
       end

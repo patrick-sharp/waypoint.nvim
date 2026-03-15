@@ -3,6 +3,7 @@ local describe = test_list.describe
 
 local config = require"waypoint.config"
 local crud = require"waypoint.waypoint_crud"
+local floating_window = require"waypoint.floating_window"
 local state = require"waypoint.state"
 local u = require"waypoint.utils"
 local uw = require"waypoint.utils_waypoint"
@@ -296,6 +297,46 @@ describe('Filter outputs garbage', function()
   tu.assert_eq(wp_2_linenr - 1, extmarks[2][2])
   tu.assert_eq(invisible_extmark_text, extmarks[2][4].sign_text)
   tu.assert_eq(wp_3_linenr - 2, extmarks[3][2])
+  tu.assert_eq(visible_extmark_text, extmarks[3][4].sign_text)
+end)
+
+describe('Filter waypoints to same line', function()
+  local wp_1_linenr = 1
+  local wp_2_linenr = 2
+  local wp_3_linenr = 8
+
+  local bufnr = vim.api.nvim_create_buf(true, false)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines_before)
+  vim.api.nvim_set_current_buf(bufnr)
+
+  u.goto_line(wp_1_linenr)
+  crud.append_waypoint_wrapper()
+  u.goto_line(wp_2_linenr)
+  crud.append_waypoint_wrapper()
+  u.goto_line(wp_3_linenr)
+  crud.append_waypoint_wrapper()
+
+  local extmarks
+  extmarks = uw.buf_get_extmarks(bufnr)
+
+  tu.assert_eq(3, #extmarks)
+  tu.assert_eq(wp_1_linenr - 1, extmarks[1][2])
+  tu.assert_eq(visible_extmark_text, extmarks[1][4].sign_text)
+  tu.assert_eq(wp_2_linenr - 1, extmarks[2][2])
+  tu.assert_eq(visible_extmark_text, extmarks[2][4].sign_text)
+  tu.assert_eq(wp_3_linenr - 1, extmarks[3][2])
+  tu.assert_eq(visible_extmark_text, extmarks[3][4].sign_text)
+
+  vim.cmd('1,9!xargs echo')
+
+  -- filter should not change location of these extmarks
+  extmarks = uw.buf_get_extmarks(bufnr)
+  tu.assert_eq(3, #extmarks)
+  tu.assert_eq(0, extmarks[1][2])
+  tu.assert_eq(visible_extmark_text, extmarks[1][4].sign_text)
+  tu.assert_eq(0, extmarks[2][2])
+  tu.assert_eq(visible_extmark_text, extmarks[2][4].sign_text)
+  tu.assert_eq(0, extmarks[3][2])
   tu.assert_eq(visible_extmark_text, extmarks[3][4].sign_text)
 end)
 

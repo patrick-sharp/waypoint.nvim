@@ -99,8 +99,6 @@ function M.fix_waypoint_positions()
         local new_start_line = hunk[3]
         local new_num_lines  = hunk[4]
 
-        u.log(diff, post_filter_buf_lines)
-
         old_end_line = old_start_line + old_num_lines - 1
         new_end_line = new_start_line + new_num_lines - 1
 
