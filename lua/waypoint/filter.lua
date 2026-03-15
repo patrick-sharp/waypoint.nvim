@@ -99,6 +99,8 @@ function M.fix_waypoint_positions()
         local new_start_line = hunk[3]
         local new_num_lines  = hunk[4]
 
+        u.log(diff, post_filter_buf_lines)
+
         old_end_line = old_start_line + old_num_lines - 1
         new_end_line = new_start_line + new_num_lines - 1
 
@@ -143,9 +145,10 @@ function M.fix_waypoint_positions()
           -- since the line updates at the beginning of while loop, we need to
           -- start one line before. we need the line to update at the beginning
           -- so we can break out of the inner for loop at the end without
-          -- updating new_line
+          -- updating new_line.
+          -- this also means our bound has to be < instead of <= so on the last iteration it has a maximum of new_end_line
           local new_line = new_start_line - 1
-          while num_matches_in_new < num_matches_in_old and new_line <= new_end_line do
+          while num_matches_in_new < num_matches_in_old and new_line < new_end_line do
             new_line = new_line + 1
             local new_line_content = post_filter_buf_lines[new_line]
             for new_line_word in new_line_content:gmatch('[%w]+') do
