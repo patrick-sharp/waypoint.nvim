@@ -269,6 +269,7 @@ local function draw_waypoint_window(action)
       "Run " .. constants.command_reset .. " to delete saved waypoints and clear all waypoint state"
     })
     set_modifiable(wp_bufnr, false)
+    most_recent_draw_succeeded = false
     return
   end
 

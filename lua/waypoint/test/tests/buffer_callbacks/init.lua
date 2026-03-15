@@ -4,8 +4,6 @@ local file_0 = test_list.file_0
 local file_1 = test_list.file_1
 
 local crud = require("waypoint.waypoint_crud")
-local floating_window = require("waypoint.floating_window")
-local message = require'waypoint.message'
 local state = require("waypoint.state")
 local u = require("waypoint.utils")
 local tu = require'waypoint.test.util'
@@ -34,6 +32,7 @@ describe('Buffer callbacks', function()
 
   vim.api.nvim_buf_delete(vim.fn.bufnr(file_0), { force = true })
 
+  -- assert waypoints are in a bufferless state
   tu.assert_eq(false, state.waypoints[1].has_buffer)
   tu.assert_eq(nil, state.waypoints[1].extmark_id)
   tu.assert_eq(nil, state.waypoints[1].bufnr)
@@ -74,5 +73,4 @@ describe('Buffer callbacks', function()
   tu.assert_eq(nil, state.waypoints[3].filepath)
   tu.assert_eq(nil, state.waypoints[3].linenr)
   tu.assert_eq(nil, state.waypoints[3].text)
-
 end)

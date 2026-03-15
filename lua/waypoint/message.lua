@@ -44,7 +44,7 @@ end
 ---@param path string
 ---@return string
 function M.file_dne(path)
-  return "Error: " .. path .. " does not exist"
+  return "Error: file \"" .. path .. "\" does not exist"
 end
 
 ---@param path string

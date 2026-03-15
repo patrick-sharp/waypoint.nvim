@@ -388,6 +388,13 @@ end
 ---@param a waypoint.Waypoint
 ---@param b waypoint.Waypoint
 local function waypoint_compare(a, b)
+  if a.error and b.error then
+    return a.error < b.error
+  elseif a.error then
+    return -1
+  elseif b.error then
+    return 1
+  end
   local a_filepath = a.has_buffer and u.path_from_buf(a.bufnr) or a.filepath
   local a_linenr = a.has_buffer and M.linenr_from_waypoint(a) or a.linenr or -1
   local b_filepath = b.has_buffer and u.path_from_buf(b.bufnr) or b.filepath

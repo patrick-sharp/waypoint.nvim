@@ -5,7 +5,6 @@ local file_1 = test_list.file_1
 local file = require'waypoint.file'
 local floating_window = require("waypoint.floating_window")
 local state = require("waypoint.state")
-local constants = require("waypoint.constants")
 local message = require("waypoint.message")
 local tu = require'waypoint.test.util'
 local uw = require'waypoint.utils_waypoint'
@@ -21,7 +20,7 @@ describe('Missing file complex', function()
   local lines
 
   local has_file_dne = function(str)
-    return string.sub(str, 1, #constants.error_file_dne) == constants.error_file_dne
+    return string.find(str, "does not exist") ~= nil
   end
 
   lines = tu.get_waypoint_buffer_lines_trimmed()

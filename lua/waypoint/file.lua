@@ -151,7 +151,7 @@ local function load_decoded_state_into_state(decoded)
     local ok, wpk, wpv, wp_expected = u.validate(waypoint, waypoint_schema, false)
     if not ok then
       waypoint.error = table.concat({
-        "expected value of type ",
+        "Expected value of type ",
         wp_expected, " for key ", tostring(wpk),
         ", but received ", tostring(wpv), "."
       })
@@ -163,23 +163,19 @@ local function load_decoded_state_into_state(decoded)
       waypoint.indent = waypoint.indent or 0
       waypoint.annotation = waypoint.annotation or ""
     else
-      -- TODO: add error if file dne
-      local bufnr = vim.fn.bufnr(waypoint.filepath)
-      if bufnr == -1 and vim.fn.filereadable(waypoint.filepath) ~= 0 then
-        bufnr = vim.fn.bufadd(waypoint.filepath)
-      end
-      waypoint.bufnr = bufnr
-      if bufnr ~= -1 then
-        buffer_init(bufnr)
+      if vim.fn.filereadable(waypoint.filepath) ~= 0 then
+        local bufnr = vim.fn.bufnr(waypoint.filepath)
+        if bufnr == -1 then
+          bufnr = vim.fn.bufadd(waypoint.filepath)
+          buffer_init(bufnr)
+        end
+        waypoint.bufnr = bufnr
         waypoint.has_buffer = true
-        -- one-indexed line number
-        local linenr = waypoint.linenr
-        assert(linenr)
 
         local line_count = vim.api.nvim_buf_line_count(bufnr)
 
-        if linenr <= line_count then
-          local extmark_id = uw.buf_set_extmark(bufnr, linenr)
+        if waypoint.linenr <= line_count then
+          local extmark_id = uw.buf_set_extmark(bufnr, waypoint.linenr)
           waypoint.extmark_id = extmark_id
         else
           waypoint.extmark_id = -1
@@ -188,6 +184,7 @@ local function load_decoded_state_into_state(decoded)
         waypoint.linenr = nil
         waypoint.text = nil
       else
+        waypoint.error = message.file_dne(waypoint.filepath)
         waypoint.has_buffer = false
         waypoint.extmark_id = nil
       end
@@ -199,6 +196,7 @@ local function load_decoded_state_into_state(decoded)
   for state_k,state_v in pairs(decoded) do
     state[state_k] = state_v
   end
+  u.log(state.waypoints)
   uw.make_sorted_waypoints()
 end
 
@@ -221,7 +219,7 @@ function M.load_from_file(file)
   local is_valid, k, v, expected = u.validate(decoded, file_schema, false)
   if not is_valid then
     state.load_error = table.concat({
-      "Error loading waypoints from file: expected value of type ",
+      "Error loading waypoints from file: Expected value of type ",
       expected, " for key ", tostring(k),
       ", but received ", tostring(v), " (of type ", type(v), ")."
     })
