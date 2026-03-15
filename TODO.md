@@ -202,8 +202,7 @@
         - echo line > file.txt
         - close vim
         - open file.txt in vim
-    - [ ] doing normal crud operations with waypoints in missing files or outside file range
-    - [ ] undo/redo with waypoints that have errors
+    - [x] undo/redo with waypoints that have errors
     - [ ] undone deletions in waypoint window should re-show extmark in file
     - [ ] have waypoints, delete one, delete text to make extmarks invalid, undo, check num waypoints
     - [ ] multiple waypoints getting moved onto the same line by a filter

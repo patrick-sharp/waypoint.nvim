@@ -36,7 +36,7 @@ function M.save_file_contents()
   pre_filter_buf_lines = get_current_buffer_lines()
   local bufnr = vim.fn.bufnr()
   for _, waypoint in ipairs(state.waypoints) do
-    if waypoint.bufnr == bufnr then
+    if not waypoint.error and waypoint.bufnr == bufnr then
       local line = uw.linenr_from_waypoint(waypoint)
       assert(line)
 
