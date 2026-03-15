@@ -2,6 +2,7 @@
 
 local M = {}
 
+local config = require("waypoint.config")
 local constants = require("waypoint.constants")
 local file = require("waypoint.file")
 local state = require("waypoint.state")
@@ -27,7 +28,6 @@ function M.save_change(undo_msg, redo_msg, change_wpi, affected_wpis)
     if M.was_most_recent_change_saved then
       return
     end
-
     file.save()
     M.was_most_recent_change_saved = true
   end)
@@ -48,7 +48,6 @@ function M.append_waypoint(filepath, line_nr, annotation)
     filepath = filepath,
     indent = 0,
     annotation = annotation,
-    linenr = line_nr,
     bufnr = bufnr,
     text = vim.api.nvim_buf_get_lines(bufnr, line_nr - 1, line_nr, true)[1],
     error = nil,
@@ -80,7 +79,6 @@ function M.insert_waypoint(filepath, line_nr, annotation)
     filepath = filepath,
     indent = 0,
     annotation = annotation,
-    linenr = line_nr,
     bufnr = bufnr,
     text = vim.api.nvim_buf_get_lines(bufnr, line_nr - 1, line_nr, true)[1],
     error = nil,

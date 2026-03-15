@@ -14,14 +14,17 @@ local uw = require("waypoint.utils_waypoint")
 ---@type string[]?
 local pre_filter_buf_lines = nil
 
--- before the filter, we save the waypoint locations so we can put them back in the right place after the filter
----@type (integer?)[]?
-local waypoint_linenrs = nil
+---@class waypoint.LineAndWaypoint
+---@field line integer
+---@field waypoint waypoint.Waypoint
 
----@param a waypoint.Waypoint
----@param b waypoint.Waypoint
+---@type waypoint.LineAndWaypoint[]
+local buf_waypoints = {}
+
+---@param a waypoint.LineAndWaypoint
+---@param b waypoint.LineAndWaypoint
 local function waypoint_compare(a, b)
-  return a.linenr < b.linenr
+  return a.line < b.line
 end
 
 local function get_current_buffer_lines()
@@ -29,11 +32,21 @@ local function get_current_buffer_lines()
 end
 
 function M.save_file_contents()
+  buf_waypoints = {}
   pre_filter_buf_lines = get_current_buffer_lines()
-  waypoint_linenrs = {}
-  for i, waypoint in ipairs(state.waypoints) do
-    waypoint_linenrs[i] = uw.linenr_from_waypoint(waypoint)
+  local bufnr = vim.fn.bufnr()
+  for _, waypoint in ipairs(state.waypoints) do
+    if waypoint.bufnr == bufnr then
+      local line = uw.linenr_from_waypoint(waypoint)
+      assert(line)
+
+      buf_waypoints[#buf_waypoints+1] = {
+        line = line,
+        waypoint = waypoint,
+      }
+    end
   end
+  table.sort(buf_waypoints, waypoint_compare)
 end
 
 -- fix the position of waypoint extmarks.
@@ -41,7 +54,6 @@ end
 -- This is a callback which will fix their positions after a filter.
 function M.fix_waypoint_positions()
   assert(pre_filter_buf_lines)
-  assert(waypoint_linenrs)
 
   local post_filter_buf_lines = get_current_buffer_lines()
 
@@ -51,17 +63,6 @@ function M.fix_waypoint_positions()
     { result_type='indices', ignore_whitespace=true }
   )
   assert(diff)
-
-  local bufnr = vim.fn.bufnr()
-  local buf_waypoints = {}
-
-  for _, waypoint in ipairs(state.waypoints) do
-    if waypoint.bufnr == bufnr then
-      table.insert(buf_waypoints, waypoint)
-    end
-  end
-
-  table.sort(buf_waypoints, waypoint_compare)
 
   local hunk_i = 1
   -- the number of lines that filtered file is longer than the original file
@@ -73,18 +74,21 @@ function M.fix_waypoint_positions()
   -- zero means the filtered file up to this point is the same number of lines.
   local running_hunk_length_diff = 0
 
-  for _, waypoint in ipairs(buf_waypoints) do
+  for _, line_and_waypoint in ipairs(buf_waypoints) do
+    local waypoint_linenr = line_and_waypoint.line
+    local waypoint = line_and_waypoint.waypoint
+    local linenr = -1
     if #diff < hunk_i then
-      waypoint.linenr = waypoint.linenr + running_hunk_length_diff
-      uw.wp_set_extmark(waypoint)
+      linenr = waypoint_linenr + running_hunk_length_diff
+      uw.wp_set_extmark(waypoint, linenr)
     else
       local old_end_line = 0
       local new_end_line = 0
 
-      while old_end_line < waypoint.linenr do
+      while old_end_line < waypoint_linenr do
         if hunk_i > #diff then
-          waypoint.linenr = waypoint.linenr + running_hunk_length_diff
-          uw.wp_set_extmark(waypoint)
+          linenr = waypoint_linenr + running_hunk_length_diff
+          uw.wp_set_extmark(waypoint, linenr)
           break
         end
         local hunk = diff[hunk_i]
@@ -100,22 +104,31 @@ function M.fix_waypoint_positions()
 
         -- where the waypoint is relative to the hunk. e.g. is_before_start is
         -- whether the waypoint's line is before the start of the hunk
-        local is_before_start = waypoint.linenr < old_start_line
-        local is_after_start = old_start_line <= waypoint.linenr
-        local is_before_end = waypoint.linenr <= old_end_line
+        local is_before_start = waypoint_linenr < old_start_line
+        local is_after_start = old_start_line <= waypoint_linenr
+        local is_before_end = waypoint_linenr <= old_end_line
 
         local should_break = false
         if is_before_start then
           -- if the waypoint is before the start 
-          waypoint.linenr = waypoint.linenr + running_hunk_length_diff
-          uw.wp_set_extmark(waypoint)
+          linenr = waypoint_linenr + running_hunk_length_diff
+          uw.wp_set_extmark(waypoint, linenr)
           should_break = true
         elseif is_after_start and is_before_end then
+          -- if the waypoint is somewhere in this hunk, we need to find out
+          -- where it is within the hunk.
+          -- the way I do this is by taking the first word on the line of the
+          -- waypoint, and finding what occurrence it is within the old hunk.
+          -- Then find that occurrence in the new hunk.
+          -- e.g. if the waypoint's line starts with "local", and it's the 4th
+          -- occurrence of the word "local" in the old hunk, then the new
+          -- location of the waypoint will be at the 4th occurrence of the 
+          -- word "local" in the new hunk
           local num_matches_in_old = 0
-          local word = pre_filter_buf_lines[waypoint.linenr]:gmatch('[%w]+')()
+          local word = pre_filter_buf_lines[waypoint_linenr]:gmatch('[%w]+')()
 
           local old_line = old_start_line
-          while old_line < waypoint.linenr do
+          while old_line < waypoint_linenr do
             local old_line_content = pre_filter_buf_lines[old_line]
             for _, old_line_word in old_line_content:gmatch('[%w]+') do
               if old_line_word == word then
@@ -127,9 +140,10 @@ function M.fix_waypoint_positions()
           num_matches_in_old = num_matches_in_old + 1
 
           local num_matches_in_new = 0
-          -- since the line updates at the beginning of while loop, we need to start one line before.
-          -- we need the line to update at the beginning so we can break out of
-          -- the inner for loop at the end without updating new_line
+          -- since the line updates at the beginning of while loop, we need to
+          -- start one line before. we need the line to update at the beginning
+          -- so we can break out of the inner for loop at the end without
+          -- updating new_line
           local new_line = new_start_line - 1
           while num_matches_in_new < num_matches_in_old and new_line <= new_end_line do
             new_line = new_line + 1
@@ -144,8 +158,12 @@ function M.fix_waypoint_positions()
             end
           end
 
-          waypoint.linenr = new_line
-          uw.wp_set_extmark(waypoint)
+          -- if the filter has changed the file in a way that prevents us from
+          -- locating the extmark, don't set it
+          if num_matches_in_old == num_matches_in_new then
+            linenr = new_line
+            uw.wp_set_extmark(waypoint, linenr)
+          end
           should_break = true
         end
 
@@ -163,7 +181,6 @@ function M.fix_waypoint_positions()
   end
 
   pre_filter_buf_lines = nil
-  waypoint_linenrs = nil
 end
 
 return M

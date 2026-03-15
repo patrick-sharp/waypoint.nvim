@@ -79,11 +79,14 @@ end
 
 -- sets the extmark for a waypoint. moves the extmark if it already exists, creates a new one otherwise
 ---@param waypoint waypoint.Waypoint
-function M.wp_set_extmark(waypoint)
+---@param linenr integer?
+function M.wp_set_extmark(waypoint, linenr)
   local bufnr, ok = M.bufnr_from_waypoint(waypoint)
 
+  local extmark_linenr = waypoint.linenr or linenr
+
   assert(ok)
-  assert(waypoint.linenr)
+  assert(extmark_linenr)
 
   local opts = {}
   if waypoint.extmark_id then
@@ -93,7 +96,7 @@ function M.wp_set_extmark(waypoint)
     end
   end
 
-  waypoint.extmark_id = M.buf_set_extmark(bufnr, waypoint.linenr, opts)
+  waypoint.extmark_id = M.buf_set_extmark(bufnr, extmark_linenr, opts)
   return true
 end
 
@@ -312,7 +315,7 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
         -- accounting for tabs and unicode characters
         row_highlights[j] = {{
           nsid = constants.ns,
-          hl_group = col_highlights,
+          hl_group = vim.fn.hlID(col_highlights),
           col_start = offset,
           col_end = offset + padded_byte_length
         }}

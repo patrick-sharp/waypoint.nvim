@@ -179,6 +179,7 @@ function M.validate(t, schema, forbid_extra_properties)
 end
 
 function M.file_exists(file_path)
+  -- return vim.fn.filereadable(file_path)
   local f = io.open(file_path)
   if f then
     f:close()

@@ -30,18 +30,22 @@ function M.undo_node_waypoints_from_waypoints()
   local result = {}
 
   for _,wp in ipairs(state.waypoints) do
-    local linenr = wp.linenr or uw.linenr_from_waypoint(wp)
-    assert(linenr)
+    if wp.error then
+      -- TODO: figure out what to do with erroneous waypoints in undo
+    else
+      local linenr = wp.linenr or uw.linenr_from_waypoint(wp)
+      assert(linenr)
 
-    result[#result+1] = {
-      indent     = wp.indent,
-      annotation = wp.annotation,
-      bufnr      = wp.bufnr,
-      extmark_id = wp.extmark_id,
-      filepath   = wp.filepath or u.path_from_buf(wp.bufnr),
-      text       = wp.text or u.get_line_text(wp.bufnr, linenr),
-      linenr     = linenr,
-    }
+      result[#result+1] = {
+        indent     = wp.indent,
+        annotation = wp.annotation,
+        bufnr      = wp.bufnr,
+        extmark_id = wp.extmark_id,
+        filepath   = wp.filepath or u.path_from_buf(wp.bufnr),
+        text       = wp.text or u.get_line_text(wp.bufnr, linenr),
+        linenr     = linenr,
+      }
+    end
   end
 
   return result

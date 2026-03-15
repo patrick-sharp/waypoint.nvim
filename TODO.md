@@ -190,6 +190,7 @@
     - [x] waypoints being moved after a filter
     - [x] filter on only part of the buffer
     - [ ] many tests around operations with erroneous waypoints (e.g. malformed, invalid files)
+    - [ ] undo/redo with waypoints that have errors
     - [ ] the following:
         - have waypoint saved in json file
         - open vim
@@ -234,10 +235,10 @@
     - [ ] think about optional dependencies like telescope
     - Use nvim -u /path/to/file
 - [ ] rename functions with new vocab:
-      cursor_to:   move the cursor
-      swap_to:     move waypoints within the waypoint list
-      navigate_to: set buffer and cursor to the location of a waypoint
-      relocate:    transfer waypoints from one file to another
+      cursor_to:      move the cursor
+      move_waypoints: move waypoints within the waypoint list
+      jump_to:        set buffer and cursor to the location of a waypoint
+      relocate:       transfer waypoints from one file to another
 - [ ] double check undo/redo messages for everything
     - [ ] in message, show which waypoints are restored to be visible
 - [ ] add ability to see soft-deleted waypoints in waypoint window (maybe a toggle)

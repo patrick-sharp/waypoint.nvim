@@ -92,7 +92,12 @@ local function encode()
 end
 
 function M.save()
+  -- TODO: check if config is default
   if #state.waypoints == 0 then
+    -- don't save a file with nothing in it
+    if u.file_exists(config.file) then
+      os.remove(config.file)
+    end
     return
   end
   local data = encode()
@@ -158,6 +163,7 @@ local function load_decoded_state_into_state(decoded)
       waypoint.indent = waypoint.indent or 0
       waypoint.annotation = waypoint.annotation or ""
     else
+      -- TODO: add error if file dne
       local bufnr = vim.fn.bufnr(waypoint.filepath)
       if bufnr == -1 and vim.fn.filereadable(waypoint.filepath) ~= 0 then
         bufnr = vim.fn.bufadd(waypoint.filepath)

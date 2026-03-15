@@ -10,6 +10,7 @@ local message = require("waypoint.message")
 local state = require("waypoint.state")
 local tu = require'waypoint.test.util'
 local uw = require'waypoint.utils_waypoint'
+local u = require'waypoint.utils'
 
 describe('Missing file', function()
   file.load_from_file("lua/waypoint/test/tests/missing_file/waypoints.json")
@@ -44,6 +45,7 @@ describe('Missing file', function()
 
   result = floating_window.move_waypoints_to_file(nonexistent_file, nonexistent_file_other)
   msg = tu.get_last_message()
+  u.log(result)
   assert(not result)
   tu.assert_eq(msg, message.file_dne(nonexistent_file_other))
 
