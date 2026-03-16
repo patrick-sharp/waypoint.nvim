@@ -95,7 +95,7 @@ function M.setup(opts)
     group = constants.augroup,
     callback = buffer_callbacks.convert_bufferless_waypoints_to_buffer,
   })
-  vim.api.nvim_create_autocmd("BufDelete", {
+  vim.api.nvim_create_autocmd("BufUnload", {
     group = constants.augroup,
     callback = buffer_callbacks.convert_buffer_waypoints_to_bufferless,
   })

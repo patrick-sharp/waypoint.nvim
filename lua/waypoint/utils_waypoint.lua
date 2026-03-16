@@ -131,10 +131,14 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after, is_
 
     if waypoint.error then
       table.insert(lines, waypoint.error)
-    elseif not ok then
-      table.insert(lines, message.missing_file_err_msg)
+    elseif not waypoint.has_buffer then
+      table.insert(lines, message.no_open_buffer_for_file)
     else
-      table.insert(lines, constants.error_line_oob)
+      if not ok then
+        table.insert(lines, message.missing_file_err_msg)
+      else
+        table.insert(lines, constants.error_line_oob)
+      end
     end
     table.insert(hlranges, {{
       nsid = constants.ns,

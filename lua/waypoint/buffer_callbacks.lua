@@ -26,8 +26,9 @@ function M.convert_buffer_waypoints_to_bufferless(arg)
   local bufnr = arg.buf
   local filepath = arg.file
   for _,waypoint in ipairs(state.waypoints) do
-    if waypoint.bufnr == bufnr then
+    if not waypoint.error and waypoint.bufnr == bufnr then
       local linenr = uw.linenr_from_waypoint(waypoint)
+      u.log(linenr)
       -- linenr can be nil if file is not a valid file. in that case, just ignore
       if linenr then
         local line = vim.api.nvim_buf_get_lines(waypoint.bufnr, linenr - 1, linenr, false)[1]

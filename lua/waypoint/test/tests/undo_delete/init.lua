@@ -14,7 +14,6 @@ local uw = require'waypoint.utils_waypoint'
 local visible_extmark_text = config.mark_char .. " "
 local invisible_extmark_text = "  "
 
--- TODO: finish
 describe('Undo delete', function()
   assert(u.file_exists(file_0))
   tu.edit_file(file_0)
@@ -43,33 +42,106 @@ describe('Undo delete', function()
   tu.assert_eq(1, #extmarks)
   tu.assert_eq(0, extmarks[1][2])
   tu.assert_eq(visible_extmark_text, extmarks[1][4].sign_text)
-
-  -- one open buffer
-  -- close the buffer
-  -- delete the waypoint
-  -- undo the deletion
-  -- buffer should still be closed, but waypoint text should be there
-  -- CHANGE THE BUFFER TO DELETE THE LINE THE WAYPOINT IS ON
-  -- go to waypoint
-  -- waypoint should be drawn, but with error that it could not be found
-
-  -- one open buffer
-  -- delete the waypoint
-  -- delete the line the waypoint was on in the buffer
-  -- undo the deletion in the waypoint window
-  -- waypoint should not appear (should be message in notify box)
 end)
-
 
 -- one open buffer
 -- close the buffer
 -- delete the waypoint
 -- undo the deletion
 -- buffer should still be closed, but waypoint text should be there
--- go to waypoint
--- buffer should be opened
-describe('Undo delete then jump', function()
+-- should show "no open buffer for file"
+-- open file
+-- should return to normal
+describe('Undo delete before reopen', function()
+  assert(u.file_exists(file_0))
+  tu.edit_file(file_0)
+  crud.append_waypoint_wrapper()
+
+  assert(state.waypoints[1].has_buffer)
+
+  vim.api.nvim_buf_delete(vim.fn.bufnr(file_0), { force = true })
+
+  tu.assert_eq(1, #state.waypoints)
+  assert(not state.waypoints[1].has_buffer)
+
+  floating_window.open()
+  floating_window.delete()
+
+  tu.assert_eq(0, #state.waypoints)
+
+  floating_window.undo()
+
+  tu.assert_eq(1, #state.waypoints)
+  assert(not state.waypoints[1].has_buffer)
+
+  local lines
+  lines = tu.get_waypoint_buffer_lines_trimmed()
+
+  tu.assert_eq(message.no_open_buffer_for_file, lines[1][4])
+
+  floating_window.close()
+  tu.edit_file(file_0)
+
+  tu.assert_eq(1, #state.waypoints)
+  assert(state.waypoints[1].has_buffer)
+
+  local extmarks = uw.buf_get_extmarks(vim.fn.bufnr(file_0))
+  tu.assert_eq(1, #extmarks)
+  tu.assert_eq(visible_extmark_text, extmarks[1][4].sign_text)
 end)
 
-describe('Undo delete then jump', function()
+describe('Undo delete after reopen', function()
+  assert(u.file_exists(file_0))
+  tu.edit_file(file_0)
+  crud.append_waypoint_wrapper()
+
+  assert(state.waypoints[1].has_buffer)
+
+  tu.assert_eq(1, #state.waypoints)
+  assert(state.waypoints[1].has_buffer)
+
+  floating_window.open()
+  floating_window.delete()
+
+  tu.assert_eq(0, #state.waypoints)
+
+  vim.api.nvim_buf_delete(vim.fn.bufnr(file_0), { force = true })
+
+  tu.assert_eq(0, #state.waypoints)
+
+  floating_window.close()
+  tu.edit_file(file_0)
+  floating_window.open()
+  floating_window.undo()
+  floating_window.close()
+
+  tu.assert_eq(1, #state.waypoints)
+
+  local extmarks = uw.buf_get_extmarks(vim.fn.bufnr(file_0))
+  tu.assert_eq(1, #state.waypoints)
+  assert(state.waypoints[1].has_buffer)
+
+  tu.assert_eq(1, #extmarks)
+  tu.assert_eq(visible_extmark_text, extmarks[1][4].sign_text)
+end)
+
+-- TODO: finish
+-- one open buffer
+-- delete the waypoint
+-- delete the line the waypoint was on in the buffer
+-- undo the deletion in the waypoint window
+-- waypoint should not appear (should be message in notify box)
+describe('Undo undrawn waypoint', function()
+end)
+
+-- TODO: finish
+-- one open buffer
+-- close the buffer
+-- delete the waypoint
+-- undo the deletion
+-- buffer should still be closed, but waypoint text should be there
+-- CHANGE THE BUFFER TO DELETE THE LINE THE WAYPOINT IS ON
+-- go to waypoint
+-- waypoint should be drawn, but with error that it could not be found
+describe('Undo waypoint in closed buffer', function()
 end)

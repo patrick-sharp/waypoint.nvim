@@ -40,7 +40,7 @@ describe('Rename file', function()
   assert(uv.fs_unlink(old_path))
 
   floating_window.open()
-  floating_window.go_to_current_waypoint()
+  floating_window.jump_to_waypoint()
 
   local curr_file_path = vim.api.nvim_buf_get_name(0)
   tu.assert_eq(new_path, u.relative_path(curr_file_path))

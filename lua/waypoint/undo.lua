@@ -147,10 +147,10 @@ function M.set_extmarks_for_state()
 
   for _,waypoint in ipairs(state.waypoints) do
     local should_show_extmark = u.all({
-        not waypoint.error,
-        waypoint.has_buffer,
-        0 ~= vim.fn.bufloaded(waypoint.bufnr),
-        uw.should_draw_waypoint(waypoint),
+      not waypoint.error,
+      waypoint.has_buffer,
+      0 ~= vim.fn.bufloaded(waypoint.bufnr),
+      uw.should_draw_waypoint(waypoint),
     })
     if should_show_extmark then
       uw.set_wp_extmark_visible(waypoint, true)

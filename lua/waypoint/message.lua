@@ -24,6 +24,7 @@ M.missing_file_err_msg = table.concat(missing_file_err_msg_table)
 
 M.at_earliest_change = "At earliest change"
 M.at_latest_change = "At latest change"
+M.no_open_buffer_for_file = "No open buffer for file"
 
 ---@param file string?
 function M.restored_before_load(file)

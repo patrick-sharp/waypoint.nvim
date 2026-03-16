@@ -24,7 +24,7 @@ describe('Navigation basic', function()
   lines = tu.get_waypoint_buffer_lines_trimmed()
 
   floating_window.move_to_last_waypoint()
-  floating_window.go_to_current_waypoint()
+  floating_window.jump_to_waypoint()
 
   linenr = tonumber(lines[#lines][3])
   tu.assert_eq("number", type(linenr))
@@ -34,7 +34,7 @@ describe('Navigation basic', function()
 
   floating_window.open()
   floating_window.prev_waypoint()
-  floating_window.go_to_current_waypoint()
+  floating_window.jump_to_waypoint()
 
   linenr = tonumber(lines[#lines - 1][3])
   tu.assert_eq("number", type(linenr))
@@ -45,7 +45,7 @@ describe('Navigation basic', function()
   floating_window.open()
   floating_window.next_waypoint()
   floating_window.move_to_first_waypoint()
-  floating_window.go_to_current_waypoint()
+  floating_window.jump_to_waypoint()
 
   linenr = tonumber(lines[1][3])
   tu.assert_eq("number", type(linenr))
