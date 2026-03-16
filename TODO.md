@@ -159,7 +159,7 @@
     - Use nvim -u /path/to/file
 - [ ] create better error handling and reporting
     - [x] think about adding some kind of error handling to draw_waypoint_window that will just display an error if pcall happens, so you don't have to fight through cumulative errors to close the window
-    - [ ] if highlighting fails for some reason, just show an error message and turn off highlighting
+    - [x] if highlighting fails for some reason, just show an error message and turn off highlighting
 - [ ] remove all asserts from the code
     - [ ] replace them with something that will only panic in debug mode, and just log in release mode
     - [ ] make this function use error with level 2 (or 3 or whatev) to keep the traceback clean
@@ -211,8 +211,8 @@
         - open file.txt in vim
     - [x] undo/redo with waypoints that have errors
     - [x] undone deletions in waypoint window should re-show extmark in file
+    - [x] telescope integration
     - [ ] have waypoints, delete one, delete text to make extmarks invalid, undo, check num waypoints
-    - [ ] telescope integration
     - [ ] load test
         - 1000 waypoints
         - all max context

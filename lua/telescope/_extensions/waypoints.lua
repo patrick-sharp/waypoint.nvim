@@ -2,8 +2,6 @@
 
 local has_telescope, telescope = pcall(require, "telescope")
 
--- require('telescope').load_extension('waypoint')
-
 if not has_telescope then
    error "This feature requires nvim-telescope/telescope.nvim"
 end
@@ -22,13 +20,16 @@ local function waypoints(opts)
    opts = opts or {}
    local waypoint_list = {}
    for _, wp in pairs(state.waypoints) do
-    local waypoint_file_text = uw.get_waypoint_context(wp, 0, 0)
-    local linenr = waypoint_file_text.context_start_linenr -- telescope expects 1-indexed lines
-    table.insert(waypoint_list, {
-       filename = wp.filepath,
-       lnum = tonumber(linenr),
-       text = waypoint_file_text.lines[1]
-    })
+    local should_add_wp = uw.should_draw_waypoint(wp) and not wp.error
+    if should_add_wp then
+      local waypoint_file_text = uw.get_waypoint_context(wp, 0, 0)
+      local linenr = waypoint_file_text.context_start_linenr -- telescope expects 1-indexed lines
+      table.insert(waypoint_list, {
+         filename = uw.filepath_from_waypoint(wp),
+         lnum = tonumber(linenr),
+         text = waypoint_file_text.lines[1]
+      })
+    end
    end
    local display = function(entry)
       local displayer = entry_display.create {
