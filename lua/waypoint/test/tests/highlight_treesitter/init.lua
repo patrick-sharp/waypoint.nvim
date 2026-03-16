@@ -11,6 +11,19 @@ local markdown_file = "lua/waypoint/test/tests/highlight_treesitter/markdown.md"
 
 -- vim.fn.hlID can get id from name. not used in this file, but good to know.
 
+local function buffer_has_ts_parser(bufnr, language)
+  local buf_highlighter = vim.treesitter.highlighter.active[bufnr]
+  local highlighter_languages = {}
+  local has_parser = false
+  buf_highlighter.tree:for_each_tree(function(_, tree)
+    if language == tree:lang() then
+      has_parser = true
+    end
+    highlighter_languages[#highlighter_languages+1] = tree:lang()
+  end)
+  return has_parser
+end
+
 describe('Highlight treesitter', function()
   assert(u.file_exists(file_0))
   assert(u.file_exists(markdown_file))
@@ -21,6 +34,8 @@ describe('Highlight treesitter', function()
   -- treesitter is on by default, this is out of an abundance of caution for previous leftover state
   vim.treesitter.start(lua_bufnr)
   vim.treesitter.start(markdown_bufnr)
+
+  assert(buffer_has_ts_parser(lua_bufnr, "lua"))
 
   ---@type integer
   local start_line
@@ -79,6 +94,12 @@ describe('Highlight treesitter', function()
   tu.assert_has_hl(hlranges[2], "@constant.builtin.lua",    10, 12)
 
   -- markdown 
+  -- markdown parser might not be installed (e.g. if using the nvim_clean test's init.lua file),
+  -- so don't bother testing it if it isn't there.
+
+  if not buffer_has_ts_parser(markdown_bufnr, "markdown") then
+    return
+  end
 
   start_line = 1
   end_line = 4

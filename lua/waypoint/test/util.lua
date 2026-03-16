@@ -173,19 +173,43 @@ function M.get_hl_name(hlrange)
 end
 
 ---@param hlranges waypoint.HighlightRange[] highlight ranges for a single row
+---@return string
+function M.inspect_hl_ranges(hlranges)
+  ---@type any[]
+  local result = vim.deepcopy(hlranges)
+  for i, hlrange in ipairs(hlranges) do
+    result[i].hl_group_name = vim.fn.synIDattr(hlrange.hl_group, "name")
+  end
+  return vim.inspect(result)
+end
+
+---@param hlranges waypoint.HighlightRange[] highlight ranges for a single row
 ---@param name string
 ---@param col_start integer
 ---@param col_end integer
-function M.assert_has_hl(hlranges, name, col_start, col_end)
+---@return boolean, integer
+function M.has_hl(hlranges, name, col_start, col_end)
   local counter = 0
   for _, hlrange in ipairs(hlranges) do
     local range_name = M.get_hl_name(hlrange)
     if range_name == name then
       counter = counter + 1
       if col_start == hlrange.col_start and col_end == hlrange.col_end then
-        return
+        return true, -1
       end
     end
+  end
+  return false, counter
+end
+
+---@param hlranges waypoint.HighlightRange[] highlight ranges for a single row
+---@param name string
+---@param col_start integer
+---@param col_end integer
+function M.assert_has_hl(hlranges, name, col_start, col_end)
+  local has_hl, counter = M.has_hl(hlranges, name, col_start, col_end)
+  if has_hl then
+    return
   end
   local hlranges_msg = M.inspect_hlranges(hlranges)
   if counter == 0 then

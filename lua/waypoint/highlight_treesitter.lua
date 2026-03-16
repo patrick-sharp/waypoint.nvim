@@ -69,9 +69,6 @@ end
 ---@return waypoint.HighlightRange[][] hlranges array of all syntax highlights on each line.
 function M.get_treesitter_syntax_highlights(bufnr, lines, start_line, end_line)
   assert(#lines == end_line - start_line)
-  -- convert to zero-indexed
-  -- start_line = start_line - 1
-  -- end_line = end_line - 1
 
   ---@type waypoint.TreesitterHighlight[]
   local treesitter_highlights = M.get_nodes_with_highlights(bufnr, start_line - 1, end_line - 1) -- this function takes zero-indexed parameters

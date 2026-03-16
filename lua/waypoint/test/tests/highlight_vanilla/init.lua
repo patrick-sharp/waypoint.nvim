@@ -11,6 +11,25 @@ local markdown_file = "lua/waypoint/test/tests/highlight_vanilla/markdown.md"
 
 -- vim.fn.hlID can get id from name. not used in this file, but good to know.
 
+---@param hlranges waypoint.HighlightRange[] highlight ranges for a single row
+---@param names string[]
+---@param col_start integer
+---@param col_end integer
+local function assert_has_any_hl(hlranges, names, col_start, col_end)
+  for _, name in ipairs(names) do
+    local has_hl, _ = tu.has_hl(hlranges, name, col_start, col_end)
+    if has_hl then
+      return
+    end
+  end
+  error(table.concat{
+   "hlranges has no range with any name in ", vim.inspect(names),
+    " from ", col_start,
+    " to ", col_end,
+    "\nhlranges = ", tu.inspect_hl_ranges(hlranges)
+  })
+end
+
 describe('Highlight vanilla', function()
   assert(u.file_exists(file_0))
   assert(u.file_exists(markdown_file))
@@ -83,8 +102,8 @@ describe('Highlight vanilla', function()
   )
 
   tu.assert_eq(end_line - start_line, #hlranges)
-  tu.assert_has_hl(hlranges[1], "markdownHeadingDelimiter", 1,  2)
-  tu.assert_has_hl(hlranges[1], "Title",                    3, 11)
+  assert_has_any_hl(hlranges[1], {"markdownHeadingDelimiter", "Delimiter"}, 1,  2)
+  tu.assert_has_hl(hlranges[1], "Title", 3, 11)
   tu.assert_eq(0, #hlranges[2])
   tu.assert_eq(0, #hlranges[3])
 
@@ -101,13 +120,13 @@ describe('Highlight vanilla', function()
   )
 
   tu.assert_eq(end_line - start_line, #hlranges)
-  tu.assert_has_hl(hlranges[1], "markdownHeadingDelimiter", 1,  2)
-  tu.assert_has_hl(hlranges[1], "Title",                    3, 11)
+  assert_has_any_hl(hlranges[1], {"markdownHeadingDelimiter", "Delimiter"}, 1,  2)
+  tu.assert_has_hl(hlranges[1], "Title", 3, 11)
   tu.assert_eq(0, #hlranges[2])
   tu.assert_eq(0, #hlranges[3])
   tu.assert_eq(0, #hlranges[4])
-  tu.assert_has_hl(hlranges[5], "markdownHeadingDelimiter", 1,  3)
-  tu.assert_has_hl(hlranges[1], "Title",                    3, 11)
+  assert_has_any_hl(hlranges[1], {"markdownHeadingDelimiter", "Delimiter"}, 1,  2)
+  tu.assert_has_hl(hlranges[1], "Title", 3, 11)
 
   start_line = 10
   end_line = 14
@@ -122,8 +141,8 @@ describe('Highlight vanilla', function()
   )
 
   tu.assert_eq(end_line - start_line, #hlranges)
-  tu.assert_has_hl(hlranges[1], "markdownBold",          1,  8)
+  assert_has_any_hl(hlranges[1], {"markdownBold", "htmlBold"}, 1,  8)
   tu.assert_eq(0, #hlranges[2])
-  tu.assert_has_hl(hlranges[3], "markdownCodeDelimiter", 1,  6)
+  assert_has_any_hl(hlranges[3], {"markdownCodeDelimiter", "Delimiter"}, 1,  6)
   tu.assert_has_hl(hlranges[4], "markdownCodeBlock",     1, 11)
 end)

@@ -151,6 +151,12 @@
     - [x] take inspiration from harpoon and bookmarks about when the file gets saved and where
         - https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua
         - maybe use vim.schedule to do it async if worried about perf?
+- [x] rename functions with new vocab:
+      move_waypoints: move waypoints within the waypoint list
+      jump_to:        set buffer and cursor to the location of a waypoint
+- [x] test waypoint (manual + test suite) on a fresh neovim install
+    - [ ] think about optional dependencies like telescope
+    - Use nvim -u /path/to/file
 - [ ] create better error handling and reporting
     - [x] think about adding some kind of error handling to draw_waypoint_window that will just display an error if pcall happens, so you don't have to fight through cumulative errors to close the window
     - [ ] if highlighting fails for some reason, just show an error message and turn off highlighting
@@ -221,14 +227,6 @@
     - [ ] highlighting
     - [ ] extmarks
     - [ ] tutorial
-- [ ] test waypoint (manual + test suite) on a fresh neovim install
-    - [ ] think about optional dependencies like telescope
-    - Use nvim -u /path/to/file
-- [ ] rename functions with new vocab:
-      cursor_to:      move the cursor
-      move_waypoints: move waypoints within the waypoint list
-      jump_to:        set buffer and cursor to the location of a waypoint
-      relocate:       transfer waypoints from one file to another
 - [ ] double check undo/redo messages for everything
     - [ ] in message, show which waypoints are restored to be visible
 - [ ] add ability to see soft-deleted waypoints in waypoint window (maybe a toggle)
@@ -272,7 +270,7 @@
     - [x] last_waypoint
     - [x] move_waypoint_to_top
     - [x] move_waypoint_to_bottom
-- [ ] add ability to undo changing waypoints with u
+- [x] add ability to undo changing waypoints with u
     - [x] moving up and down
     - [x] moving waypoints to different files
     - [x] creating
@@ -286,10 +284,6 @@
 - [x] add soft deletes for waypoints
     - [x] handle the case where the extmark gets invalidated (hide the waypoint, but allow it to be brought back if they undo the extmark deletion)
     - [ ] when you undo and that causes a soft delete (i.e. waypoint in new state has existing, but invalid extmark), display a message that waypoint is not shown because its extmark was deleted
-
-still got some weird treesitter behavior
-it seems like in the skhd repo I'm using, it will only properly highlight some highlights if the highlight is onscreen or close to it
-some, like header 2, appear to never work
 
 how to use luajit profiler
 https://luajit.org/ext_profiler.html
