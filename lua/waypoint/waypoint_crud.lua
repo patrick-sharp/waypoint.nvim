@@ -254,6 +254,7 @@ function M.remove_waypoints()
 
   for i,wp in ipairs(waypoints) do
     if i < start_i or i > end_i or not uw.should_draw_waypoint(wp) then
+      -- move waypoints that shouldn't be deleted into the new waypoint array
       new_waypoints[#new_waypoints+1] = wp
       waypoint_map[wp] = true
       if change_wpi == nil then
@@ -291,7 +292,7 @@ end
 -- move current waypoint or selection of waypoints
 -- -1 for up, 1 for down
 ---@param direction -1 | 1
-function M.move_curr(direction)
+function M.move_waypoints(direction)
   local split = uw.split_by_drawn()
   local drawn = split.drawn
 
@@ -308,6 +309,11 @@ function M.move_curr(direction)
     message.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
   end
   if should_return then return end
+
+  ---@type integer
+  local change_wpi
+  ---@type waypoint.AffectedWpis
+  local affected_wpis = { updated = {}}
 
   if u.is_in_visual_mode() then
     local front = split.top
@@ -339,6 +345,11 @@ function M.move_curr(direction)
     if split.cursor_vis_i then
       split.cursor_vis_i = split.cursor_vis_i + front_delta
     end
+
+    change_wpi = split.top
+    for i = split.top, split.bottom do
+      affected_wpis.updated[#affected_wpis.updated+1] = split.wpi_from_drawn_i[i]
+    end
   else
     local new_cursor_i = u.clamp(split.cursor_i + direction * vim.v.count1, 1, #drawn)
     local temp = drawn[split.cursor_i]
@@ -347,6 +358,8 @@ function M.move_curr(direction)
     end
     drawn[new_cursor_i] = temp
     split.cursor_i = new_cursor_i
+    change_wpi = split.wpi_from_drawn_i[new_cursor_i]
+    affected_wpis.updated[1] = change_wpi
   end
 
   uw.recombine_drawn_split(split)
@@ -354,7 +367,7 @@ function M.move_curr(direction)
   local redo_msg = message.move_waypoint(old_wpi, state.wpi)
   local undo_msg = message.move_waypoint(state.wpi, old_wpi)
 
-  file.save_change(undo_msg, redo_msg)
+  file.save_change(undo_msg, redo_msg, change_wpi, affected_wpis)
   uw.make_sorted_waypoints()
 end
 
@@ -374,6 +387,11 @@ function M.move_waypoint_to_top()
     return
   end
 
+  ---@type integer
+  local change_wpi
+  ---@type waypoint.AffectedWpis
+  local affected_wpis = { updated = {}}
+
   if u.is_in_visual_mode() then
     local selection = {}
     for i = split.top, split.bottom do
@@ -392,6 +410,10 @@ function M.move_waypoint_to_top()
       split.cursor_i = #selection
       split.cursor_vis_i = 1
     end
+    change_wpi = split.top
+    for i = split.top, split.bottom do
+      affected_wpis.updated[#affected_wpis.updated+1] = split.wpi_from_drawn_i[i]
+    end
   else
     local temp = drawn[split.cursor_i]
     for i=split.cursor_i, 2, -1 do
@@ -399,13 +421,15 @@ function M.move_waypoint_to_top()
     end
     drawn[1] = temp
     split.cursor_i = 1
+    change_wpi = split.wpi_from_drawn_i[1]
+    affected_wpis.updated[1] = change_wpi
   end
 
   uw.recombine_drawn_split(split)
 
   local redo_msg = message.move_waypoint(old_wpi, state.wpi)
   local undo_msg = message.move_waypoint(state.wpi, old_wpi)
-  file.save_change(undo_msg, redo_msg)
+  file.save_change(undo_msg, redo_msg, change_wpi, affected_wpis)
 end
 
 function M.move_waypoint_to_bottom()
@@ -423,6 +447,11 @@ function M.move_waypoint_to_bottom()
   if should_return then
     return
   end
+
+  ---@type integer
+  local change_wpi
+  ---@type waypoint.AffectedWpis
+  local affected_wpis = { updated = {}}
 
   if u.is_in_visual_mode() then
     local selection = {}
@@ -442,20 +471,26 @@ function M.move_waypoint_to_bottom()
       split.cursor_i = #drawn
       split.cursor_vis_i = #drawn - #selection + 1
     end
-  else
-    local temp = state.waypoints[state.wpi]
-    for i=state.wpi, #state.waypoints - 1 do
-      state.waypoints[i] = state.waypoints[i+1]
+
+    change_wpi = split.top
+    for i = split.top, split.bottom do
+      affected_wpis.updated[#affected_wpis.updated+1] = split.wpi_from_drawn_i[i]
     end
-    state.waypoints[#state.waypoints] = temp
-    state.wpi = #state.waypoints
+  else
+    local temp = split.drawn[split.cursor_i]
+    for i=split.cursor_i, #split.drawn - 1 do
+      split.drawn[i] = split.drawn[i+1]
+    end
+    split.drawn[#split.drawn] = temp
+    change_wpi = split.wpi_from_drawn_i[#split.drawn]
+    affected_wpis.updated[1] = change_wpi
   end
 
   uw.recombine_drawn_split(split)
 
   local redo_msg = message.move_waypoint(old_wpi, state.wpi)
   local undo_msg = message.move_waypoint(state.wpi, old_wpi)
-  file.save_change(undo_msg, redo_msg)
+  file.save_change(undo_msg, redo_msg, change_wpi, affected_wpis)
 end
 
 function M.indent(increment)

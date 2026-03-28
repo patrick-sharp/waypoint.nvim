@@ -1083,13 +1083,13 @@ function M.unindent()
 end
 
 function M.move_waypoint_up()
-  crud.move_curr(-1)
+  crud.move_waypoints(-1)
   draw_waypoint_window(M.WINDOW_ACTIONS.swap)
   vim.cmd.normal("m.")
 end
 
 function M.move_waypoint_down()
-  crud.move_curr(1)
+  crud.move_waypoints(1)
   draw_waypoint_window(M.WINDOW_ACTIONS.swap)
   vim.cmd.normal("m.")
 end
