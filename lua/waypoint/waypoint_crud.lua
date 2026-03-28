@@ -45,11 +45,9 @@ function M.append_waypoint(filepath, line_nr, annotation)
   local waypoint = {
     has_buffer = true,
     extmark_id = extmark_id,
-    -- filepath = filepath,
     indent = 0,
     annotation = annotation,
     bufnr = bufnr,
-    -- text = vim.api.nvim_buf_get_lines(bufnr, line_nr - 1, line_nr, true)[1],
     error = nil,
   }
 

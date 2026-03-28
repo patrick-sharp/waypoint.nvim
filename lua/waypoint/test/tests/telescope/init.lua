@@ -38,8 +38,6 @@ describe('Telescope', function()
   local bufnr = vim.api.nvim_get_current_buf()
   local picker = action_state.get_current_picker(bufnr)
 
-  u.log(picker.finder.results)
-
   tu.assert_eq(4, #picker.finder.results)
 
   tu.assert_eq(file_0, picker.finder.results[1].filename)

@@ -12,7 +12,9 @@ local uw = require"waypoint.utils_waypoint"
 ---@field wpi integer?
 ---@field undo_msg string
 ---@field redo_msg string
----@field affected_wpis integer[]
+---@field created_wpis integer[]
+---@field updated_wpis integer[]
+---@field deleted_wpis integer[]
 
 -- we will always keep at least one state in this ring buffer.
 -- when you undo, load the previous state and previous wpi.
@@ -115,12 +117,19 @@ function M.waypoints_from_undo_node_waypoints(undo_node_waypoints)
   return result
 end
 
+
+---@class waypoint.AffectedWpis
+---@field created integer[]?
+---@field updated integer[]?
+---@field deleted integer[]?
+
 ---@param undo_msg string
 ---@param redo_msg string
 ---@param change_wpi integer?
----@param affected_wpis integer[]?
+---@param affected_wpis waypoint.AffectedWpis?
 function M.save_state(undo_msg, redo_msg, change_wpi, affected_wpis)
   message.notify(redo_msg, vim.log.levels.INFO)
+  affected_wpis = affected_wpis or {}
 
   ---@type waypoint.UndoNode
   local undo_node = {
@@ -128,7 +137,9 @@ function M.save_state(undo_msg, redo_msg, change_wpi, affected_wpis)
     wpi = change_wpi or state.wpi,
     undo_msg = undo_msg,
     redo_msg = redo_msg,
-    affected_wpis = affected_wpis or {},
+    created_wpis = affected_wpis.created or {},
+    updated_wpis = affected_wpis.updated or {},
+    deleted_wpis = affected_wpis.deleted or {},
   }
 
   ring_buffer.push(M.states, undo_node)
@@ -171,14 +182,16 @@ function M.undo()
   assert(ok)
   _, ok = ring_buffer.pop(M.states)
   assert(ok)
+  ---@type waypoint.UndoNode
   prev_state, ok = ring_buffer.peek(M.states)
   assert(ok)
 
+  local old_waypoints = state.waypoints
   state.waypoints = M.waypoints_from_undo_node_waypoints(prev_state.waypoints)
   state.wpi = prev_state.wpi
   uw.make_sorted_waypoints()
   M.set_extmarks_for_state()
-  message.notify(message.from_undo(curr_state.undo_msg), vim.log.levels.INFO)
+  message.notify(message.from_undo(curr_state.undo_msg).. M.wpis_shown_msg_for_undo(old_waypoints, prev_state), vim.log.levels.INFO)
   return true
 end
 
@@ -189,13 +202,56 @@ function M.redo()
     message.notify(message.at_latest_change, vim.log.levels.INFO)
     return false
   end
+  ---@type waypoint.UndoNode
   local next_state, _ = ring_buffer.peek(M.states)
   state.waypoints = M.waypoints_from_undo_node_waypoints(next_state.waypoints)
   state.wpi = next_state.wpi
   uw.make_sorted_waypoints()
   M.set_extmarks_for_state()
-  message.notify(message.from_redo(next_state.redo_msg), vim.log.levels.INFO)
+
+  message.notify(message.from_redo(next_state.redo_msg) .. M.wpis_shown_msg_for_redo(next_state), vim.log.levels.INFO)
   return true
+end
+
+---@param old_waypoints waypoint.Waypoint[]
+---@param prev_state waypoint.UndoNode
+---@return string
+function M.wpis_shown_msg_for_undo(old_waypoints, prev_state)
+  local num_not_shown = 0
+  for _, wpi in pairs(prev_state.updated_wpis) do
+    if not uw.should_draw_waypoint(old_waypoints[wpi]) then
+      num_not_shown = num_not_shown + 1
+    end
+  end
+  for _, wpi in pairs(prev_state.deleted_wpis) do
+    if not uw.should_draw_waypoint(state.waypoints[wpi]) then
+      num_not_shown = num_not_shown + 1
+    end
+  end
+  if num_not_shown > 0 then
+    return '(' .. num_not_shown .. ' ' .. message.not_shown_suffix .. ')'
+  end
+  return ""
+end
+
+---@param node waypoint.UndoNode
+---@return string
+function M.wpis_shown_msg_for_redo(node)
+  local num_not_shown = 0
+  for _, wpi in pairs(node.updated_wpis) do
+    if not uw.should_draw_waypoint(state.waypoints[wpi]) then
+      num_not_shown = num_not_shown + 1
+    end
+  end
+  for _, wpi in pairs(node.created_wpis) do
+    if not uw.should_draw_waypoint(state.waypoints[wpi]) then
+      num_not_shown = num_not_shown + 1
+    end
+  end
+  if num_not_shown > 0 then
+    return '(' .. num_not_shown .. ' ' .. message.not_shown_suffix .. ')'
+  end
+  return ""
 end
 
 -- clears the undo history.

@@ -92,7 +92,6 @@ local function encode()
 end
 
 function M.save()
-  -- TODO: check if config is default
   if #state.waypoints == 0 then
     -- don't save a file with nothing in it
     if u.file_exists(config.file) then
@@ -233,7 +232,11 @@ function M.load_from_file(file)
   end
 
   load_decoded_state_into_state(decoded)
-  undo.save_state(message.restored_before_load(file), message.loaded_file(file))
+  local affected_wpis = {}
+  for i = 1, #state.waypoints do
+    affected_wpis[i] = i
+  end
+  undo.save_state(message.restored_before_load(file), message.loaded_file(file), nil, affected_wpis)
 end
 
 
@@ -270,13 +273,14 @@ end
 -- mutates the waypoint objects to put them in the new file
 ---@param src_filepath string
 ---@param dest_filepath string
----@param waypoints (waypoint.SavedWaypoint | waypoint.Waypoint)[]
+---@param wpis integer[]
 ---@param change_wpi integer?
-function M.locate_waypoints_in_file(src_filepath, dest_filepath, waypoints, change_wpi)
+function M.locate_waypoints_in_file(src_filepath, dest_filepath, wpis, change_wpi)
   local bufnr = M.open_file(dest_filepath)
   if bufnr == -1 then
     message.notify("Error: " .. dest_filepath .. " does not exist")
-    for _, waypoint in ipairs(waypoints) do
+    for _, wpi in ipairs(wpis) do
+      local waypoint = state.waypoints[wpi]
       waypoint.has_buffer = false
       waypoint.extmark_id = -1
       waypoint.bufnr      = -1
@@ -291,7 +295,8 @@ function M.locate_waypoints_in_file(src_filepath, dest_filepath, waypoints, chan
   )
 
   -- if a match can't be found for a waypoint, it will have a bufnr of -1 and its original filepath
-  for _, waypoint in ipairs(waypoints) do
+  for _, wpi in ipairs(wpis) do
+    local waypoint = state.waypoints[wpi]
     local linenr = waypoint.linenr
     waypoint.has_buffer = false
     waypoint.extmark_id = -1
@@ -321,10 +326,10 @@ function M.locate_waypoints_in_file(src_filepath, dest_filepath, waypoints, chan
 
   state.wpi = change_wpi
 
-  local undo_msg = message.moved_waypoints_to_file(#waypoints, dest_filepath, src_filepath)
-  local redo_msg = message.moved_waypoints_to_file(#waypoints, src_filepath, dest_filepath)
+  local undo_msg = message.moved_waypoints_to_file(#wpis, dest_filepath, src_filepath)
+  local redo_msg = message.moved_waypoints_to_file(#wpis, src_filepath, dest_filepath)
 
-  undo.save_state(undo_msg, redo_msg)
+  undo.save_state(undo_msg, redo_msg, nil, wpis)
 end
 
 return M

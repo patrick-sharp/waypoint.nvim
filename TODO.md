@@ -155,7 +155,7 @@
       move_waypoints: move waypoints within the waypoint list
       jump_to:        set buffer and cursor to the location of a waypoint
 - [x] test waypoint (manual + test suite) on a fresh neovim install
-    - [ ] think about optional dependencies like telescope
+    - [x] think about optional dependencies like telescope
     - Use nvim -u /path/to/file
 - [ ] create better error handling and reporting
     - [x] think about adding some kind of error handling to draw_waypoint_window that will just display an error if pcall happens, so you don't have to fight through cumulative errors to close the window

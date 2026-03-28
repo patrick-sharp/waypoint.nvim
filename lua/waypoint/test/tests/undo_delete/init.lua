@@ -14,6 +14,11 @@ local uw = require'waypoint.utils_waypoint'
 local visible_extmark_text = config.mark_char .. " "
 local invisible_extmark_text = "  "
 
+-- one open buffer
+-- one waypoint
+-- delete the waypoint
+-- open waypoint window and undo the delete
+-- redo the delete
 describe('Undo delete', function()
   assert(u.file_exists(file_0))
   tu.edit_file(file_0)
@@ -45,10 +50,11 @@ describe('Undo delete', function()
 end)
 
 -- one open buffer
+-- one waypoint
 -- close the buffer
 -- delete the waypoint
 -- undo the deletion
--- buffer should still be closed, but waypoint text should be there
+-- buffer should still be closed, but waypoint should be there
 -- should show "no open buffer for file"
 -- open file
 -- should return to normal
@@ -127,21 +133,25 @@ end)
 
 -- TODO: finish
 -- one open buffer
+-- one waypoint
 -- delete the waypoint
 -- delete the line the waypoint was on in the buffer
 -- undo the deletion in the waypoint window
 -- waypoint should not appear (should be message in notify box)
 describe('Undo undrawn waypoint', function()
-end)
+  tu.edit_file(file_0)
+  crud.append_waypoint_wrapper()
 
--- TODO: finish
--- one open buffer
--- close the buffer
--- delete the waypoint
--- undo the deletion
--- buffer should still be closed, but waypoint text should be there
--- CHANGE THE BUFFER TO DELETE THE LINE THE WAYPOINT IS ON
--- go to waypoint
--- waypoint should be drawn, but with error that it could not be found
-describe('Undo waypoint in closed buffer', function()
+  floating_window.open()
+  floating_window.delete()
+  floating_window.close()
+
+  tu.edit_file(file_0)
+  tu.normal('dd')
+
+  floating_window.open()
+  floating_window.undo()
+
+  u.log(tu.get_last_message())
+  -- tu.assert_eq(message.at_latest_change, tu.get_last_message())
 end)
