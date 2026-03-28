@@ -1232,7 +1232,7 @@ function M.jump_to_waypoint()
     return
   end
 
-  local extmark = uw.extmark_from_waypoint(waypoint)
+  local extmark = uw.extmark_from_waypoint2(waypoint)
   if not extmark then
     message.notify(constants.error_line_oob, vim.log.levels.ERROR)
     return
@@ -1246,7 +1246,7 @@ function M.jump_to_waypoint()
 
   local waypoint_bufnr = uw.bufnr_from_waypoint(waypoint)
   vim.api.nvim_win_set_buf(0, waypoint_bufnr)
-  vim.api.nvim_win_set_cursor(0, { extmark[1] + 1, 0 })
+  vim.api.nvim_win_set_cursor(0, { extmark[1], 0 })
   vim.api.nvim_command("normal! zz")
 end
 

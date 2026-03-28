@@ -43,8 +43,18 @@ function M.extmark_from_waypoint(waypoint)
     return nil
   end
 
-  --return M.extmark_from_id(bufnr, waypoint.extmark_id)
   return M.extmark_from_id(bufnr, waypoint.extmark_id)
+end
+
+---@param waypoint waypoint.Waypoint
+---@return waypoint.Extmark?
+function M.extmark_from_waypoint2(waypoint)
+  local bufnr, ok = M.bufnr_from_waypoint(waypoint)
+  if not ok or waypoint.extmark_id == -1 or waypoint.extmark_id == nil then
+    return nil
+  end
+
+  return M.buf_get_extmark(bufnr, waypoint.extmark_id)
 end
 
 ---@param waypoint waypoint.Waypoint
@@ -60,9 +70,9 @@ end
 ---@param waypoint waypoint.Waypoint
 ---@return integer? the one-indexed line number a waypoint's extmark is on, or nil if it doesn't have one
 function M.linenr_from_waypoint(waypoint)
-  local extmark = M.extmark_from_waypoint(waypoint)
+  local extmark = M.extmark_from_waypoint2(waypoint)
   if not extmark then return waypoint.linenr end
-  return extmark[1] + 1 -- convert from zero-indexed to one-indexed
+  return extmark[1]
 end
 
 ---@param waypoint waypoint.Waypoint
@@ -71,7 +81,7 @@ function M.should_draw_waypoint(waypoint)
   if not waypoint.has_buffer then
     return true
   end
-  local extmark = M.extmark_from_waypoint(waypoint)
+  local extmark = M.extmark_from_waypoint2(waypoint)
   if not extmark or not extmark[3] or extmark[3].invalid then
     return false
   end
