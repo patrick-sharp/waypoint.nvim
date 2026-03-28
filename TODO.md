@@ -157,9 +157,12 @@
 - [x] test waypoint (manual + test suite) on a fresh neovim install
     - [x] think about optional dependencies like telescope
     - Use nvim -u /path/to/file
-- [ ] create better error handling and reporting
+- [x] create better error handling and reporting
     - [x] think about adding some kind of error handling to draw_waypoint_window that will just display an error if pcall happens, so you don't have to fight through cumulative errors to close the window
     - [x] if highlighting fails for some reason, just show an error message and turn off highlighting
+- [x] refactor several things for cleanliness
+    - [x] consolidate split_by_drawn and get_drawn_waypoints
+    - [x] investigate extmark_from_id vs buf_get_extmark (I removed extmark_from_id)
 - [ ] remove all asserts from the code
     - [ ] replace them with something that will only panic in debug mode, and just log in release mode
     - [ ] make this function use error with level 2 (or 3 or whatev) to keep the traceback clean
@@ -232,9 +235,6 @@
     - [ ] in message, show which waypoints are restored to be visible
 - [ ] add ability to see soft-deleted waypoints in waypoint window (maybe a toggle)
     - [ ] refactor the drawn wpi functions to be clearer
-- [ ] refactor several things for cleanliness
-    - [x] consolidate split_by_drawn and get_drawn_waypoints
-    - [ ] investigate extmark_from_id vs buf_get_extmark
 - [ ] make a better experience for the non-telescope "locate waypoints within file" command
 
 ### ADVANCED FEATURES:

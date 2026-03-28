@@ -15,16 +15,6 @@ function M.bufnr_from_waypoint(waypoint)
   return bufnr, u.is_buffer_valid(bufnr)
 end
 
----@return vim.api.keyset.get_extmark_item_by_id?
-function M.extmark_from_id(bufnr, id)
-  ---@type vim.api.keyset.get_extmark_item_by_id
-  local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, id, {details=true})
-  if #extmark == 0 then
-    return nil
-  end
-  return extmark
-end
-
 ---@param bufnr integer
 ---@param extmark_id integer?
 ---@return integer?
@@ -34,21 +24,9 @@ function M.linenr_from_extmark_id(bufnr, extmark_id)
   return extmark[1]
 end
 
--- also returns values from bufnr_from_waypoint to avoid redundancy
----@param waypoint waypoint.Waypoint
----@return vim.api.keyset.get_extmark_item_by_id?
-function M.extmark_from_waypoint(waypoint)
-  local bufnr, ok = M.bufnr_from_waypoint(waypoint)
-  if not ok or waypoint.extmark_id == -1 or waypoint.extmark_id == nil then
-    return nil
-  end
-
-  return M.extmark_from_id(bufnr, waypoint.extmark_id)
-end
-
 ---@param waypoint waypoint.Waypoint
 ---@return waypoint.Extmark?
-function M.extmark_from_waypoint2(waypoint)
+function M.extmark_from_waypoint(waypoint)
   local bufnr, ok = M.bufnr_from_waypoint(waypoint)
   if not ok or waypoint.extmark_id == -1 or waypoint.extmark_id == nil then
     return nil
@@ -70,7 +48,7 @@ end
 ---@param waypoint waypoint.Waypoint
 ---@return integer? the one-indexed line number a waypoint's extmark is on, or nil if it doesn't have one
 function M.linenr_from_waypoint(waypoint)
-  local extmark = M.extmark_from_waypoint2(waypoint)
+  local extmark = M.extmark_from_waypoint(waypoint)
   if not extmark then return waypoint.linenr end
   return extmark[1]
 end
@@ -81,7 +59,7 @@ function M.should_draw_waypoint(waypoint)
   if not waypoint.has_buffer then
     return true
   end
-  local extmark = M.extmark_from_waypoint2(waypoint)
+  local extmark = M.extmark_from_waypoint(waypoint)
   if not extmark or not extmark[3] or extmark[3].invalid then
     return false
   end
@@ -112,7 +90,7 @@ function M.wp_set_extmark(waypoint, linenr)
 end
 
 ---@class waypoint.WaypointContext
----@field extmark              vim.api.keyset.get_extmark_item_by_id the zero-indexed row,col coordinates of the extmark corresponding to this waypoint
+---@field extmark              waypoint.Extmark
 ---@field lines                string[] the lines of text from the file the waypoint is in. Includes the line the waypoint is on and the lines in the context around the waypoint.
 ---@field waypoint_linenr      integer the zero-indexed line number the waypoint is on within the file.
 ---@field context_start_linenr integer the zero-indexed line number within the file of the first line of the context
@@ -174,11 +152,11 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after, is_
     }
   end
 
-  ---@type vim.api.keyset.get_extmark_item_by_id
+  ---@type waypoint.Extmark
   local extmark = maybe_extmark
 
   -- one-indexed line number
-  local extmark_line_nr = extmark[1] + 1
+  local extmark_line_nr = extmark[1]
 
   -- one-indexed line number, inclusive bound
   local start_linenr = u.clamp(extmark_line_nr - num_lines_before, 1)

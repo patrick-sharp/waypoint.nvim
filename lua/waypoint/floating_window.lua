@@ -1232,7 +1232,7 @@ function M.jump_to_waypoint()
     return
   end
 
-  local extmark = uw.extmark_from_waypoint2(waypoint)
+  local extmark = uw.extmark_from_waypoint(waypoint)
   if not extmark then
     message.notify(constants.error_line_oob, vim.log.levels.ERROR)
     return
