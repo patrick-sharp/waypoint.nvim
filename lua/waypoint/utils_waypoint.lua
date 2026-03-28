@@ -29,9 +29,9 @@ end
 ---@param extmark_id integer?
 ---@return integer?
 function M.linenr_from_extmark_id(bufnr, extmark_id)
-  local extmark = M.extmark_from_id(bufnr, extmark_id)
+  local extmark = M.buf_get_extmark(bufnr, extmark_id)
   if not extmark then return nil end
-  return extmark[1] + 1 -- convert from zero-indexed to one-indexed
+  return extmark[1]
 end
 
 -- also returns values from bufnr_from_waypoint to avoid redundancy
@@ -43,6 +43,7 @@ function M.extmark_from_waypoint(waypoint)
     return nil
   end
 
+  --return M.extmark_from_id(bufnr, waypoint.extmark_id)
   return M.extmark_from_id(bufnr, waypoint.extmark_id)
 end
 
@@ -424,9 +425,10 @@ end
 ---@field [3] vim.api.keyset.extmark_details
 
 ---@param bufnr integer
----@param extmark_id integer
+---@param extmark_id integer?
 ---@return waypoint.Extmark?
 function M.buf_get_extmark(bufnr, extmark_id)
+  if extmark_id == nil then return nil end
   local extmark = vim.api.nvim_buf_get_extmark_by_id(bufnr, constants.ns, extmark_id, {details=true})
   local details = extmark[3]
   assert(details)
