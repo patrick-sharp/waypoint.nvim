@@ -56,7 +56,7 @@ function M.append_waypoint(filepath, line_nr, annotation)
   local redo_msg = message.append_waypoint(#state.waypoints)
   local undo_msg = message.remove_waypoint(#state.waypoints)
 
-  undo.save_state(undo_msg, redo_msg, #state.waypoints)
+  undo.save_state(undo_msg, redo_msg, #state.waypoints, { #state.waypoints })
   uw.make_sorted_waypoints()
 
   state.wpi = state.wpi or 1
@@ -80,12 +80,17 @@ function M.insert_waypoint(filepath, line_nr, annotation)
     error = nil,
   }
 
+  ---@type integer
+  local change_wpi
+
   if not state.wpi then
     state.waypoints = {waypoint}
     state.wpi = 1
+    change_wpi = 1
   elseif state.wpi == #state.waypoints then
     state.wpi = state.wpi + 1
     state.waypoints[state.wpi] = waypoint
+    change_wpi = #state.waypoints
   else
     ---@type waypoint.Waypoint[]
     local new_waypoints = {}
@@ -94,6 +99,7 @@ function M.insert_waypoint(filepath, line_nr, annotation)
       new_waypoints[i] = state.waypoints[i]
     end
     new_waypoints[state.wpi] = waypoint
+    change_wpi = state.wpi
     for i = state.wpi,#state.waypoints do
       new_waypoints[i+1] = state.waypoints[i]
     end
@@ -103,7 +109,7 @@ function M.insert_waypoint(filepath, line_nr, annotation)
   local redo_msg = message.insert_waypoint(state.wpi)
   local undo_msg = message.remove_waypoint(state.wpi)
 
-  undo.save_state(undo_msg, redo_msg)
+  undo.save_state(undo_msg, redo_msg, change_wpi, { change_wpi })
   uw.make_sorted_waypoints()
 end
 
@@ -174,7 +180,7 @@ function M.reset_current_indent()
   local redo_msg = "Reset indent for waypoint " .. tostring(state.wpi)
   local undo_msg = "Restored waypoint " .. tostring(state.wpi) .. " to indentation of " .. tostring(old_indent)
 
-  undo.save_state(undo_msg, redo_msg)
+  undo.save_state(undo_msg, redo_msg, state.wpi, { state.wpi })
   uw.make_sorted_waypoints()
 end
 
@@ -369,117 +375,6 @@ function M.move_curr(direction)
 
   undo.save_state(undo_msg, redo_msg)
   uw.make_sorted_waypoints()
-end
-
--- move current waypoint or selection of waypoints
--- -1 for up, 1 for down
----@param direction -1 | 1
-function M.move_curr_old(direction)
-  local should_return = (
-    #state.waypoints <= 1
-    or state.sort_by_file_and_line
-  )
-  if state.sort_by_file_and_line then
-    message.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
-  end
-  if should_return then return end
-
-  local old_wpi = state.wpi
-
-  local selection_top, selection_bottom, top, bottom = uw.get_drawn_wpi()
-
-  local did_anything = false
-
-  if u.is_in_visual_mode() then
-    for _ = 1, vim.v.count1 do
-      -- this will only happen if all waypoints in the window have been deleted
-      if selection_top == nil or selection_bottom == nil then
-        return
-      end
-
-      -- if moving up, front is top
-      -- if moving down, front is bottom
-      ---@type integer
-      local front = selection_top
-      local back = selection_bottom
-      local bound = top - 1
-      if direction == 1 then
-        front = selection_bottom
-        back = selection_top
-        bound = bottom + 1
-      end
-
-      local new_front = front
-      local can_move = false
-      while new_front + direction ~= bound do
-        new_front = new_front + direction
-        if uw.should_draw_waypoint(state.waypoints[new_front]) then
-          can_move = true
-          break
-        end
-      end
-
-      if not can_move then
-        return
-      end
-
-      local wp_to_move_to_back = state.waypoints[new_front]
-
-      local new_back = back
-      for i=front,back,-direction do
-        local wp = state.waypoints[i]
-        if uw.should_draw_waypoint(wp) then
-          local new_i = i + direction
-          -- the bound check is not ever supposed to hit, just there for sanity to prevent infinite loop
-          while new_i ~= bound and not(uw.should_draw_waypoint(state.waypoints[new_i])) do
-            new_i = new_i + direction
-          end
-          state.waypoints[new_i] = wp
-          if i == back then
-            new_back = new_i
-          end
-        end
-      end
-
-      assert(new_front)
-      assert(new_back)
-
-      state.waypoints[back] = wp_to_move_to_back
-
-      if (state.wpi < state.vis_wpi) == (front < back) then
-        state.wpi = new_front
-        state.vis_wpi = new_back
-      else
-        state.wpi = new_back
-        state.vis_wpi = new_front
-      end
-      did_anything = true
-    end
-  else
-    local wpi = selection_top
-    local count = 0
-    local bound = 0
-    if direction == 1 then
-      bound = bottom + 1
-    end
-    while wpi + direction ~= bound and count < vim.v.count1 do
-      assert(wpi)
-      local temp = state.waypoints[wpi + direction]
-      state.waypoints[wpi + direction] = state.waypoints[wpi]
-      state.waypoints[wpi] = temp
-      state.wpi = wpi + direction
-      count = count + 1
-      did_anything = true
-    end
-  end
-
-  if did_anything then
-    local redo_msg = message.move_waypoint(old_wpi, state.wpi)
-    local undo_msg = message.move_waypoint(state.wpi, old_wpi)
-
-    undo.save_state(undo_msg, redo_msg)
-    uw.make_sorted_waypoints()
-  end
 end
 
 function M.move_waypoint_to_top()
