@@ -208,8 +208,10 @@ end
 function M.load_from_file(file)
   local data = read_file(file)
   if data == nil then
-    -- if no waypoints file, then make the first state the empty state
+    -- if no waypoints file, then make the first state the empty state.
+    -- no need to save to file since we just loaded from file.
     undo.save_state("", "")
+    uw.make_sorted_waypoints()
     return
   end
 
@@ -236,9 +238,30 @@ function M.load_from_file(file)
   for i = 1, #state.waypoints do
     affected_wpis[i] = i
   end
-  undo.save_state(message.restored_before_load(file), message.loaded_file(file), nil, affected_wpis)
+  M.save_change(message.restored_before_load(file), message.loaded_file(file), nil, affected_wpis)
 end
 
+M.was_most_recent_change_saved = false
+
+-- save the state in the undo stack and persist the change to a file.
+---@param undo_msg string
+---@param redo_msg string
+---@param change_wpi integer?
+---@param affected_wpis waypoint.AffectedWpis?
+function M.save_change(undo_msg, redo_msg, change_wpi, affected_wpis)
+  M.was_most_recent_change_saved = false
+  undo.save_state(undo_msg, redo_msg, change_wpi, affected_wpis)
+  uw.make_sorted_waypoints()
+
+  -- asynchronously schedule saving to file to not block user interaction
+  vim.schedule(function()
+    if M.was_most_recent_change_saved then
+      return
+    end
+    M.save()
+    M.was_most_recent_change_saved = true
+  end)
+end
 
 ---@param bufnr integer
 ---@param waypoint waypoint.Waypoint | waypoint.SavedWaypoint
@@ -329,7 +352,7 @@ function M.locate_waypoints_in_file(src_filepath, dest_filepath, wpis, change_wp
   local undo_msg = message.moved_waypoints_to_file(#wpis, dest_filepath, src_filepath)
   local redo_msg = message.moved_waypoints_to_file(#wpis, src_filepath, dest_filepath)
 
-  undo.save_state(undo_msg, redo_msg, nil, wpis)
+  M.save_change(undo_msg, redo_msg, nil, wpis)
 end
 
 return M
