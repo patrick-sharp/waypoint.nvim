@@ -131,7 +131,6 @@ describe('Undo delete after reopen', function()
   tu.assert_eq(visible_extmark_text, extmarks[1][4].sign_text)
 end)
 
--- TODO: finish
 -- one open buffer
 -- one waypoint
 -- delete the waypoint
@@ -151,6 +150,9 @@ describe('Undo undrawn waypoint', function()
 
   floating_window.open()
   floating_window.undo()
+
+  tu.assert_eq(1, #state.waypoints)
+  assert(not uw.should_draw_waypoint(state.waypoints[1]))
 
   local msg
 

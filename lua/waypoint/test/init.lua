@@ -116,7 +116,7 @@ end
 
 -- open a new no name buffer and close everything else
 local function clear_buffers()
-  vim.api.nvim_command('enew')
+  vim.api.nvim_command('enew!')
   local bufs = vim.api.nvim_list_bufs()
   local current_buf = vim.api.nvim_get_current_buf()
   for _, buf in ipairs(bufs) do
