@@ -152,6 +152,18 @@ describe('Undo undrawn waypoint', function()
   floating_window.open()
   floating_window.undo()
 
-  u.log(tu.get_last_message())
-  -- tu.assert_eq(message.at_latest_change, tu.get_last_message())
+  local msg
+
+  msg = tu.get_last_message()
+
+  assert(msg)
+  tu.assert_string_contains(msg, message.restored_waypoint .. 1)
+  tu.assert_string_contains(msg, 1 .. message.not_shown_suffix)
+
+  floating_window.redo()
+
+  msg = tu.get_last_message()
+
+  assert(msg)
+  tu.assert_string_contains(msg, message.deleted_waypoint .. 1)
 end)

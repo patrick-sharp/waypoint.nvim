@@ -212,8 +212,8 @@
     - [x] undo/redo with waypoints that have errors
     - [x] undone deletions in waypoint window should re-show extmark in file
     - [x] telescope integration
+    - [x] deleting waypoints doesn't delete undrawn waypoints
     - [ ] have waypoints, delete one, delete text to make extmarks invalid, undo, check num waypoints
-    - [ ] deleting waypoints doesn't delete undrawn waypoints
     - [ ] load test
         - 1000 waypoints
         - all max context

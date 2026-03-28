@@ -186,12 +186,12 @@ function M.undo()
   prev_state, ok = ring_buffer.peek(M.states)
   assert(ok)
 
-  local old_waypoints = state.waypoints
+  local curr_waypoints = state.waypoints
   state.waypoints = M.waypoints_from_undo_node_waypoints(prev_state.waypoints)
   state.wpi = prev_state.wpi
   uw.make_sorted_waypoints()
   M.set_extmarks_for_state()
-  message.notify(message.from_undo(curr_state.undo_msg).. M.wpis_shown_msg_for_undo(old_waypoints, prev_state), vim.log.levels.INFO)
+  message.notify(message.from_undo(curr_state.undo_msg) .. M.wpis_shown_msg_for_undo(curr_state, curr_waypoints), vim.log.levels.INFO)
   return true
 end
 
@@ -213,23 +213,23 @@ function M.redo()
   return true
 end
 
----@param old_waypoints waypoint.Waypoint[]
----@param prev_state waypoint.UndoNode
+---@param curr_node waypoint.UndoNode node representing the current state
+---@param curr_waypoints waypoint.Waypoint[]
 ---@return string
-function M.wpis_shown_msg_for_undo(old_waypoints, prev_state)
+function M.wpis_shown_msg_for_undo(curr_node, curr_waypoints)
   local num_not_shown = 0
-  for _, wpi in pairs(prev_state.updated_wpis) do
-    if not uw.should_draw_waypoint(old_waypoints[wpi]) then
+  for _, wpi in pairs(curr_node.updated_wpis) do
+    if not uw.should_draw_waypoint(curr_waypoints[wpi]) then
       num_not_shown = num_not_shown + 1
     end
   end
-  for _, wpi in pairs(prev_state.deleted_wpis) do
+  for _, wpi in pairs(curr_node.deleted_wpis) do
     if not uw.should_draw_waypoint(state.waypoints[wpi]) then
       num_not_shown = num_not_shown + 1
     end
   end
   if num_not_shown > 0 then
-    return '(' .. num_not_shown .. ' ' .. message.not_shown_suffix .. ')'
+    return ' (' .. num_not_shown .. message.not_shown_suffix .. ')'
   end
   return ""
 end
@@ -249,7 +249,7 @@ function M.wpis_shown_msg_for_redo(node)
     end
   end
   if num_not_shown > 0 then
-    return '(' .. num_not_shown .. ' ' .. message.not_shown_suffix .. ')'
+    return ' (' .. num_not_shown .. message.not_shown_suffix .. ')'
   end
   return ""
 end

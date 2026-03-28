@@ -25,7 +25,11 @@ M.missing_file_err_msg = table.concat(missing_file_err_msg_table)
 M.at_earliest_change = "At earliest change"
 M.at_latest_change = "At latest change"
 M.no_open_buffer_for_file = "No open buffer for file"
-M.not_shown_suffix = "not shown because line was deleted"
+M.not_shown_suffix = " not shown because line was deleted"
+M.deleted_waypoint = "Deleted waypoint "
+M.restored_waypoint = "Restored waypoint "
+M.deleted_waypoints = "Deleted waypoints "
+M.restored_waypoints = "Restored waypoints "
 
 ---@param file string?
 function M.restored_before_load(file)

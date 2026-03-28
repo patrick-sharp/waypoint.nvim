@@ -219,4 +219,12 @@ function M.assert_has_hl(hlranges, name, col_start, col_end)
   end
 end
 
+---@param a string
+---@param b string
+function M.assert_string_contains(a, b)
+  local msg = "\"" .. a .. "\" does not contain string \"" .. b .. "\""
+  -- fourth param means use plaintext search instead of lua pattern match
+  assert(string.find(a, b, 1, true), msg)
+end
+
 return M

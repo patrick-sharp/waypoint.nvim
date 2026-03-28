@@ -211,10 +211,10 @@ function M.remove_waypoint(existing_waypoint_i)
   end
   state.waypoints = waypoints_new
 
-  local redo_msg = "Deleted waypoint at position " .. tostring(existing_waypoint_i)
-  local undo_msg = "Restored waypoint at position " .. tostring(existing_waypoint_i)
+  local redo_msg = message.deleted_waypoint .. tostring(existing_waypoint_i)
+  local undo_msg = message.restored_waypoint .. tostring(existing_waypoint_i)
 
-  file.save_change(undo_msg, redo_msg, existing_waypoint_i)
+  file.save_change(undo_msg, redo_msg, existing_waypoint_i, { deleted = { existing_waypoint_i } })
 end
 
 function M.remove_waypoints()
@@ -244,6 +244,9 @@ function M.remove_waypoints()
   local start_i = math.min(state.wpi, state.vis_wpi)
   local end_i = math.max(state.wpi, state.vis_wpi)
 
+  -- we are just using this for the undo message, not for recombining afterward
+  local split = uw.split_by_drawn()
+
   assert(start_i)
   assert(end_i)
 
@@ -260,8 +263,8 @@ function M.remove_waypoints()
       if change_wpi == nil then
         change_wpi = i
       end
-      affected_wpis.deleted[#affected_wpis.deleted+1] = i
     else
+      affected_wpis.deleted[#affected_wpis.deleted+1] = i
       if wp.extmark_id ~= -1 then
         uw.set_wp_extmark_visible(wp, false)
       end
@@ -282,8 +285,8 @@ function M.remove_waypoints()
     state.sorted_waypoints = new_other_waypoints
   end
 
-  local redo_msg = "Deleted waypoints " .. tostring(start_i) .. "-" .. tostring(end_i)
-  local undo_msg = "Restored waypoints at positions " .. tostring(start_i) .. "-" .. tostring(end_i)
+  local redo_msg = message.deleted_waypoints .. tostring(split.top) .. "-" .. tostring(split.bottom)
+  local undo_msg = message.restored_waypoints .. tostring(split.top) .. "-" .. tostring(split.bottom)
   state.wpi = start_i
 
   file.save_change(undo_msg, redo_msg, change_wpi, affected_wpis)
