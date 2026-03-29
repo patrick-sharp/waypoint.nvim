@@ -6,6 +6,7 @@ local ring_buffer = require"waypoint.ring_buffer"
 local state = require"waypoint.state"
 local u = require"waypoint.utils"
 local uw = require"waypoint.utils_waypoint"
+local Timer = require"waypoint.timer"
 
 ---@class waypoint.UndoNode
 ---@field waypoints waypoint.UndoNodeWaypoint[]
@@ -31,6 +32,9 @@ function M.undo_node_waypoints_from_waypoints()
   ---@type waypoint.UndoNodeWaypoint[]
   local result = {}
 
+  ---@type table<integer, string>
+  local path_cache = {}
+
   for _,wp in ipairs(state.waypoints) do
     if wp.error then
       result[#result+1] = {
@@ -44,7 +48,11 @@ function M.undo_node_waypoints_from_waypoints()
         linenr     = wp.linenr,
       }
     else
-      local linenr = wp.linenr or uw.linenr_from_waypoint(wp)
+      -- TODO
+      -- local linenr = wp.linenr or uw.linenr_from_waypoint(wp)
+      local linenr = u.track("linenr", function()
+        return wp.linenr or uw.linenr_from_waypoint(wp)
+      end)
       assert(linenr)
 
       result[#result+1] = {
@@ -52,10 +60,20 @@ function M.undo_node_waypoints_from_waypoints()
         annotation = wp.annotation,
         bufnr      = wp.bufnr,
         extmark_id = wp.extmark_id,
-        filepath   = wp.filepath or u.path_from_buf(wp.bufnr),
-        text       = wp.text or u.get_line_text(wp.bufnr, linenr),
+        filepath   = wp.filepath or u.track("path_from_buf", function() return u.path_from_buf_cached(wp.bufnr, path_cache) end),
+        text       = wp.text or u.track("get_line_text", function() return u.get_line_text(wp.bufnr, linenr) end),
         linenr     = linenr,
       }
+    -- TODO
+      -- result[#result+1] = {
+      --   indent     = wp.indent,
+      --   annotation = wp.annotation,
+      --   bufnr      = wp.bufnr,
+      --   extmark_id = wp.extmark_id,
+      --   filepath   = wp.filepath or u.path_from_buf(wp.bufnr),
+      --   text       = wp.text or u.get_line_text(wp.bufnr, linenr),
+      --   linenr     = linenr,
+      -- }
     end
   end
 
@@ -116,7 +134,6 @@ function M.waypoints_from_undo_node_waypoints(undo_node_waypoints)
 
   return result
 end
-
 
 ---@class waypoint.AffectedWpis
 ---@field created integer[]?

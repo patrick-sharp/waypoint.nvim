@@ -8,11 +8,12 @@ local Timer = require"waypoint.timer"
 local floating_window = require"waypoint.floating_window"
 local state = require"waypoint.state"
 local u = require"waypoint.utils"
+local undo = require"waypoint.undo"
 
 describe('Stress', function()
   --local total_lines = 1000000
-  local total_lines = 300
-  local lines_between_waypoints = 1
+  local total_lines = 1000000
+  local lines_between_waypoints = 1000
 
   local lines = {}
   local function add_line(str)
@@ -23,7 +24,7 @@ describe('Stress', function()
 
   local timer = Timer.start()
   for _=1,total_lines do
-    add_line("lkajsdhflakjsdhflkajsdhflkasjdhflakjsdhfalkjsdhf")
+    add_line("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")
   end
 
   u.log(timer:stop())
@@ -69,7 +70,6 @@ describe('Stress', function()
   vim.api.nvim_set_current_buf(bufnr)
   u.log(timer:stop())
 
-
   timer:reset()
   local line = 1
   while line <= total_lines do
@@ -78,6 +78,13 @@ describe('Stress', function()
     line = line + lines_between_waypoints
   end
   u.log(timer:stop())
+
+  floating_window.open()
+  floating_window.close()
+
+  for k,v in pairs(u.track_data) do
+    u.log(k, v.total)
+  end
 
   -- local timer = Timer.start()
   -- timer:reset()

@@ -1,4 +1,5 @@
 local log = require("waypoint.log")
+local Timer = require("waypoint.timer")
 
 local M = {}
 local u = M
@@ -282,6 +283,20 @@ function M.path_from_buf(bufnr)
   return vim.fn.fnamemodify(path, ":.")
 end
 
+-- use this for when you need to call this function a bunch of times in quick
+-- succession.
+---@param bufnr integer
+---@param cache table<integer, string>
+---@return string
+function M.path_from_buf_cached(bufnr, cache)
+  if cache[bufnr] then
+    return cache[bufnr]
+  end
+  local path = vim.api.nvim_buf_get_name(bufnr)
+  cache[bufnr] = vim.fn.fnamemodify(path, ":.")
+  return cache[bufnr]
+end
+
 ---@param mode string | vim.api.keyset.get_mode
 function M.is_visual(mode)
   return u.any({
@@ -353,5 +368,21 @@ function M.end_timer()
 end
 
 
+M.track_data = {}
+
+function M.track(k, f)
+  local x = M.track_data[k]
+  if not x then
+    x = {
+      timer = Timer.start(),
+      total = 0,
+    }
+    M.track_data[k] = x
+  end
+  x.timer:reset()
+  local result = f()
+  x.total = x.total + x.timer:stop()
+  return result
+end
 
 return M

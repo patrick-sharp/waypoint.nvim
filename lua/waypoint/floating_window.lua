@@ -348,12 +348,19 @@ local function draw_waypoint_window(action)
     local is_in_view = view.topline <= waypoint_bottomline and waypoint_topline <= view_bottomline
 
     ---@type waypoint.WaypointContext
-    local waypoint_file_text = uw.get_waypoint_context(
+    local waypoint_file_text = u.track("context", function() return uw.get_waypoint_context(
       waypoint,
       num_lines_before,
       num_lines_after,
       is_in_view
-    )
+    ) end)
+    -- TODO
+    -- local waypoint_file_text = uw.get_waypoint_context(
+    --   waypoint,
+    --   num_lines_before,
+    --   num_lines_after,
+    --   is_in_view
+    -- )
     local extmark_lines = waypoint_file_text.lines
     local extmark_line = waypoint_file_text.waypoint_linenr -- zero-indexed
     local context_start_linenr = waypoint_file_text.context_start_linenr -- zero-indexed
