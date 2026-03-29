@@ -105,7 +105,7 @@ end
 
 -- loads the buffer (so its text can be accessed) and triggers syntax
 -- highlighting for the buffer
-local function buffer_init(bufnr)
+function M.buffer_init(bufnr)
   vim.fn.bufload(bufnr)
   -- without this, vim won't apply syntax highlighting to the new buffer
   vim.api.nvim_exec_autocmds("BufRead", { buffer = bufnr })
@@ -166,7 +166,7 @@ local function load_decoded_state_into_state(decoded)
         local bufnr = vim.fn.bufnr(waypoint.filepath)
         if bufnr == -1 then
           bufnr = vim.fn.bufadd(waypoint.filepath)
-          buffer_init(bufnr)
+          M.buffer_init(bufnr)
         end
         waypoint.bufnr = bufnr
         waypoint.has_buffer = true
