@@ -189,7 +189,6 @@ function M.undo()
   local curr_waypoints = state.waypoints
   state.waypoints = M.waypoints_from_undo_node_waypoints(prev_state.waypoints)
   state.wpi = prev_state.wpi
-  uw.make_sorted_waypoints()
   M.set_extmarks_for_state()
   message.notify(message.from_undo(curr_state.undo_msg) .. M.wpis_shown_msg_for_undo(curr_state, curr_waypoints), vim.log.levels.INFO)
   return true
@@ -206,7 +205,6 @@ function M.redo()
   local next_state, _ = ring_buffer.peek(M.states)
   state.waypoints = M.waypoints_from_undo_node_waypoints(next_state.waypoints)
   state.wpi = next_state.wpi
-  uw.make_sorted_waypoints()
   M.set_extmarks_for_state()
 
   message.notify(message.from_redo(next_state.redo_msg) .. M.wpis_shown_msg_for_redo(next_state), vim.log.levels.INFO)

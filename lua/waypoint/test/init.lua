@@ -5,6 +5,7 @@ local floating_window = require'waypoint.floating_window'
 local message = require'waypoint.message'
 local state = require'waypoint.state'
 local test_list = require'waypoint.test.test_list'
+local Timer = require'waypoint.timer'
 local u = require'waypoint.utils'
 
 -- these files call test_list.describe, which adds tests to the list
@@ -29,6 +30,7 @@ local _ = require'waypoint.test.tests.quickfix_list'
 local _ = require'waypoint.test.tests.rename_file'
 local _ = require'waypoint.test.tests.ring_buffer'
 local _ = require'waypoint.test.tests.sort'
+local _ = require'waypoint.test.tests.stress'
 local _ = require'waypoint.test.tests.telescope'
 local _ = require'waypoint.test.tests.toggles'
 local _ = require'waypoint.test.tests.undo_append'
@@ -148,9 +150,9 @@ function M.run_tests()
     floating_window.clear_and_close()
     state.should_notify = false
     state.should_ignore_autocmds = true
-    u.start_timer()
+    local timer = Timer.start()
     _, test.err = xpcall(test.fn, debug.traceback)
-    test.millis = u.end_timer()
+    test.millis = timer:stop()
     test.pass = not test.err
     floating_window.clear_and_close()
     state.should_notify = false

@@ -191,7 +191,8 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after, is_
     waypoint.annotation,
   })
 
-  if true or has_highlights then
+  -- if true or has_highlights then
+  if has_highlights then
     local file_uses_treesitter = vim.treesitter.highlighter.active[bufnr]
     if file_uses_treesitter then
       hlranges = highlight_treesitter.get_treesitter_syntax_highlights(bufnr, lines, start_linenr, end_linenr)
@@ -717,7 +718,6 @@ function M.recombine_drawn_split(split)
     state.vis_wpi = split.wpi_from_drawn_i[split.cursor_vis_i]
   end
   state.waypoints = waypoints
-  M.make_sorted_waypoints()
 end
 
 return M

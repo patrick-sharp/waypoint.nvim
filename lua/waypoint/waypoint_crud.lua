@@ -271,9 +271,12 @@ function M.remove_waypoints()
     end
   end
 
-  for _,wp in ipairs(other_waypoints) do
-    if waypoint_map[wp] then
-      new_other_waypoints[#new_other_waypoints+1] = wp
+  -- if not in sort view, then state.sorted_waypoints will be nil and we don't have to do this
+  if state.sort_by_file_and_line then
+    for _,wp in ipairs(other_waypoints) do
+      if waypoint_map[wp] then
+        new_other_waypoints[#new_other_waypoints+1] = wp
+      end
     end
   end
 
@@ -282,7 +285,7 @@ function M.remove_waypoints()
     state.sorted_waypoints = new_waypoints
   else
     state.waypoints = new_waypoints
-    state.sorted_waypoints = new_other_waypoints
+    state.sorted_waypoints = nil
   end
 
   local redo_msg = message.deleted_waypoints .. tostring(split.top) .. "-" .. tostring(split.bottom)
@@ -296,21 +299,22 @@ end
 -- -1 for up, 1 for down
 ---@param direction -1 | 1
 function M.move_waypoints(direction)
+  if state.sort_by_file_and_line then
+    message.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
+    return
+  end
+
   local split = uw.split_by_drawn()
   local drawn = split.drawn
 
   local old_wpi = split.cursor_i
 
   local should_return = u.any({
-    state.sort_by_file_and_line,
     #drawn < 2,
     direction == -1 and (split.cursor_i == 1 or split.cursor_vis_i == 1),
     direction == 1 and (split.cursor_i == #drawn or split.cursor_vis_i == #drawn),
   })
 
-  if state.sort_by_file_and_line then
-    message.notify(message.sorted_mode_err_msg, vim.log.levels.ERROR)
-  end
   if should_return then return end
 
   ---@type integer
@@ -371,7 +375,6 @@ function M.move_waypoints(direction)
   local undo_msg = message.move_waypoint(state.wpi, old_wpi)
 
   file.save_change(undo_msg, redo_msg, change_wpi, affected_wpis)
-  uw.make_sorted_waypoints()
 end
 
 function M.move_waypoint_to_top()

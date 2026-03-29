@@ -274,10 +274,14 @@ local function draw_waypoint_window(action)
   end
 
   -- set this to false at the beginning.
-  -- I do this because if the draw fails, then the autocommands usually do to,
+  -- I do this because if the draw fails, then the autocommands usually do too,
   -- which creates a terrible experience where doing anything prints a nasty
   -- error message. this allows the draw calls to fail more gracefully.
   most_recent_draw_succeeded = false
+
+  if state.sort_by_file_and_line and not state.sorted_waypoints then
+    uw.make_sorted_waypoints()
+  end
 
   vim.api.nvim_buf_clear_namespace(wp_bufnr, constants.ns, 0, -1)
   local rows = {}
@@ -1379,17 +1383,24 @@ function M.toggle_sort()
     waypoints = state.sorted_waypoints
     other_waypoints = state.waypoints
   else
+    -- since we haven't toggled yet, we'll need to create sorted waypoints if
+    -- sort is not currently enabled
+    if not state.sorted_waypoints then
+      uw.make_sorted_waypoints()
+    end
     waypoints = state.waypoints
     other_waypoints = state.sorted_waypoints
   end
 
   local curr_waypoint = waypoints[state.wpi]
   local new_wpi = nil
+
   for i, waypoint in ipairs(other_waypoints) do
     if curr_waypoint == waypoint then
       new_wpi = i
     end
   end
+
   assert(#waypoints == 0 or new_wpi)
 
   state.wpi = new_wpi

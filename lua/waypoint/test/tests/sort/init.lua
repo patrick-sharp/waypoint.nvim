@@ -33,7 +33,7 @@ describe('Sort', function()
   floating_window.open()
 
   assert(#state.waypoints == 5)
-  assert(#state.sorted_waypoints == 5)
+  tu.assert_eq(nil, state.sorted_waypoints)
   assert(state.waypoints[1].bufnr == vim.fn.bufnr(file_0))
   assert(state.waypoints[2].bufnr == vim.fn.bufnr(file_1))
   assert(state.waypoints[3].bufnr == vim.fn.bufnr(file_1))
@@ -45,22 +45,6 @@ describe('Sort', function()
   assert(uw.linenr_from_waypoint(state.waypoints[3]) ==  5)
   assert(uw.linenr_from_waypoint(state.waypoints[4]) ==  3)
   assert(uw.linenr_from_waypoint(state.waypoints[5]) == 17)
-
-  local assert_waypoint_locations = function()
-    assert(state.sorted_waypoints[1].bufnr == vim.fn.bufnr(file_0))
-    assert(state.sorted_waypoints[2].bufnr == vim.fn.bufnr(file_0))
-    assert(state.sorted_waypoints[3].bufnr == vim.fn.bufnr(file_0))
-    assert(state.sorted_waypoints[4].bufnr == vim.fn.bufnr(file_1))
-    assert(state.sorted_waypoints[5].bufnr == vim.fn.bufnr(file_1))
-
-    assert(uw.linenr_from_waypoint(state.sorted_waypoints[1]) ==  3)
-    assert(uw.linenr_from_waypoint(state.sorted_waypoints[2]) ==  7)
-    assert(uw.linenr_from_waypoint(state.sorted_waypoints[3]) == 17)
-    assert(uw.linenr_from_waypoint(state.sorted_waypoints[4]) ==  5)
-    assert(uw.linenr_from_waypoint(state.sorted_waypoints[5]) ==  8)
-  end
-
-  assert_waypoint_locations()
 
   floating_window.toggle_full_path()
 
@@ -80,7 +64,17 @@ describe('Sort', function()
   assert(#state.waypoints == 5)
   assert(#state.sorted_waypoints == 5)
 
-  assert_waypoint_locations()
+  assert(state.sorted_waypoints[1].bufnr == vim.fn.bufnr(file_0))
+  assert(state.sorted_waypoints[2].bufnr == vim.fn.bufnr(file_0))
+  assert(state.sorted_waypoints[3].bufnr == vim.fn.bufnr(file_0))
+  assert(state.sorted_waypoints[4].bufnr == vim.fn.bufnr(file_1))
+  assert(state.sorted_waypoints[5].bufnr == vim.fn.bufnr(file_1))
+  assert(uw.linenr_from_waypoint(state.sorted_waypoints[1]) ==  3)
+  assert(uw.linenr_from_waypoint(state.sorted_waypoints[2]) ==  7)
+  assert(uw.linenr_from_waypoint(state.sorted_waypoints[3]) == 17)
+  assert(uw.linenr_from_waypoint(state.sorted_waypoints[4]) ==  5)
+  assert(uw.linenr_from_waypoint(state.sorted_waypoints[5]) ==  8)
+
 
   lines = tu.get_waypoint_buffer_lines_trimmed()
   assert(lines[1][2] == file_0)

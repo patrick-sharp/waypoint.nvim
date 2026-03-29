@@ -36,7 +36,6 @@ describe('Visual delete', function()
   num_deleted = 1
   tu.assert_eq(num_waypoints - num_deleted, u.len(lines))
   tu.assert_eq(num_waypoints - num_deleted, #state.waypoints)
-  tu.assert_eq(num_waypoints - num_deleted, #state.sorted_waypoints)
   tu.assert_eq(false, u.is_in_visual_mode())
   tu.assert_eq(1, state.wpi)
 
@@ -52,7 +51,6 @@ describe('Visual delete', function()
   num_deleted = num_deleted + 2
   tu.assert_eq(num_waypoints - num_deleted, u.len(lines))
   tu.assert_eq(num_waypoints - num_deleted, #state.waypoints)
-  tu.assert_eq(num_waypoints - num_deleted, #state.sorted_waypoints)
   for i = 1, num_waypoints - num_deleted do
     tu.assert_waypoints_eq(waypoints[i+3], state.waypoints[i])
   end
@@ -65,7 +63,6 @@ describe('Visual delete', function()
   tu.assert_eq(1, u.len(lines)) -- every buffer has at least one line
   tu.assert_eq(nil, state.wpi)
   tu.assert_eq(0, #state.waypoints)
-  tu.assert_eq(0, #state.sorted_waypoints)
 end)
 
 describe('Visual delete undo', function()
@@ -95,7 +92,6 @@ describe('Visual delete undo', function()
   num_deleted = num_deleted + 2
   tu.assert_eq(num_waypoints - num_deleted, u.len(lines))
   tu.assert_eq(num_waypoints - num_deleted, #state.waypoints)
-  tu.assert_eq(num_waypoints - num_deleted, #state.sorted_waypoints)
   for i = 1, num_waypoints - num_deleted do
     tu.assert_waypoints_eq(waypoints[i+num_deleted], state.waypoints[i])
   end

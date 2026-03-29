@@ -195,7 +195,6 @@ local function load_decoded_state_into_state(decoded)
   for state_k,state_v in pairs(decoded) do
     state[state_k] = state_v
   end
-  uw.make_sorted_waypoints()
 end
 
 -- this is only called on startup. we want the first entry in the undo history
@@ -211,7 +210,6 @@ function M.load_from_file(file)
     -- if no waypoints file, then make the first state the empty state.
     -- no need to save to file since we just loaded from file.
     undo.save_state("", "")
-    uw.make_sorted_waypoints()
     return
   end
 
@@ -250,8 +248,8 @@ M.was_most_recent_change_saved = false
 ---@param affected_wpis waypoint.AffectedWpis?
 function M.save_change(undo_msg, redo_msg, change_wpi, affected_wpis)
   M.was_most_recent_change_saved = false
+  state.sorted_waypoints = nil -- every time we make a change, it invalidates the sorted waypoints table
   undo.save_state(undo_msg, redo_msg, change_wpi, affected_wpis)
-  uw.make_sorted_waypoints()
 
   -- asynchronously schedule saving to file to not block user interaction
   vim.schedule(function()
