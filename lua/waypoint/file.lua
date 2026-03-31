@@ -281,7 +281,7 @@ function M.open_file(path)
     local does_file_exist = vim.fn.filereadable(path) ~= 0
     if does_file_exist then
       bufnr = vim.fn.bufadd(path)
-      buffer_init(bufnr)
+      M.buffer_init(bufnr)
       return bufnr
     else
       return -1
