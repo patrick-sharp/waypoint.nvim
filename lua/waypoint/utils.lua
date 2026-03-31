@@ -385,4 +385,26 @@ function M.track(k, f)
   return result
 end
 
+M.span_data = {}
+
+function M.span_start(k)
+  local x = M.span_data[k]
+  if not x then
+    x = {
+      timer = Timer.start(),
+      total = 0,
+    }
+    M.span_data[k] = x
+  end
+  x.timer:reset()
+end
+
+function M.span_end(k)
+  local x = M.span_data[k]
+  if not x then
+    error(k .. "not in span data")
+  end
+  x.total = x.total + x.timer:stop()
+end
+
 return M

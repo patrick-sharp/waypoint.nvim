@@ -163,6 +163,8 @@
 - [x] refactor several things for cleanliness
     - [x] consolidate split_by_drawn and get_drawn_waypoints
     - [x] investigate extmark_from_id vs buf_get_extmark (I removed extmark_from_id)
+- [x] double check undo/redo messages for everything
+    - [x] in message, show which waypoints are restored to be visible
 - [ ] remove all asserts from the code
     - [ ] replace them with something that will only panic in debug mode, and just log in release mode
     - [ ] make this function use error with level 2 (or 3 or whatev) to keep the traceback clean
@@ -231,10 +233,6 @@
     - [ ] highlighting
     - [ ] extmarks
     - [ ] tutorial
-- [ ] double check undo/redo messages for everything
-    - [ ] in message, show which waypoints are restored to be visible
-- [ ] add ability to see soft-deleted waypoints in waypoint window (maybe a toggle)
-    - [ ] refactor the drawn wpi functions to be clearer
 - [ ] make a better experience for the non-telescope "locate waypoints within file" command
 
 ### ADVANCED FEATURES:
@@ -284,26 +282,4 @@
         - [x] when you undo/redo, convert waypoints to UndoNodeWaypoints
 - [x] add soft deletes for waypoints
     - [x] handle the case where the extmark gets invalidated (hide the waypoint, but allow it to be brought back if they undo the extmark deletion)
-    - [ ] when you undo and that causes a soft delete (i.e. waypoint in new state has existing, but invalid extmark), display a message that waypoint is not shown because its extmark was deleted
-
-how to use luajit profiler
-https://luajit.org/ext_profiler.html
-
--- function level
-require('jit.p').start('f', '/tmp/nvim_profile.txt')
--- line level, include stack, no idea what the r is, include vm states (e.g. garbage collection), 1ms sample frequency
-require('jit.p').start('lsri1', '/tmp/nvim_profile.txt')
--- function level, include stack, no idea what the r is, include vm states (e.g. garbage collection), 1ms sample frequency
-require('jit.p').start('fsri1', '/tmp/nvim_profile.txt')
-
--- Execute the code you want to profile, for example:
--- require('my_slow_plugin').some_function()
--- Or run a series of complex edits
-
--- Stop the session and write the profile
-require('jit.p').stop()
-
-how to segfault neovim
-local ffi = require'ffi'
-local p = ffi.new("int *", nil)  -- Pointer to null
-print(p[0])  -- This will crash the program
+    - [x] when you undo and that causes a soft delete (i.e. waypoint in new state has existing, but invalid extmark), display a message that waypoint is not shown because its extmark was deleted

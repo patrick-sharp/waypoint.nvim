@@ -255,7 +255,7 @@ end
 ---@param highlights (string | waypoint.HighlightRange[])[][] rows x columns x (optionally) multiple highlights for a given column. This parameter is mutated to adjust the highlights of each line so they will work after the alignment.
 ---@param opts waypoint.AlignTableOpts?
 ---@return string[]
-function M.align_waypoint_table(t, table_cell_types, highlights, opts)
+function M._align_waypoint_table(t, table_cell_types, highlights, opts)
   if #t == 0 then
     return {}
   end
@@ -376,6 +376,141 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
       end
     end
   end
+  return result
+end
+
+local concat = table.concat
+local s_rep = string.rep
+local win_separator = vim.fn.hlID('WinSeparator')
+
+---@param t string[][] rows x columns x content
+---@param table_cell_types string[] type of each column
+---@param highlights (string | waypoint.HighlightRange[])[][] rows x columns x (optionally) multiple highlights for a given column. This parameter is mutated to adjust the highlights of each line so they will work after the alignment.
+---@param opts waypoint.AlignTableOpts?
+---@return string[]
+function M.align_waypoint_table(t, table_cell_types, highlights, opts)
+  local nrows = #t
+  if nrows == 0 then return {} end
+  local ncols = #table_cell_types
+
+  -- cache for vislen and hlIDs to avoid redundant calculations/bridge calls
+  local vislens = {} -- 2D map: vislens[row][col]
+  local hl_id_cache = {}
+  local widths = {}
+
+  -- calculate widths and cache vislens in a single pass
+  for i = 1, ncols do
+    local max_width = 0
+    local width_override = opts and opts.width_override and opts.width_override[i]
+
+    for j = 1, nrows do
+      local row = t[j]
+      if row ~= "" then
+        vislens[j] = vislens[j] or {}
+        local field = row[i]
+        local v_len = u.vislen(field)
+        vislens[j][i] = v_len
+        if v_len > max_width then max_width = v_len end
+      end
+    end
+
+    local width = width_override or max_width
+    -- only run expensive string formatting for asserts if actually failing
+    if max_width > width then
+       error(string.format("Max width of col %d (%d) exceeds override (%d)", i, max_width, width))
+    end
+    widths[i] = width
+  end
+
+  -- adjust highlights (using cached vislens)
+  local col_sep = opts and opts.column_separator
+  local col_sep_len = col_sep and #col_sep or 0
+
+  for i = 1, nrows do
+    local row_highlights = highlights[i]
+    local row_data = t[i]
+    if row_data ~= "" then
+      local offset = 0
+      for j = 1, ncols do
+        local field = row_data[j]
+        local v_len = vislens[i][j]
+        local padded_byte_length = widths[j] - v_len + #field
+        local col_highlights = row_highlights[j]
+
+        if type(col_highlights) == "string" then
+          -- Cache the Highlight ID lookup
+          local hl_group = col_highlights
+          if not hl_id_cache[hl_group] then
+            hl_id_cache[hl_group] = vim.fn.hlID(hl_group)
+          end
+
+          row_highlights[j] = {{
+            nsid = constants.ns,
+            hl_group = hl_id_cache[hl_group],
+            col_start = offset,
+            col_end = offset + padded_byte_length
+          }}
+        else
+          for k = 1, #col_highlights do
+            local hlrange = col_highlights[k]
+            hlrange.col_start = hlrange.col_start + offset - 1
+            hlrange.col_end = hlrange.col_end + offset
+          end
+        end
+
+        if col_sep then
+          if j < ncols then
+            local sep_start = offset + padded_byte_length + 1
+            local row_highlights_j = row_highlights[j]
+            assert(type(row_highlights_j) ~= "string")
+            row_highlights_j[#row_highlights_j+1] = {
+              nsid = constants.ns,
+              hl_group = win_separator,
+              col_start = sep_start,
+              col_end = sep_start + col_sep_len
+            }
+            offset = offset + padded_byte_length + col_sep_len + 2
+          end
+        else
+          offset = offset + padded_byte_length + 1
+        end
+      end
+    end
+  end
+
+  -- final String Assembly
+  local result = {}
+  local win_width = opts and opts.win_width
+  local indents = opts and opts.indents
+
+  for i = 1, nrows do
+    if t[i] == "" then
+      result[#result+1] = ""
+    else
+      local fields = {}
+      for j = 1, ncols do
+        local field = t[i][j]
+        local padding = widths[j] - vislens[i][j]
+
+        if table_cell_types[j] == "number" then
+          fields[j] = s_rep(" ", padding) .. field
+        else
+          fields[j] = field .. s_rep(" ", padding)
+        end
+      end
+
+      local line = concat(fields, col_sep and (" " .. col_sep .. " ") or " ")
+
+      if win_width then
+        local row_len = u.vislen(line) + (indents and indents[i] or 0)
+        if row_len < win_width then
+          line = line .. s_rep(" ", win_width - row_len)
+        end
+      end
+      result[#result+1] = line
+    end
+  end
+
   return result
 end
 
