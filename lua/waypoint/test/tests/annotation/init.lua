@@ -8,7 +8,7 @@ local floating_window = require("waypoint.floating_window")
 local state = require("waypoint.state")
 local u = require("waypoint.util")
 local tu = require'waypoint.test.util'
-local uw = require('waypoint.utils_waypoint')
+local uw = require('waypoint.util_waypoint')
 
 describe('Annotation', function()
   assert(u.file_exists(file_0))

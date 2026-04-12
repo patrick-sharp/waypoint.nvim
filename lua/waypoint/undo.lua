@@ -5,7 +5,7 @@ local message = require"waypoint.message"
 local ring_buffer = require"waypoint.ring_buffer"
 local state = require"waypoint.state"
 local u = require"waypoint.util"
-local uw = require"waypoint.utils_waypoint"
+local uw = require"waypoint.util_waypoint"
 local Timer = require"waypoint.timer"
 
 ---@class waypoint.UndoNode

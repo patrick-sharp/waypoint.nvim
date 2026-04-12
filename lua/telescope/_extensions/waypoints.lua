@@ -13,7 +13,7 @@ local conf = require("telescope.config").values
 local telescope_utils = require "telescope.utils"
 local config = require("waypoint.config")
 
-local uw = require("waypoint.utils_waypoint")
+local uw = require("waypoint.util_waypoint")
 local state = require("waypoint.state")
 
 local function waypoints(opts)

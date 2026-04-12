@@ -5,7 +5,7 @@ local config = require"waypoint.config"
 local crud = require"waypoint.waypoint_crud"
 local state = require"waypoint.state"
 local u = require"waypoint.util"
-local uw = require"waypoint.utils_waypoint"
+local uw = require"waypoint.util_waypoint"
 local tu = require"waypoint.test.util"
 
 local lines_before = {

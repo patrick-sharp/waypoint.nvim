@@ -223,6 +223,7 @@
         - 1000 waypoints
         - all max context
         - <= 10ms draw time
+- [x] fix bug with FileChangedShell and relocating with the same file
 - [ ] write docs
     - [ ] drawn vs not drawn waypoints
     - [ ] undo and file changes

@@ -243,7 +243,6 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after, is_
   }
 end
 
-
 ---@class waypoint.AlignTableOpts
 ---@field column_separator string? if present, add as a separator between each column
 ---@field win_width integer? if this is non-nil, add spaces to the right of each row to pad to this width

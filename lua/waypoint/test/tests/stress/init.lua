@@ -78,17 +78,27 @@ describe('Stress syntax', function()
   local section_giant_table_start = section_nested_scopes_end + 1
   local section_giant_table_end = section_giant_table_start + math.floor(total_lines / 3)
 
-  -- 1. Generate Deeply Nested Scopes (The Stack Stressor)
+  local nesting_level = 32
+  local num_outer = math.floor((section_nested_scopes_end - section_nested_scopes_start) / (nesting_level * 2 + 1))
+  local outer_end = 1 + num_outer * nesting_level + 1
+
+  -- generate deeply nested scopes
   add_line("-- Section: Nested Scopes")
-  for i = section_nested_scopes_start + 1, section_nested_scopes_end / 2 - 1 do
-    add_line("do -- level " .. i)
-  end
-  add_line("  local leaf_node = 'bottom of the stack'")
-  for i = section_nested_scopes_start + 1, section_nested_scopes_end / 2 - 1 do
-    add_line("end -- " .. i)
+  for _ = 1, num_outer do
+    for j = 1, nesting_level do
+      add_line(string.rep(" ", j - 1) .. "do -- " .. j)
+    end
+    add_line(string.rep(" ", nesting_level) .. "local leaf_node = 'leaf'")
+    for j = 1, nesting_level do
+      add_line(string.rep(" ", nesting_level - j) .. "end -- " .. nesting_level - j + 1)
+    end
   end
 
-  -- 2. Generate Massive Table Constructors (The Memory Stressor)
+  for _ = outer_end + 1, section_nested_scopes_end do
+    add_line("-- blank")
+  end
+
+  -- generate massive table constructors
   add_line("local giant_table = {")
   while #lines < section_giant_table_end do
     local format_string = "  ['key_%d'] = { val = %d, fn = function(x) return x + %d end },"
@@ -96,7 +106,7 @@ describe('Stress syntax', function()
   end
   add_line("}")
 
-  -- 3. High-Complexity Logic Mix
+  -- high-complexity logic mix
   add_line("local function complex_logic(...)")
   while #lines < total_lines do
     local r = math.random(1, 3)
@@ -145,10 +155,10 @@ describe('Stress syntax', function()
   floating_window.close()
   u.log("draw", timer:stop())
 
-  timer:reset()
-  floating_window.open()
-  floating_window.close()
-  u.log("subsequent draw", timer:stop())
+  -- timer:reset()
+  -- floating_window.open()
+  -- floating_window.close()
+  -- u.log("subsequent draw", timer:stop())
 
   state.context = 28
   timer:reset()
@@ -163,10 +173,10 @@ describe('Stress syntax', function()
   floating_window.close()
   u.log("draw with context " .. state.context, timer:stop())
 
-  timer:reset()
-  floating_window.open()
-  floating_window.close()
-  u.log("subsequent draw with context " .. state.context, timer:stop())
+  -- timer:reset()
+  -- floating_window.open()
+  -- floating_window.close()
+  -- u.log("subsequent draw with context " .. state.context, timer:stop())
 
   u.log("<TRACKDATA>")
   for k,v in pairs(u.track_data) do

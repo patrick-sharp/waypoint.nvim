@@ -8,7 +8,7 @@ local M = {}
 
 local state = require("waypoint.state")
 local u = require("waypoint.util")
-local uw = require("waypoint.utils_waypoint")
+local uw = require("waypoint.util_waypoint")
 
 -- before the filter, we save the file contents as a string so we can diff them with the new file contents
 ---@type string[]?

@@ -11,7 +11,7 @@ local message = require("waypoint.message")
 local state = require("waypoint.state")
 local tu = require'waypoint.test.util'
 local u = require("waypoint.util")
-local uw = require("waypoint.utils_waypoint")
+local uw = require("waypoint.util_waypoint")
 
 -- get rid of uv warnings in this file
 ---@diagnostic disable: undefined-field

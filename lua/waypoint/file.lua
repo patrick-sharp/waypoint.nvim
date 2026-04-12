@@ -9,7 +9,7 @@ local levenshtein   = require "waypoint.levenshtein"
 local pretty = require "waypoint.prettyjson"
 local state = require "waypoint.state"
 local u = require "waypoint.util"
-local uw = require "waypoint.utils_waypoint"
+local uw = require "waypoint.util_waypoint"
 local message = require "waypoint.message"
 local undo = require "waypoint.undo"
 

@@ -8,7 +8,7 @@ local floating_window = require("waypoint.floating_window")
 local message = require("waypoint.message")
 local state = require("waypoint.state")
 local tu = require'waypoint.test.util'
-local uw = require'waypoint.utils_waypoint'
+local uw = require'waypoint.util_waypoint'
 
 describe('Missing file', function()
   file.load_from_file("lua/waypoint/test/tests/missing_file/waypoints.json")

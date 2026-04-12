@@ -72,7 +72,7 @@ function M.setup(opts)
   vim.api.nvim_create_autocmd("FileChangedShellPost", {
     group = constants.augroup,
     callback = function(arg)
-      floating_window.move_waypoints_to_file(arg.file, arg.file)
+      floating_window.move_waypoints_to_file(arg.file, arg.file, true)
     end
   })
   vim.api.nvim_create_autocmd("DirChangedPre", {

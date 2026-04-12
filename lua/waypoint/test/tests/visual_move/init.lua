@@ -8,7 +8,7 @@ local file = require'waypoint.file'
 local u = require("waypoint.util")
 local tu = require'waypoint.test.util'
 local state = require'waypoint.state'
-local uw = require'waypoint.utils_waypoint'
+local uw = require'waypoint.util_waypoint'
 
 -- this test also tests waypoints not displaying when their extmarks are deleted
 describe('Visual move', function()

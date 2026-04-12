@@ -7,7 +7,7 @@ local crud = require("waypoint.waypoint_crud")
 local state = require("waypoint.state")
 local u = require("waypoint.util")
 local tu = require'waypoint.test.util'
-local uw = require'waypoint.utils_waypoint'
+local uw = require'waypoint.util_waypoint'
 
 describe('Buffer callbacks', function()
   assert(u.file_exists(file_0))

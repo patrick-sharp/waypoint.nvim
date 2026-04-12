@@ -9,7 +9,7 @@ local message = require'waypoint.message'
 local state = require("waypoint.state")
 local u = require("waypoint.util")
 local tu = require'waypoint.test.util'
-local uw = require'waypoint.utils_waypoint'
+local uw = require'waypoint.util_waypoint'
 
 local visible_extmark_text = config.mark_char .. " "
 local invisible_extmark_text = "  "

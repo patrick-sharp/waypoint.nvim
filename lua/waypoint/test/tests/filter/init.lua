@@ -5,7 +5,7 @@ local crud = require("waypoint.waypoint_crud")
 local state = require("waypoint.state")
 local filter = require("waypoint.filter")
 local u = require("waypoint.util")
-local uw = require("waypoint.utils_waypoint")
+local uw = require("waypoint.util_waypoint")
 local tu = require'waypoint.test.util'
 
 local before = "lua/waypoint/test/tests/filter/before.lua"
