@@ -7,7 +7,7 @@ local waypoints_json = "lua/waypoint/test/tests/visual_first_last/waypoints.json
 
 local floating_window = require("waypoint.floating_window")
 local file = require'waypoint.file'
-local u = require("waypoint.utils")
+local u = require("waypoint.util")
 local tu = require'waypoint.test.util'
 local state = require'waypoint.state'
 

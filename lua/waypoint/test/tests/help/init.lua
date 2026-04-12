@@ -5,7 +5,7 @@ local global_keybindings = require("waypoint.global_keybindings")
 local floating_window = require("waypoint.floating_window")
 local config = require("waypoint.config")
 local tu = require("waypoint.test.util")
-local u = require("waypoint.utils")
+local u = require("waypoint.util")
 
 ---@param t table
 ---@param s string

@@ -7,7 +7,7 @@ local crud = require("waypoint.waypoint_crud")
 local floating_window = require("waypoint.floating_window")
 local message = require'waypoint.message'
 local state = require("waypoint.state")
-local u = require("waypoint.utils")
+local u = require("waypoint.util")
 local tu = require'waypoint.test.util'
 local uw = require'waypoint.utils_waypoint'
 

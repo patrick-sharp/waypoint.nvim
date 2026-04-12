@@ -3,7 +3,7 @@ local describe = test_list.describe
 local file_0 = test_list.file_0
 
 local file = require'waypoint.file'
-local u = require("waypoint.utils")
+local u = require("waypoint.util")
 local tu = require'waypoint.test.util'
 local highlight_treesitter = require'waypoint.highlight_treesitter'
 

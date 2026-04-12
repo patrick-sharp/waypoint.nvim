@@ -9,7 +9,7 @@ local file = require"waypoint.file"
 local floating_window = require"waypoint.floating_window"
 local state = require"waypoint.state"
 local tu = require"waypoint.test.util"
-local u = require"waypoint.utils"
+local u = require"waypoint.util"
 
 describe('Indent', function()
   assert(u.file_exists(file_0))

@@ -1,7 +1,7 @@
 local M = {}
 local highlighter = vim.treesitter.highlighter
 local constants = require("waypoint.constants")
-local u = require("waypoint.utils")
+local u = require("waypoint.util")
 
 ---@class waypoint.TreesitterHighlight
 ---@field hl_id   integer
@@ -30,19 +30,27 @@ function M.get_nodes_with_highlights(bufnr, start_line, end_line)
 
   local buf_highlighter = vim.treesitter.highlighter.active[bufnr]
   buf_highlighter.tree:for_each_tree(function(tstree, tree)
+    ---@type table<integer, string>
+    local capture_cache = {}
     local root = tstree:root()
     local q = buf_highlighter:get_query(tree:lang())
-    local iter = q:query():iter_captures(root, buf_highlighter.bufnr, start_line, end_line)
+    local query = q:query()
+    local iter = query:iter_captures(root, buf_highlighter.bufnr, start_line, end_line)
     for id, node in iter do
-      local capture = q:query().captures[id] -- name of the capture in the query, e.g. "number"
-      if capture ~= nil then
-        -- 0-indexed, inclusive lower bound, exclusive upper bound
-        local start_row, start_col = node:start()
-        -- 0-indexed, inclusive lower bound, exclusive upper bound
-        local end_row, end_col = node:end_()
+      ---@type string?
+      local hl_group = capture_cache[id]
 
-        local hl_group = '@' .. capture .. '.' .. tree:lang()
+      if not capture_cache[id] then
+        local capture = query.captures[id] -- name of the capture in the query, e.g. "number"
+        if capture ~= nil then
+          -- 0-indexed, inclusive lower bound, exclusive upper bound
+          hl_group = '@' .. capture .. '.' .. tree:lang()
+          capture_cache[id] = hl_group
+        end
+      end
 
+      if hl_group then
+        local start_row, start_col, end_row, end_col = node:range()
         table.insert(results,
           {
             range = {
@@ -61,7 +69,6 @@ function M.get_nodes_with_highlights(bufnr, start_line, end_line)
   return results
 end
 
-
 ---@param bufnr      integer
 ---@param lines      string[] the lines of text in the file that we're getting the highlights for
 ---@param start_line integer one-indexed, inclusive
@@ -71,7 +78,7 @@ function M.get_treesitter_syntax_highlights(bufnr, lines, start_line, end_line)
   assert(#lines == end_line - start_line)
 
   ---@type waypoint.TreesitterHighlight[]
-  local treesitter_highlights = M.get_nodes_with_highlights(bufnr, start_line - 1, end_line - 1) -- this function takes zero-indexed parameters
+  local treesitter_highlights = u.track("get_ts_nodes", function() return M.get_nodes_with_highlights(bufnr, start_line - 1, end_line - 1) end)-- this function takes zero-indexed parameters
   ---@type waypoint.HighlightRange[]
   local hlranges = {}
   for _=1, #lines do
@@ -155,5 +162,172 @@ function M.get_treesitter_syntax_highlights(bufnr, lines, start_line, end_line)
   return hlranges
 end
 
+---@param start_lines integer[] one-indexed, inclusive
+---@param end_lines   integer[] one-indexed, exclusive
+---@return waypoint.TreesitterHighlight[][]
+function M.batch_get_nodes_with_highlights(bufnr, start_lines, end_lines)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+
+  local self = highlighter.active[bufnr]
+  if not self then return {} end
+
+  ---@type waypoint.TreesitterHighlight[][]
+  local results = {}
+
+  local buf_highlighter = vim.treesitter.highlighter.active[bufnr]
+  buf_highlighter.tree:for_each_tree(function(tstree, tree)
+    ---@type table<integer, { [1]: integer, [2]: string }>
+    local capture_cache = {}
+    local root = tstree:root()
+    local q = buf_highlighter:get_query(tree:lang())
+    local query = q:query()
+    for i = 1,#start_lines do
+      local wp_highlights = {}
+      results[#results+1] = wp_highlights
+      local start_line = start_lines[i] - 1
+      local end_line = end_lines[i]
+      local iter = query:iter_captures(root, buf_highlighter.bufnr, start_line, end_line)
+      for id, node in iter do
+        local cached = capture_cache[id]
+        local hl_id
+        local hl_group
+
+        if cached then
+          hl_id = cached[1]
+          hl_group = cached[2]
+        else
+          local capture = query.captures[id] -- name of the capture in the query, e.g. "number"
+          if capture ~= nil then
+            -- 0-indexed, inclusive lower bound, exclusive upper bound
+            hl_group = '@' .. capture .. '.' .. tree:lang()
+            hl_id = vim.api.nvim_get_hl_id_by_name(hl_group)
+            capture_cache[id] = { hl_id, hl_group }
+          end
+        end
+
+        if hl_id and hl_group then
+          local start_row, start_col, end_row, end_col = node:range()
+
+          wp_highlights[#wp_highlights+1] = {
+            range = {
+              start_row,
+              start_col,
+              end_row,
+              end_col,
+            },
+            hl_name = hl_group,
+            hl_id = hl_id
+          }
+        end
+      end
+    end
+  end)
+
+  return results
+end
+
+---@param bufnr       integer
+---@param lines       string[][] index into this with lines[wpi][line_i]
+---@param start_lines integer[] zero-indexed, inclusive
+---@param end_lines   integer[] zero-indexed, exclusive
+---@return waypoint.HighlightRange[][][] hlranges array of all syntax highlights on each line for each waypoint. Index into it with results[wpi][line][hlgroup_i]
+function M.batch_get_treesitter_syntax_highlights(bufnr, lines, start_lines, end_lines)
+  assert(#start_lines == #end_lines)
+
+  ---@type waypoint.TreesitterHighlight[][]
+  local treesitter_highlights = u.track("get_ts_nodes", function() return M.batch_get_nodes_with_highlights(bufnr, start_lines, end_lines) end)
+
+  ---@type waypoint.HighlightRange[]
+  local hlranges = {}
+
+  for i, wp_highlights in ipairs(treesitter_highlights) do
+    local wp_hlranges = {}
+    hlranges[#hlranges+1] = wp_hlranges
+
+    local start_line = start_lines[i]
+    local end_line = end_lines[i]
+
+    local wp_lines = lines[i]
+
+    for _, ts_highlight in ipairs(wp_highlights) do
+      local hl_start_line = ts_highlight.range[1] + 1 -- one-indexed
+      local hl_end_line = ts_highlight.range[3] + 1   -- one-indexed
+      -- one-indexed index into the highlight ranges table.
+      -- e.g. if you're getting highlights where start_line is 20 and end_line is
+      -- 23, then line 21 (0-based indexing) will have a hlrange_idx of 2
+      local wp_hlrange_idx = math.max(hl_start_line - start_line + 1, 1)
+      if hl_start_line == hl_end_line then
+        table.insert(wp_hlranges[wp_hlrange_idx], {
+          ns = constants.ns,
+          hl_group = ts_highlight.hl_id,
+          col_start = ts_highlight.range[2] + 1,
+          col_end = ts_highlight.range[4],
+        })
+      else
+        ---@type integer
+        local range_start_line
+        ---@type integer
+        local range_start_col
+        ---@type integer
+        local range_end_line
+        ---@type integer
+        local range_end_col
+
+        if ts_highlight.range[1] + 1 < start_line then
+          range_start_line = start_line
+          range_start_col = 0
+        else
+          range_start_line = ts_highlight.range[1] + 1
+          range_start_col = ts_highlight.range[2]
+        end
+
+        if end_line <= ts_highlight.range[3] + 1 then
+          range_end_line = end_line - 1
+          range_end_col = u.vislen(wp_lines[#wp_lines])
+        else
+          if ts_highlight.range[4] == 0 then
+            range_end_line = ts_highlight.range[3] -- remember end_line is exclusive, and the ts_highlight.range fields are zero-indexed
+            local line_i =  ts_highlight.range[3] - ts_highlight.range[1]
+            range_end_col = u.vislen(wp_lines[line_i])
+          else
+            range_end_line = ts_highlight.range[3] + 1 -- remember end_line is exclusive, and the ts_highlight.range fields are zero-indexed
+            range_end_col = ts_highlight.range[4]
+          end
+        end
+
+        for j = range_start_line, range_end_line do
+          local line_i = j - start_line + 1
+          local col_start
+          if line_i == 1 then
+            col_start = range_start_col
+          else
+            col_start = 0
+          end
+          local col_end
+          if line_i == #wp_lines then
+            -- for some reason, some treesitter highlights have their end column
+            -- past the end of the line. This will cause an "end_col out of range"
+            -- error when you try to make an extmark make an extmark.
+            -- col_end = math.min(range_end_col, u.vislen(lines[j]))
+            col_end = math.min(range_end_col, u.vislen(wp_lines[line_i]))
+          else
+            col_end = u.vislen(wp_lines[line_i])
+          end
+          table.insert(wp_hlranges[line_i], {
+            ns = constants.ns,
+            hl_group = ts_highlight.hl_id,
+            col_start = col_start,
+            col_end = col_end,
+          })
+        end
+      end
+    end
+    assert(#hlranges[i] == end_lines - start_line)
+  end
+  return hlranges
+end
+
+
 return M
+
 

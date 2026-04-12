@@ -17,7 +17,7 @@ local dir_new = "lua/waypoint/test/tests/dirchanged/"
 local floating_window = require("waypoint.floating_window")
 local state = require("waypoint.state")
 local file = require'waypoint.file'
-local u = require("waypoint.utils")
+local u = require("waypoint.util")
 local tu = require'waypoint.test.util'
 
 describe('DirChanged', function()

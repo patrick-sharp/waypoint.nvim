@@ -18,7 +18,7 @@
 local M = {}
 
 local state = require("waypoint.state")
-local u = require("waypoint.utils")
+local u = require("waypoint.util")
 local uw = require("waypoint.utils_waypoint")
 
 ---@param arg vim.api.keyset.create_autocmd.callback_args

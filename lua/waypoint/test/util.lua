@@ -4,7 +4,7 @@ local message = require("waypoint.message")
 local ring_buffer = require("waypoint.ring_buffer")
 local constants = require("waypoint.constants")
 local floating_window = require("waypoint.floating_window")
-local u = require("waypoint.utils")
+local u = require("waypoint.util")
 
 ---strings returned by thins function are trimmed to make testing more legible and not depend on screen size
 ---@return string[][]

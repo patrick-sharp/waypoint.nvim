@@ -5,7 +5,7 @@ local M = {}
 local constants = require("waypoint.constants")
 local file = require("waypoint.file")
 local state = require("waypoint.state")
-local u = require("waypoint.utils")
+local u = require("waypoint.util")
 local uw = require("waypoint.utils_waypoint")
 local message = require("waypoint.message")
 

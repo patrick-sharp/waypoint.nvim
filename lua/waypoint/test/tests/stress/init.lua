@@ -8,7 +8,7 @@ local file = require"waypoint.file"
 local floating_window = require"waypoint.floating_window"
 local state = require"waypoint.state"
 local Timer = require"waypoint.timer"
-local u = require"waypoint.utils"
+local u = require"waypoint.util"
 
 describe('Stress', function()
   local total_lines = 1000000
@@ -113,11 +113,18 @@ describe('Stress syntax', function()
   -- create the buffer
   local bufnr = vim.api.nvim_create_buf(true, false)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  -- vim.api.nvim_set_option_value("filetype", "lua", { buf = bufnr })
-  -- vim.api.nvim_set_option_value("syntax", "lua", { buf = bufnr })
+  vim.api.nvim_set_option_value("filetype", "lua", { buf = bufnr })
+  vim.api.nvim_set_option_value("syntax", "lua", { buf = bufnr })
   file.buffer_init(bufnr)
+
+  -- I don't know if this is actually necessary
+  local clients = vim.lsp.get_clients({ bufnr = bufnr })
+  for _, client in ipairs(clients) do
+    vim.lsp.buf_detach_client(bufnr, client.id)
+  end
   vim.api.nvim_set_current_buf(bufnr)
-  -- uncomment this to make this test fast
+
+  -- uncomment this to make this test fast. it disables syntax highlighting on the new buffer so the treesitter highlight grabber won't run
   -- vim.api.nvim_set_option_value("filetype", "text", { buf = bufnr })
   -- vim.api.nvim_set_option_value("syntax", "text", { buf = bufnr })
 
@@ -132,21 +139,50 @@ describe('Stress syntax', function()
   end
   u.log("append waypoints", timer:stop())
 
-  u.log("<TRACKDATA>")
-  for k,v in pairs(u.track_data) do
-    u.log(k, v.total)
-  end
-  u.log("</TRACKDATA>")
-
   -- local timer = Timer.start()
   timer:reset()
   floating_window.open()
   floating_window.close()
   u.log("draw", timer:stop())
 
-  state.context = 10
   timer:reset()
   floating_window.open()
   floating_window.close()
-  u.log("draw with context 10", timer:stop())
+  u.log("subsequent draw", timer:stop())
+
+  state.context = 28
+  timer:reset()
+  floating_window.open()
+  floating_window.next_waypoint()
+  floating_window.next_waypoint()
+  floating_window.next_waypoint()
+  floating_window.next_waypoint()
+  floating_window.next_waypoint()
+  floating_window.next_waypoint()
+  floating_window.next_waypoint()
+  floating_window.close()
+  u.log("draw with context " .. state.context, timer:stop())
+
+  timer:reset()
+  floating_window.open()
+  floating_window.close()
+  u.log("subsequent draw with context " .. state.context, timer:stop())
+
+  u.log("<TRACKDATA>")
+  for k,v in pairs(u.track_data) do
+    u.log(k, v.total)
+  end
+  u.log("</TRACKDATA>")
+
+  local spans = {}
+  u.log("<SPANDATA>")
+  for k,v in pairs(u.span_data) do
+    spans[#spans+1] = {k, v}
+  end
+  table.sort(spans, function(a, b) return a[1] < b[1] end)
+  for _,v in ipairs(spans) do
+    u.log(v[1], v[2].total)
+  end
+  u.log("</SPANDATA>")
+
 end)

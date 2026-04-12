@@ -4,7 +4,7 @@ local describe = test_list.describe
 local crud = require("waypoint.waypoint_crud")
 local state = require("waypoint.state")
 local filter = require("waypoint.filter")
-local u = require("waypoint.utils")
+local u = require("waypoint.util")
 local uw = require("waypoint.utils_waypoint")
 local tu = require'waypoint.test.util'
 

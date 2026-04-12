@@ -6,7 +6,7 @@ local message = require'waypoint.message'
 local state = require'waypoint.state'
 local test_list = require'waypoint.test.test_list'
 local Timer = require'waypoint.timer'
-local u = require'waypoint.utils'
+local u = require'waypoint.util'
 
 -- these files call test_list.describe, which adds tests to the list
 local _ = require'waypoint.test.tests.annotation'

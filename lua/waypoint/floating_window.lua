@@ -4,7 +4,7 @@ local config = require("waypoint.config")
 local crud = require("waypoint.waypoint_crud")
 local constants = require("waypoint.constants")
 local state = require("waypoint.state")
-local u = require("waypoint.utils")
+local u = require("waypoint.util")
 local uw = require("waypoint.utils_waypoint")
 local highlight = require("waypoint.highlight")
 local message = require("waypoint.message")
@@ -323,11 +323,13 @@ local function draw_waypoint_window(action)
     num_lines_after = 0
   end
 
-  local split = uw.split_by_drawn()
+  local split = u.track("split_by_drawn", function() return uw.split_by_drawn() end)
   local drawn = split.drawn
   local cursor_i = split.cursor_i
   local cursor_vis_i = split.cursor_vis_i
   local wpi_from_drawn_i = split.wpi_from_drawn_i
+
+  u.span_start("span 1")
 
   -- In general, we don't want to be updating state on draw calls, but this simplifies things a lot.
   -- This basically updates the wpi if either the cursor or the vis cursor are on an undrawn waypoint.
@@ -476,6 +478,9 @@ local function draw_waypoint_window(action)
     end
   end
 
+  u.span_end("span 1")
+  u.span_start("span 2")
+
   assert(#rows == #indents, "#rows == " .. #rows ..", #indents == " .. #indents .. ", but they should be the same" )
   assert(#rows == #line_to_waypoint, "#rows == " .. #rows ..", #line_to_waypoint == " .. #line_to_waypoint .. ", but they should be the same" )
   assert(#rows == #hlranges, "#rows == " .. #rows ..", #hlranges == " .. #hlranges .. ", but they should be the same" )
@@ -506,7 +511,6 @@ local function draw_waypoint_window(action)
     longest_line_len = math.max(longest_line_len, vim.fn.strchars(aligned[i]))
   end
 
-
   if action == M.WINDOW_ACTIONS.exit_visual_mode then
     ignore_next_modechanged = true
     u.exit_visual_mode()
@@ -526,6 +530,9 @@ local function draw_waypoint_window(action)
     vis_v_col         = v_pos[3]
     vis_cursor_offset = v_pos[4]
   end
+
+  u.span_end("span 2")
+  u.span_start("span 3")
 
   -- Set text in the buffer
   vim.api.nvim_buf_set_lines(wp_bufnr, 0, -1, true, aligned)
@@ -568,6 +575,9 @@ local function draw_waypoint_window(action)
       end
     end
   end
+
+  u.span_end("span 3")
+  u.span_start("span 4")
 
   local waypoint_context_lines = (state.before_context + state.context + 1 + state.context + state.after_context)
   if (cursor_i) then
@@ -703,6 +713,9 @@ local function draw_waypoint_window(action)
     end
   end
 
+  u.span_end("span 4")
+  u.span_start("span 5")
+
   -- update window config, used to update the footer a/b/c indicators and the size of the window
   local win_opts, bg_win_opts = get_win_opts(split)
   vim.api.nvim_win_set_config(winnr, win_opts)
@@ -714,6 +727,7 @@ local function draw_waypoint_window(action)
   end
 
   most_recent_draw_succeeded = true
+  u.span_end("span 5")
 end
 
 ---@type table<integer, table<string, boolean>>

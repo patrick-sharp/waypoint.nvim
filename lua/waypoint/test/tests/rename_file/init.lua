@@ -10,7 +10,7 @@ local floating_window = require("waypoint.floating_window")
 local message = require("waypoint.message")
 local state = require("waypoint.state")
 local tu = require'waypoint.test.util'
-local u = require("waypoint.utils")
+local u = require("waypoint.util")
 local uw = require("waypoint.utils_waypoint")
 
 -- get rid of uv warnings in this file

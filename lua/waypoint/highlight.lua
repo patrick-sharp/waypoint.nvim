@@ -2,7 +2,7 @@ local M = {}
 
 local config = require("waypoint.config")
 local constants = require("waypoint.constants")
-local u = require("waypoint.utils")
+local u = require("waypoint.util")
 
 function M.highlight_custom_groups()
   local color_dir_dec = vim.api.nvim_get_hl(0, {name = "Directory"}).fg

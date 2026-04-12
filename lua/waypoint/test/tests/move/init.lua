@@ -10,7 +10,7 @@ local wp_3_text = test_list.wp_3_text
 local floating_window = require("waypoint.floating_window")
 local state = require("waypoint.state")
 local file = require'waypoint.file'
-local u = require("waypoint.utils")
+local u = require("waypoint.util")
 local tu = require'waypoint.test.util'
 
 describe('Move', function()

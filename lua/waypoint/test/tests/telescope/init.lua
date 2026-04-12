@@ -6,7 +6,7 @@ local file_1 = test_list.file_1
 
 local message = require("waypoint.message")
 local file = require'waypoint.file'
-local u = require("waypoint.utils")
+local u = require("waypoint.util")
 local tu = require'waypoint.test.util'
 
 -- this test also tests waypoints not displaying when their extmarks are deleted

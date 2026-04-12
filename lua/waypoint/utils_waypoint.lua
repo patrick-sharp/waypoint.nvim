@@ -6,7 +6,7 @@ local highlight_treesitter = require("waypoint.highlight_treesitter")
 local highlight_vanilla = require("waypoint.highlight_vanilla")
 local message = require("waypoint.message")
 local state = require("waypoint.state")
-local u = require("waypoint.utils")
+local u = require("waypoint.util")
 
 ---@param waypoint waypoint.Waypoint
 ---@return integer, boolean

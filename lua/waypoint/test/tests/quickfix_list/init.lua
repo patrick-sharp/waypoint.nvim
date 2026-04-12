@@ -6,7 +6,7 @@ local waypoints_json = test_list.waypoints_json
 
 local floating_window = require("waypoint.floating_window")
 local file = require'waypoint.file'
-local u = require("waypoint.utils")
+local u = require("waypoint.util")
 local tu = require'waypoint.test.util'
 
 describe('Quickfix list', function()
