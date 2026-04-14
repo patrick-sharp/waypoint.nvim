@@ -380,14 +380,10 @@ local function draw_waypoint_window(action, reuse)
     end
   end
 
-  local _is_in_view = {}
-  u.log(cursor_i, cursor_line, view_topline, view_bottomline)
-
   for i, waypoint in ipairs(drawn) do
     local waypoint_topline = #table_rows + 1
     local waypoint_bottomline = #table_rows + num_lines_before + 1 + num_lines_after
     local is_in_view = view_topline <= waypoint_bottomline and waypoint_topline <= view_bottomline
-    _is_in_view[i] = {i, waypoint_topline, waypoint_bottomline, is_in_view}
 
     ---@type waypoint.WaypointContext
     local waypoint_file_text = u.track("context", function() return uw.get_waypoint_context(
@@ -521,8 +517,6 @@ local function draw_waypoint_window(action, reuse)
       table.insert(hlranges, {})
     end
   end
-
-  u.log(_is_in_view)
 
   assert(#table_rows == #indents, "#rows == " .. #table_rows ..", #indents == " .. #indents .. ", but they should be the same" )
   assert(#table_rows == #line_to_waypoint, "#rows == " .. #table_rows ..", #line_to_waypoint == " .. #line_to_waypoint .. ", but they should be the same" )
