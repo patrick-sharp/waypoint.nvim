@@ -45,6 +45,8 @@ local vis_v_col = nil
 ---@type integer?
 local vis_v_offset = nil
 
+---@type waypoint.WaypointContext[]
+local prev_waypoint_contexts = {}
 ---@type integer[]
 local prev_col_widths = {}
 ---@type integer[]
@@ -327,15 +329,7 @@ local function draw_waypoint_window(action, reuse)
   ---Otherwise, apply each highlight in the table.
   local hlranges = {}
 
-  local num_lines_before
-  local num_lines_after
-  if state.show_context then
-    num_lines_before = state.before_context + state.context
-    num_lines_after = state.after_context + state.context
-  else
-    num_lines_before = 0
-    num_lines_after = 0
-  end
+  local num_lines_before, num_lines_after = uw.num_lines_before_after()
 
   local split = u.track("split_by_drawn", function() return uw.split_by_drawn() end)
   local drawn = split.drawn
@@ -353,7 +347,9 @@ local function draw_waypoint_window(action, reuse)
   end
 
   local lines_per_waypoint = uw.lines_per_waypoint()
-  cursor_line = (cursor_i - 1) * lines_per_waypoint + state.before_context + state.context
+  if cursor_i then
+    cursor_line = (cursor_i - 1) * lines_per_waypoint + state.before_context + state.context
+  end
 
   local winheight = vim.fn.winheight(0)
   local view = vim.fn.winsaveview()
@@ -370,7 +366,7 @@ local function draw_waypoint_window(action, reuse)
     -- This is definitely a bit of a hack.
     view_topline = u.clamp(cursor_line - math.floor(winheight / 2), 1)
     view_bottomline = view_topline + winheight - 1
-  else
+  elseif cursor_line then
     if cursor_line > view_bottomline then
       view_bottomline = cursor_line
       view_topline = cursor_line - (winheight - 1)

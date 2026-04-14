@@ -94,6 +94,7 @@ end
 ---@field lines                string[] the lines of text from the file the waypoint is in. Includes the line the waypoint is on and the lines in the context around the waypoint.
 ---@field waypoint_linenr      integer the zero-indexed line number the waypoint is on within the file.
 ---@field context_start_linenr integer the zero-indexed line number within the file of the first line of the context
+---@field context_end_linenr   integer the zero-indexed line number within the file of the last line of the context (meaning it's an inclusive bound)
 ---@field highlight_ranges     waypoint.HighlightRange[][] the syntax highlights for each line in lines. This table will have the same number of elements as lines.
 ---@field file_start_idx       integer index within lines where the start of the file is, or 1 if the file starts before the context
 ---@field file_end_idx         integer index within lines where the end of the file is, or #lines + 1 if the file ends after the context
@@ -146,6 +147,7 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after, is_
       lines = lines,
       waypoint_linenr = num_lines_before,
       context_start_linenr = waypoint.linenr,
+      context_end_linenr = waypoint.linenr,
       file_start_idx = num_lines_before + 1,
       file_end_idx = num_lines_before + 2,
       highlight_ranges = hlranges,
@@ -237,10 +239,53 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after, is_
     lines = lines_,
     waypoint_linenr = marked_line_idx + lines_before_start,
     context_start_linenr = start_linenr,
+    context_end_linenr = end_linenr,
     file_start_idx = lines_before_start + 1,
     file_end_idx = #lines_ - lines_after_end + 1,
     highlight_ranges = hlranges_,
   }
+end
+
+---@param bufnr integer
+---@param context waypoint.WaypointContext
+function M.get_waypoint_highlights(bufnr, context, num_lines_before, num_lines_after)
+  local lines = context.lines
+  local file_uses_treesitter = vim.treesitter.highlighter.active[bufnr]
+  local start_linenr = context.context_start_linenr
+  local end_linenr = context.context_end_linenr
+  local hlranges
+  if file_uses_treesitter then
+    return highlight_treesitter.get_treesitter_syntax_highlights(bufnr, lines, start_linenr, end_linenr)
+  elseif pcall(vim.api.nvim_buf_get_var, bufnr, "current_syntax") then
+    return highlight_vanilla.get_vanilla_syntax_highlights(bufnr, lines, start_linenr, end_linenr)
+  else
+    for i=1,#context.lines do hlranges[i] = {} end
+  end
+
+  local extmark_line_nr = context.extmark[1]
+
+  -- if the waypoint context extends to before the start of the file or after
+  -- the end, pad to the length of the context with empty lines
+  local lines_before_start = start_linenr - (extmark_line_nr - num_lines_before)
+  local lines_after_end = (extmark_line_nr + 1 + num_lines_after) - end_linenr
+
+  local hlranges_ = {}
+
+  for _=1, lines_before_start do
+    table.insert(hlranges_, {})
+  end
+
+  for i=1,#lines do
+    table.insert(hlranges_, hlranges[i])
+  end
+
+  for _=1, lines_after_end do
+    table.insert(hlranges_, {})
+  end
+
+  assert(#lines == #hlranges_)
+
+  return hlranges
 end
 
 ---@class waypoint.AlignTableOpts
@@ -864,6 +909,19 @@ function M.lines_per_waypoint()
     return 1
   end
   return context_lines + 1
+end
+
+function M.num_lines_before_after()
+  local num_lines_before
+  local num_lines_after
+  if state.show_context then
+    num_lines_before = state.before_context + state.context
+    num_lines_after = state.after_context + state.context
+  else
+    num_lines_before = 0
+    num_lines_after = 0
+  end
+  return num_lines_before, num_lines_after
 end
 
 return M
