@@ -20,7 +20,9 @@ local help_bufnr
 local winnr
 local bg_winnr
 
--- we persist some data about the previous draw here so that we can access it in autocmd calbacks.
+-- we persist some data about the previous draw in local variables here so that
+-- we can access it in autocmd callbacks, and cache results from previous draws
+-- where possible.
 -- e.g. in CursorMoved:
 -- if the user does something to move the cursor to another line, we want to set
 -- the new selected waypoint to whatever waypoint the cursor is currently on
@@ -42,6 +44,14 @@ local vis_v_wpi = nil
 local vis_v_col = nil
 ---@type integer?
 local vis_v_offset = nil
+
+---@type integer[]
+local prev_col_widths = {}
+---@type integer[]
+local prev_waypoint_window_lines = {}
+-- zero-indexed. I should refactor this, but I haven't gotten around to it.
+---@type integer
+local prev_cursor_line = 0
 
 ---@type string?
 local last_visual_mode = nil
@@ -255,7 +265,8 @@ local function get_win_opts(split)
 end
 
 ---@param action waypoint.window_actions?
-local function draw_waypoint_window(action)
+---@param reuse ("lines" | "widths")? what to reuse. If widths, don't compute widths in align_waypoint_table. If lines, reuse the content of the waypoint window
+local function draw_waypoint_window(action, reuse)
   if not wp_bufnr or not bg_bufnr or not winnr or not bg_winnr then
     M.close()
     return
@@ -284,7 +295,10 @@ local function draw_waypoint_window(action)
   end
 
   vim.api.nvim_buf_clear_namespace(wp_bufnr, constants.ns, 0, -1)
-  local rows = {}
+  -- columns in each line of the waypoint window
+  ---@type string[][]
+  local table_rows = {}
+  ---@type integer[]
   local indents = {}
   ---@type integer[]
   line_to_waypoint = {}
@@ -338,14 +352,42 @@ local function draw_waypoint_window(action)
     state.vis_wpi = wpi_from_drawn_i[cursor_vis_i]
   end
 
-  local view = vim.fn.winsaveview()
+  local lines_per_waypoint = uw.lines_per_waypoint()
+  cursor_line = (cursor_i - 1) * lines_per_waypoint + state.before_context + state.context
+
   local winheight = vim.fn.winheight(0)
+  local view = vim.fn.winsaveview()
+  -- keep in mind that this is view BEFORE we change the content of the waypoint
+  -- buffer. Here, we are calculating what the topline and bottomline will be
+  -- at the end of the draw call, which allows us to figure out which waypoints
+  -- are currently on screen.
+  local view_topline = view.topline
+  local view_bottomline = view_topline + winheight - 1
+
+  if action == M.WINDOW_ACTIONS.context then
+    -- in this case, we'll center the view.
+    -- Here, I calculate where the centered view will be.
+    -- This is definitely a bit of a hack.
+    view_topline = u.clamp(cursor_line - math.floor(winheight / 2), 1)
+    view_bottomline = view_topline + winheight - 1
+  else
+    if cursor_line > view_bottomline then
+      view_bottomline = cursor_line
+      view_topline = cursor_line - (winheight - 1)
+    elseif cursor_line < view_topline then
+      view_topline = cursor_line
+      view_bottomline = view_topline + winheight - 1
+    end
+  end
+
+  local _is_in_view = {}
+  u.log(cursor_i, cursor_line, view_topline, view_bottomline)
 
   for i, waypoint in ipairs(drawn) do
-    local waypoint_topline = #rows + 1
-    local waypoint_bottomline = #rows + num_lines_before + 1 + num_lines_after
-    local view_bottomline = view.topline + winheight - 1
-    local is_in_view = view.topline <= waypoint_bottomline and waypoint_topline <= view_bottomline
+    local waypoint_topline = #table_rows + 1
+    local waypoint_bottomline = #table_rows + num_lines_before + 1 + num_lines_after
+    local is_in_view = view_topline <= waypoint_bottomline and waypoint_topline <= view_bottomline
+    _is_in_view[i] = {i, waypoint_topline, waypoint_bottomline, is_in_view}
 
     ---@type waypoint.WaypointContext
     local waypoint_file_text = u.track("context", function() return uw.get_waypoint_context(
@@ -370,13 +412,13 @@ local function draw_waypoint_window(action)
     assert(extmark_lines)
 
     if i == cursor_i then
-      ctx_start = #rows
-      cursor_waypoint_topline = #rows + 1
-      cursor_waypoint_bottomline = #rows + #extmark_lines
-      cursor_line = #rows + extmark_line
+      ctx_start = #table_rows
+      cursor_waypoint_topline = #table_rows + 1
+      cursor_waypoint_bottomline = #table_rows + #extmark_lines
+      cursor_line = #table_rows + extmark_line
     end
     if i == cursor_vis_i then
-      vis_ctx_start = #rows
+      vis_ctx_start = #table_rows
     end
 
     for j, line_text in ipairs(extmark_lines) do
@@ -385,6 +427,9 @@ local function draw_waypoint_window(action)
       local line_extmark_hlranges = extmark_hlranges[j]
       table.insert(indents, waypoint.indent * config.indent_width)
       table.insert(line_to_waypoint, wpi_from_drawn_i[i])
+
+      -- line in the waypoint window
+      ---@type string[]
       local row = {}
 
       -- waypoint number
@@ -453,21 +498,22 @@ local function draw_waypoint_window(action)
         table.insert(line_hlranges, line_extmark_hlranges)
       end
 
-      table.insert(rows, row)
+      table.insert(table_rows, row)
+
       table.insert(hlranges, line_hlranges)
     end
     if i == cursor_i then
-      ctx_end = #rows
+      ctx_end = #table_rows
     end
     if i == cursor_vis_i then
-      vis_ctx_end = #rows
+      vis_ctx_end = #table_rows
     end
     local has_context = state.before_context ~= 0
     has_context = has_context or state.context ~= 0
     has_context = has_context or state.after_context ~= 0
     if state.show_context and has_context and i < #drawn then
       -- insert a blank line as a separator between waypoints
-      table.insert(rows, "")
+      table.insert(table_rows, "")
       table.insert(indents, 0)
       -- if the user somehow moves to a blank space, just treat that as 
       -- selecting the waypoint above the space
@@ -476,9 +522,11 @@ local function draw_waypoint_window(action)
     end
   end
 
-  assert(#rows == #indents, "#rows == " .. #rows ..", #indents == " .. #indents .. ", but they should be the same" )
-  assert(#rows == #line_to_waypoint, "#rows == " .. #rows ..", #line_to_waypoint == " .. #line_to_waypoint .. ", but they should be the same" )
-  assert(#rows == #hlranges, "#rows == " .. #rows ..", #hlranges == " .. #hlranges .. ", but they should be the same" )
+  u.log(_is_in_view)
+
+  assert(#table_rows == #indents, "#rows == " .. #table_rows ..", #indents == " .. #indents .. ", but they should be the same" )
+  assert(#table_rows == #line_to_waypoint, "#rows == " .. #table_rows ..", #line_to_waypoint == " .. #line_to_waypoint .. ", but they should be the same" )
+  assert(#table_rows == #hlranges, "#rows == " .. #table_rows ..", #hlranges == " .. #hlranges .. ", but they should be the same" )
 
   local table_cell_types = {"number"}
   if state.show_path then
@@ -492,18 +540,29 @@ local function draw_waypoint_window(action)
   end
 
   local win_width = M.get_floating_window_width()
-  local aligned = uw.align_waypoint_table(
-    rows, table_cell_types, hlranges,
+
+  -- TODO
+  -- local waypoint_window_lines = uw.align_waypoint_table(
+  --   rows, table_cell_types, hlranges,
+  --   {
+  --     column_separator = constants.table_separator,
+  --     win_width = win_width,
+  --     indents = indents,
+  --   })
+
+  local waypoint_window_lines = u.track("align_waypoint_table", function() return uw.align_waypoint_table(
+    table_rows, table_cell_types, hlranges,
     {
       column_separator = constants.table_separator,
       win_width = win_width,
       indents = indents,
     })
+  end)
 
   longest_line_len = 0
-  for i, line in pairs(aligned) do
-    aligned[i] = string.rep(" ", indents[i]) .. line
-    longest_line_len = math.max(longest_line_len, vim.fn.strchars(aligned[i]))
+  for i, line in pairs(waypoint_window_lines) do
+    waypoint_window_lines[i] = string.rep(" ", indents[i]) .. line
+    longest_line_len = math.max(longest_line_len, vim.fn.strchars(waypoint_window_lines[i]))
   end
 
   if action == M.WINDOW_ACTIONS.exit_visual_mode then
@@ -527,7 +586,7 @@ local function draw_waypoint_window(action)
   end
 
   -- Set text in the buffer
-  vim.api.nvim_buf_set_lines(wp_bufnr, 0, -1, true, aligned)
+  vim.api.nvim_buf_set_lines(wp_bufnr, 0, -1, true, waypoint_window_lines)
 
   -- highlight the text in the buffer
   for linenr,line_hlranges in pairs(hlranges) do
@@ -712,6 +771,7 @@ local function draw_waypoint_window(action)
     ignore_next_cursormoved = true
   end
 
+  prev_cursor_line = cursor_line
   most_recent_draw_succeeded = true
 end
 

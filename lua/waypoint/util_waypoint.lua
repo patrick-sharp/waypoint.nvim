@@ -386,15 +386,17 @@ local win_separator = vim.fn.hlID('WinSeparator')
 ---@param table_cell_types string[] type of each column
 ---@param highlights (string | waypoint.HighlightRange[])[][] rows x columns x (optionally) multiple highlights for a given column. This parameter is mutated to adjust the highlights of each line so they will work after the alignment.
 ---@param opts waypoint.AlignTableOpts?
----@return string[]
+---@return string[], integer[] each string row in the aligned table and the widths of each column
 function M.align_waypoint_table(t, table_cell_types, highlights, opts)
   local nrows = #t
-  if nrows == 0 then return {} end
+  if nrows == 0 then return {}, {} end
   local ncols = #table_cell_types
 
   -- cache for vislen and hlIDs to avoid redundant calculations/bridge calls
   local vislens = {} -- 2D map: vislens[row][col]
   local hl_id_cache = {}
+
+  ---@type integer[]
   local widths = {}
 
   -- calculate widths and cache vislens in a single pass
@@ -510,7 +512,7 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
     end
   end
 
-  return result
+  return result, widths
 end
 
 ---@param a waypoint.Waypoint
@@ -745,8 +747,8 @@ end
 ---@field wp waypoint.Waypoint
 
 ---@class waypoint.DrawnSplit
----@field cursor_i           integer?
----@field cursor_vis_i       integer?
+---@field cursor_i           integer? one-indexed
+---@field cursor_vis_i       integer? one-indexed
 ---@field top                integer? the index of the topmost part of the visual selection
 ---@field bottom             integer? the index of the bottommost poart of the visual selection
 ---@field drawn              waypoint.Waypoint[]
@@ -852,6 +854,16 @@ function M.recombine_drawn_split(split)
     state.vis_wpi = split.wpi_from_drawn_i[split.cursor_vis_i]
   end
   state.waypoints = waypoints
+end
+
+-- includes the space that appears between waypoints when context > 0
+---@return integer
+function M.lines_per_waypoint()
+  local context_lines = state.before_context + 2 * state.context + state.after_context
+  if context_lines == 0 then
+    return 1
+  end
+  return context_lines + 1
 end
 
 return M

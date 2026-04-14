@@ -224,7 +224,7 @@
         - all max context
         - <= 10ms draw time
 - [x] fix bug with FileChangedShell and relocating with the same file
-- [ ] fix bugs where is_in_view is set incorrectly
+- [x] fix bugs where is_in_view is set incorrectly
 - [ ] find ways to reuse the lines in the buffer to increase performance on draws that don't change the content of the waypoint window
 - [ ] automatically disable highlights on a file if they took more than 200ms to generate (use highlight_threshold_ms)
 - [ ] make a better experience for the non-telescope "locate waypoints within file" command
