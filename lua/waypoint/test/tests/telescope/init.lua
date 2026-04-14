@@ -29,7 +29,11 @@ describe('Telescope', function()
   local action_state = require('telescope.actions.state')
   local actions = require('telescope.actions')
 
-  telescope.extensions.waypoints.waypoints()
+  -- if you don't set the initial mode, then telescope queues some callback
+  -- that sets the mode to insert, which will affect the mode vim is in when it
+  -- opens the waypoint test report. this was the only way I could figure out
+  -- to fix it.
+  telescope.extensions.waypoints.waypoints({initial_mode = 'normal'})
 
   vim.wait(100, function()
     return action_state.get_current_picker(vim.api.nvim_get_current_buf()) ~= nil
@@ -55,6 +59,7 @@ describe('Telescope', function()
   tu.assert_eq(file_1, picker.finder.results[4].filename)
   tu.assert_eq(9, picker.finder.results[4].lnum)
   tu.assert_eq("  end", picker.finder.results[4].text)
-
+  u.log(vim.api.nvim_get_mode().mode)
   actions.close(bufnr)
+  u.log(vim.api.nvim_get_mode().mode)
 end)
