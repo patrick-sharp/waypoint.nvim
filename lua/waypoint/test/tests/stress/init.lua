@@ -155,28 +155,23 @@ describe('Stress syntax', function()
   floating_window.close()
   u.log("draw", timer:stop())
 
-  -- timer:reset()
-  -- floating_window.open()
-  -- floating_window.close()
-  -- u.log("subsequent draw", timer:stop())
+  timer:reset()
+  floating_window.open()
+  floating_window.close()
+  u.log("subsequent draw", timer:stop())
 
   state.context = 28
   timer:reset()
   floating_window.open()
-  floating_window.next_waypoint()
-  floating_window.next_waypoint()
-  floating_window.next_waypoint()
-  floating_window.next_waypoint()
-  floating_window.next_waypoint()
-  floating_window.next_waypoint()
-  floating_window.next_waypoint()
   floating_window.close()
   u.log("draw with context " .. state.context, timer:stop())
 
-  -- timer:reset()
-  -- floating_window.open()
-  -- floating_window.close()
-  -- u.log("subsequent draw with context " .. state.context, timer:stop())
+  u.track_data = {}
+
+  timer:reset()
+  floating_window.open()
+  floating_window.close()
+  u.log("subsequent draw with context " .. state.context, timer:stop())
 
   u.log("<TRACKDATA>")
   for k,v in pairs(u.track_data) do
@@ -184,15 +179,15 @@ describe('Stress syntax', function()
   end
   u.log("</TRACKDATA>")
 
-  local spans = {}
-  u.log("<SPANDATA>")
-  for k,v in pairs(u.span_data) do
-    spans[#spans+1] = {k, v}
-  end
-  table.sort(spans, function(a, b) return a[1] < b[1] end)
-  for _,v in ipairs(spans) do
-    u.log(v[1], v[2].total)
-  end
-  u.log("</SPANDATA>")
+  -- local spans = {}
+  -- u.log("<SPANDATA>")
+  -- for k,v in pairs(u.span_data) do
+  --   spans[#spans+1] = {k, v}
+  -- end
+  -- table.sort(spans, function(a, b) return a[1] < b[1] end)
+  -- for _,v in ipairs(spans) do
+  --   u.log(v[1], v[2].total)
+  -- end
+  -- u.log("</SPANDATA>")
 
 end)

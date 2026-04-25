@@ -347,8 +347,8 @@ local function draw_waypoint_window(action, reuse)
   local bottom_view_threshold = nil
 
   if cursor_i then
-    local lines_per_waypoint = uw.lines_per_waypoint()
-    cursor_line = (cursor_i - 1) * (lines_per_waypoint + 1) + state.before_context + state.context
+    local lines_per_waypoint, space_between = uw.lines_per_waypoint()
+    cursor_line = (cursor_i - 1) * (lines_per_waypoint + space_between) + state.before_context + state.context
 
     -- one-indexed
     local cursor_linenr = cursor_line + 1
@@ -363,7 +363,7 @@ local function draw_waypoint_window(action, reuse)
   for i, waypoint in ipairs(drawn) do
     local waypoint_topline = #table_rows + 1
     local waypoint_bottomline = #table_rows + num_lines_before + 1 + num_lines_after
-    local is_in_view = top_view_threshold <= waypoint_bottomline or waypoint_topline <= bottom_view_threshold
+    local is_in_view = top_view_threshold <= waypoint_bottomline and waypoint_topline <= bottom_view_threshold
 
     ---@type waypoint.WaypointContext
     local waypoint_context
@@ -1387,6 +1387,7 @@ function M.set_waypoint_for_cursor(_, override_ignore)
       state.should_ignore_autocmds,
     }
   })
+  u.log("IGNORE SET WP", should_ignore)
   if should_ignore then
     ignore_next_cursormoved = false
     return

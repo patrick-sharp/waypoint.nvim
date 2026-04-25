@@ -225,10 +225,14 @@
         - <= 10ms draw time
 - [x] fix bug with FileChangedShell and relocating with the same file
 - [x] fix bugs where is_in_view is set incorrectly
-- [ ] find ways to reuse the lines in the buffer to increase performance on draws that don't change the content of the waypoint window
+- [x] fix bug where sometimes waypoints in view aren't highlighted
+- [x] find ways to reuse the lines in the buffer to increase performance on draws that don't change the content of the waypoint window
+- [ ] speed up regular stress test (not stress syntax)
 - [ ] automatically disable highlights on a file if they took more than 200ms to generate (use highlight_threshold_ms)
 - [ ] make a better experience for the non-telescope "locate waypoints within file" command
 - [ ] remove the u.track calls I made to understand performance
+- [ ] fix bug where waypoints in file that doesn't exist are saved (stress syntax + quit + reopen)
+- [ ] fix behavior of ctrl-d and ctrl-u
 - [ ] write docs
     - [ ] drawn vs not drawn waypoints
     - [ ] undo and file changes

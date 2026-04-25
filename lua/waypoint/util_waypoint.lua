@@ -329,7 +329,7 @@ function M.get_waypoint_highlights(waypoint, context, num_lines_before, num_line
     error("#context.lines is " .. #context.lines .. ", #result is " .. #result)
   end
 
-  if not did_use_cache then
+  if has_highlights and not did_use_cache then
     draw_cache.highlight_cache = draw_cache.highlight_cache or {}
     draw_cache.highlight_cache[idx] = vim.deepcopy(result)
   end
@@ -910,13 +910,14 @@ function M.recombine_drawn_split(split)
 end
 
 -- includes the space that appears between waypoints when context > 0
----@return integer
+-- returns lines for each waypoint, and the space between waypoints (hardcoded to 1)
+---@return integer, integer
 function M.lines_per_waypoint()
   local context_lines = state.before_context + 2 * state.context + state.after_context
   if context_lines == 0 then
-    return 1
+    return 1, 0
   end
-  return context_lines + 1
+  return context_lines + 1, 1
 end
 
 function M.num_lines_before_after()
