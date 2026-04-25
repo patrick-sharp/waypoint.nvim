@@ -17,6 +17,7 @@
 
 local M = {}
 
+local draw_cache = require("waypoint.draw_cache")
 local state = require("waypoint.state")
 local u = require("waypoint.util")
 local uw = require("waypoint.util_waypoint")
@@ -42,6 +43,7 @@ function M.convert_buffer_waypoints_to_bufferless(arg)
       end
     end
   end
+  draw_cache.invalidate_cache()
 end
 
 ---@param arg vim.api.keyset.create_autocmd.callback_args
@@ -59,6 +61,7 @@ function M.convert_bufferless_waypoints_to_buffer(arg)
       waypoint.linenr     = nil
     end
   end
+  draw_cache.invalidate_cache()
 end
 
 return M

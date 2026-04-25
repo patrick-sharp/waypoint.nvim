@@ -4,6 +4,7 @@ local M = {}
 
 local config = require "waypoint.config"
 local constants = require "waypoint.constants"
+local draw_cache = require "waypoint.draw_cache"
 local highlight = require "waypoint.highlight"
 local levenshtein   = require "waypoint.levenshtein"
 local pretty = require "waypoint.prettyjson"
@@ -205,6 +206,7 @@ end
 
 ---@param file string relative path config file.
 function M.load_from_file(file)
+  draw_cache.invalidate_cache()
   local data = read_file(file)
   if data == nil then
     -- if no waypoints file, then make the first state the empty state.

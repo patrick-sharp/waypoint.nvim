@@ -1,15 +1,17 @@
 local M = {}
 
-local config = require("waypoint.config")
-local crud = require("waypoint.waypoint_crud")
-local constants = require("waypoint.constants")
-local state = require("waypoint.state")
-local u = require("waypoint.util")
-local uw = require("waypoint.util_waypoint")
-local highlight = require("waypoint.highlight")
-local message = require("waypoint.message")
-local file = require("waypoint.file")
-local undo = require("waypoint.undo")
+local config = require"waypoint.config"
+local crud = require"waypoint.waypoint_crud"
+local constants = require"waypoint.constants"
+local draw_cache = require"waypoint.draw_cache"
+local help_window = require"waypoint.help_window"
+local state = require"waypoint.state"
+local u = require"waypoint.util"
+local uw = require"waypoint.util_waypoint"
+local highlight = require"waypoint.highlight"
+local message = require"waypoint.message"
+local file = require"waypoint.file"
+local undo = require"waypoint.undo"
 
 -- these are some pieces of window state that don't belong in the main state
 -- table because they shouldn't be persisted to a file
@@ -44,16 +46,6 @@ local vis_v_wpi = nil
 local vis_v_col = nil
 ---@type integer?
 local vis_v_offset = nil
-
----@type waypoint.WaypointContext[]
-local prev_waypoint_contexts = {}
----@type integer[]
-local prev_col_widths = {}
----@type integer[]
-local prev_waypoint_window_lines = {}
--- zero-indexed. I should refactor this, but I haven't gotten around to it.
----@type integer
-local prev_cursor_line = 0
 
 ---@type string?
 local last_visual_mode = nil
@@ -286,6 +278,10 @@ local function draw_waypoint_window(action, reuse)
     return
   end
 
+  if not reuse then
+    draw_cache.invalidate_cache()
+  end
+
   -- set this to false at the beginning.
   -- I do this because if the draw fails, then the autocommands usually do too,
   -- which creates a terrible experience where doing anything prints a nasty
@@ -346,48 +342,44 @@ local function draw_waypoint_window(action, reuse)
     state.vis_wpi = wpi_from_drawn_i[cursor_vis_i]
   end
 
-  local lines_per_waypoint = uw.lines_per_waypoint()
-  if cursor_i then
-    cursor_line = (cursor_i - 1) * lines_per_waypoint + state.before_context + state.context
-  end
-
   local winheight = vim.fn.winheight(0)
-  local view = vim.fn.winsaveview()
-  -- keep in mind that this is view BEFORE we change the content of the waypoint
-  -- buffer. Here, we are calculating what the topline and bottomline will be
-  -- at the end of the draw call, which allows us to figure out which waypoints
-  -- are currently on screen.
-  local view_topline = view.topline
-  local view_bottomline = view_topline + winheight - 1
+  local top_view_threshold = nil
+  local bottom_view_threshold = nil
 
-  if action == M.WINDOW_ACTIONS.context then
-    -- in this case, we'll center the view.
-    -- Here, I calculate where the centered view will be.
-    -- This is definitely a bit of a hack.
-    view_topline = u.clamp(cursor_line - math.floor(winheight / 2), 1)
-    view_bottomline = view_topline + winheight - 1
-  elseif cursor_line then
-    if cursor_line > view_bottomline then
-      view_bottomline = cursor_line
-      view_topline = cursor_line - (winheight - 1)
-    elseif cursor_line < view_topline then
-      view_topline = cursor_line
-      view_bottomline = view_topline + winheight - 1
-    end
+  if cursor_i then
+    local lines_per_waypoint = uw.lines_per_waypoint()
+    cursor_line = (cursor_i - 1) * (lines_per_waypoint + 1) + state.before_context + state.context
+
+    -- one-indexed
+    local cursor_linenr = cursor_line + 1
+
+    top_view_threshold = cursor_linenr - (winheight - 1)
+    bottom_view_threshold = cursor_linenr + (winheight - 1)
   end
+
+  ---@type waypoint.WaypointContext[]
+  local waypoint_contexts = {}
 
   for i, waypoint in ipairs(drawn) do
     local waypoint_topline = #table_rows + 1
     local waypoint_bottomline = #table_rows + num_lines_before + 1 + num_lines_after
-    local is_in_view = view_topline <= waypoint_bottomline and waypoint_topline <= view_bottomline
+    local is_in_view = top_view_threshold <= waypoint_bottomline or waypoint_topline <= bottom_view_threshold
 
     ---@type waypoint.WaypointContext
-    local waypoint_file_text = u.track("context", function() return uw.get_waypoint_context(
-      waypoint,
-      num_lines_before,
-      num_lines_after,
-      is_in_view
-    ) end)
+    local waypoint_context
+
+    if reuse == "lines" and draw_cache.prev_waypoint_contexts then
+      waypoint_context = draw_cache.prev_waypoint_contexts[i]
+    else
+      waypoint_context = u.track("context", function() return uw.get_waypoint_context(
+        waypoint,
+        num_lines_before,
+        num_lines_after,
+        is_in_view
+      ) end)
+      waypoint_contexts[#waypoint_contexts+1] = waypoint_context
+    end
+
     -- TODO
     -- local waypoint_file_text = uw.get_waypoint_context(
     --   waypoint,
@@ -395,28 +387,30 @@ local function draw_waypoint_window(action, reuse)
     --   num_lines_after,
     --   is_in_view
     -- )
-    local extmark_lines = waypoint_file_text.lines
-    local extmark_line = waypoint_file_text.waypoint_linenr -- zero-indexed
-    local context_start_linenr = waypoint_file_text.context_start_linenr -- zero-indexed
-    local extmark_hlranges = waypoint_file_text.highlight_ranges
-    local file_start_idx = waypoint_file_text.file_start_idx
-    local file_end_idx = waypoint_file_text.file_end_idx
-    assert(extmark_lines)
+    local file_lines = waypoint_context.lines
+    local waypoint_linenr = waypoint_context.waypoint_linenr -- zero-indexed
+    local context_start_linenr = waypoint_context.context_start_linenr -- zero-indexed
+    -- local waypoint_hlranges = waypoint_context.highlight_ranges
+    local waypoint_hlranges = uw.get_waypoint_highlights(
+      waypoint, waypoint_context, num_lines_before, num_lines_after,
+      is_in_view, i, reuse == "lines"
+    )
+    local file_start_idx = waypoint_context.file_start_idx
+    local file_end_idx = waypoint_context.file_end_idx
 
     if i == cursor_i then
       ctx_start = #table_rows
       cursor_waypoint_topline = #table_rows + 1
-      cursor_waypoint_bottomline = #table_rows + #extmark_lines
-      cursor_line = #table_rows + extmark_line
+      cursor_waypoint_bottomline = #table_rows + #file_lines
+      cursor_line = #table_rows + waypoint_linenr
     end
     if i == cursor_vis_i then
       vis_ctx_start = #table_rows
     end
 
-    for j, line_text in ipairs(extmark_lines) do
+    for j, line_text in ipairs(file_lines) do
       local line_hlranges = {}
       ---@type waypoint.HighlightRange[]
-      local line_extmark_hlranges = extmark_hlranges[j]
       table.insert(indents, waypoint.indent * config.indent_width)
       table.insert(line_to_waypoint, wpi_from_drawn_i[i])
 
@@ -425,7 +419,7 @@ local function draw_waypoint_window(action, reuse)
       local row = {}
 
       -- waypoint number
-      if j == extmark_line + 1 then
+      if j == waypoint_linenr + 1 then
         -- if this is line the waypoint is on
         if config.enable_relative_waypoint_numbers then
           if i == cursor_i then
@@ -445,7 +439,7 @@ local function draw_waypoint_window(action, reuse)
 
       -- file path
       if state.show_path then
-        if j == extmark_line + 1 then
+        if j == waypoint_linenr + 1 then
           -- if this is line the waypoint is on
           if state.show_full_path then
             -- if we're showing the full path
@@ -467,8 +461,8 @@ local function draw_waypoint_window(action, reuse)
       -- line number
       if state.show_line_num then
         if waypoint.annotation then
-          if j == extmark_line + 1 then
-            table.insert(row, tostring(extmark_line + 1))
+          if j == waypoint_linenr + 1 then
+            table.insert(row, tostring(waypoint_linenr + 1))
             table.insert(line_hlranges, constants.hl_linenr)
           else
             table.insert(row, "")
@@ -487,7 +481,7 @@ local function draw_waypoint_window(action, reuse)
       -- file text
       if state.show_waypoint_text then
         table.insert(row, line_text)
-        table.insert(line_hlranges, line_extmark_hlranges)
+        table.insert(line_hlranges, waypoint_hlranges[j])
       end
 
       table.insert(table_rows, row)
@@ -531,29 +525,51 @@ local function draw_waypoint_window(action, reuse)
 
   local win_width = M.get_floating_window_width()
 
-  -- TODO
-  -- local waypoint_window_lines = uw.align_waypoint_table(
-  --   rows, table_cell_types, hlranges,
-  --   {
-  --     column_separator = constants.table_separator,
-  --     win_width = win_width,
-  --     indents = indents,
-  --   })
-
-  local waypoint_window_lines = u.track("align_waypoint_table", function() return uw.align_waypoint_table(
-    table_rows, table_cell_types, hlranges,
-    {
-      column_separator = constants.table_separator,
-      win_width = win_width,
-      indents = indents,
-    })
-  end)
-
-  longest_line_len = 0
-  for i, line in pairs(waypoint_window_lines) do
-    waypoint_window_lines[i] = string.rep(" ", indents[i]) .. line
-    longest_line_len = math.max(longest_line_len, vim.fn.strchars(waypoint_window_lines[i]))
+  local waypoint_window_lines, widths
+  if reuse == "lines" and draw_cache.prev_waypoint_window_lines then
+    waypoint_window_lines, widths = draw_cache.prev_waypoint_window_lines, draw_cache.prev_widths
+    uw.align_waypoint_highlights(
+      table_rows, table_cell_types, hlranges,
+      {
+        column_separator = constants.table_separator,
+        win_width = win_width,
+        indents = indents,
+        width_override=widths,
+      }
+    )
+  else
+    ---@type integer[]?
+    local width_override = nil
+    if (reuse == "widths" or reuse == "lines") and draw_cache.prev_widths then
+      width_override = draw_cache.prev_widths
+    end
+      -- TODO
+      -- waypoint_window_lines, widths = uw.align_waypoint_table(
+      -- table_rows, table_cell_types, hlranges,
+      -- {
+      --   column_separator = constants.table_separator,
+      --   win_width = win_width,
+      --   indents = indents,
+      --   width_override=width_override,
+      -- })
+    u.track("align_waypoint_table", function()
+      waypoint_window_lines, widths = uw.align_waypoint_table(
+      table_rows, table_cell_types, hlranges,
+      {
+        column_separator = constants.table_separator,
+        win_width = win_width,
+        indents = indents,
+        width_override=width_override,
+      })
+    end)
+    longest_line_len = 0
+    for i, line in pairs(waypoint_window_lines) do
+      waypoint_window_lines[i] = string.rep(" ", indents[i]) .. line
+      longest_line_len = math.max(longest_line_len, vim.fn.strchars(waypoint_window_lines[i]))
+    end
   end
+
+  assert(waypoint_window_lines)
 
   if action == M.WINDOW_ACTIONS.exit_visual_mode then
     ignore_next_modechanged = true
@@ -575,8 +591,10 @@ local function draw_waypoint_window(action, reuse)
     vis_cursor_offset = v_pos[4]
   end
 
-  -- Set text in the buffer
-  vim.api.nvim_buf_set_lines(wp_bufnr, 0, -1, true, waypoint_window_lines)
+  if reuse ~= "lines" then
+    -- Set text in the buffer
+    vim.api.nvim_buf_set_lines(wp_bufnr, 0, -1, true, waypoint_window_lines)
+  end
 
   -- highlight the text in the buffer
   for linenr,line_hlranges in pairs(hlranges) do
@@ -714,7 +732,7 @@ local function draw_waypoint_window(action, reuse)
 
     -- if need be, scroll up/down to make the whole waypoint context visible.
     -- have to re-get the view because it could change after setting the lines in the waypoint buffer
-    view = vim.fn.winsaveview()
+    local view = vim.fn.winsaveview()
     if waypoint_context_lines >= winheight then
       -- vim.api.nvim_command("normal! zz")
       -- since we limit context size depending on window height, this should only happen when the context fills up the whole window
@@ -761,7 +779,12 @@ local function draw_waypoint_window(action, reuse)
     ignore_next_cursormoved = true
   end
 
-  prev_cursor_line = cursor_line
+  draw_cache.prev_widths = widths
+  -- if we reuse lines, we don't touch the variable, so don't set this
+  if reuse ~= "lines" then
+    draw_cache.prev_waypoint_contexts = waypoint_contexts
+  end
+  draw_cache.prev_waypoint_window_lines = waypoint_window_lines
   most_recent_draw_succeeded = true
 end
 
@@ -857,243 +880,9 @@ local function set_waypoint_keybinds()
   bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "reselect_visual",         M.reselect_visual)
 end
 
-M.global_keybindings_description = {
-  {"append_waypoint"          ,  "Create a waypoint on the current line, and add it to end of the waypoint list"}                      ,
-  {"insert_waypoint"          ,  "Create a waypoint on the current line, and add it immediately after the current waypoint"}           ,
-  {"append_annotated_waypoint",  "Create an annotated waypoint on the current line, and add it to end of the waypoint list"}           ,
-  {"insert_annotated_waypoint",  "Create an annotated waypoint on the current line, and add it immediately after the current waypoint"},
-  {"delete_waypoint"          ,  "Delete the waypoint on the current line"}                                                            ,
-  {"open_waypoint_window"     ,  "Show the waypoint window"}                                                                           ,
-}
-
-M.waypoint_window_keybindings_description = {
-  {"jump_to_waypoint"       , "Jump to the current waypoint's location"}                     ,
-  {"delete_waypoint"        , "Delete the current waypoint from the waypoint list"}          ,
-  {"move_waypoint_down"     , "Move the current waypoint before the previous waypoint"}      ,
-  {"move_waypoint_up"       , "Move the current waypoint after the next waypoint"}           ,
-  {"move_waypoint_to_top"   , "Move the current waypoint to the top of the waypoint list"}   ,
-  {"move_waypoint_to_bottom", "Move the current waypoint to the bottom of the waypoint list"},
-  {"exit_waypoint_window"   , "Exit the waypoint window"}                                    ,
-  {"increase_context"       , "Increase the number of lines shown around each waypoint"}     ,
-  {"decrease_context"       , "Decrease the number of lines shown around each waypoint"}     ,
-  {"increase_before_context", "Increase the number of lines shown before each waypoint"}     ,
-  {"decrease_before_context", "Decrease the number of lines shown before each waypoint"}     ,
-  {"increase_after_context" , "Increase the number of lines shown after each waypoint"}      ,
-  {"decrease_after_context" , "Decrease the number of lines shown after each waypoint"}      ,
-  {"reset_context"          , "Show no lines around each waypoint"}                          ,
-  {"toggle_path"            , "Toggle whether the file path appears"}                        ,
-  {"toggle_full_path"       , "Toggle whether the full file path appears"}                   ,
-  {"toggle_line_num"        , "Toggle whether the line number appears"}                      ,
-  {"toggle_file_text"       , "Toggle whether the file text appears"}                        ,
-  {"toggle_context"         , "Toggle whether any lines are shown around each waypoint"}     ,
-  {"toggle_sort"            , "Toggle whether waypoints are sorted by file and line"}        ,
-  {"show_help"              , "Show this help window"}                                       ,
-  {"set_quickfix_list"      , "Set the quickfix list to locations of all waypoints"}         ,
-  {"indent"                 , "Increase the indentation of the current waypoint"}            ,
-  {"unindent"               , "Decrease the indentation of the current waypoint"}            ,
-  {"reset_waypoint_indent"  , "Set the current waypoint's indentation to zero"}              ,
-  {"reset_all_indent"       , "Set the indentation of all waypoints to zero"}                ,
-  {"reselect_visual"        , "Re-select the previously selected range of waypoints"}        ,
-  {"next_waypoint"          , "Move to the next waypoint in the waypoint window"}            ,
-  {"prev_waypoint"          , "Move to the previous waypoint in the waypoint window"}        ,
-  {"first_waypoint"         , "Move to the first waypoint in the waypoint window"}           ,
-  {"last_waypoint"          , "Move to the last waypoint in the waypoint window"}            ,
-  {"move_waypoints_to_file" , "Move all waypoints in one file to another file"}              ,
-  {"undo"                   , "Undo the last change to the waypoints"}                       ,
-  {"redo"                   , "Redo the last undone change to the waypoints"}                ,
-}
-
-M.help_keybindings_description = {
-  {"exit_help", "Exit help and return to the waypoint window"},
-}
-
-local kb_separator = " or "
-
----@param lines string[]
----@param highlights waypoint.HighlightRange[][][]
----@param keybindings_group table
----@param keybindings_description table
----@param keybindings_group_title string
----@param keybindings_group_name string
----@param width_override (integer?)[]?
-local function insert_lines_for_keybindings(lines, highlights, keybindings_group, keybindings_description, keybindings_group_title, keybindings_group_name, width_override)
-  table.insert(lines, "")
-  table.insert(lines, "")
-  table.insert(lines, keybindings_group_title .. " keybindings")
-  table.insert(lines, "")
-  table.insert(highlights, {})
-  table.insert(highlights, {})
-  table.insert(highlights, {})
-  table.insert(highlights, {})
-
-  local keybindings = {}
-  local keybindings_highlights = {}
-
-  for _, action_and_description in pairs(keybindings_description) do
-    local action = action_and_description[1]
-    local description = action_and_description[2]
-    assert(keybindings_group[action], "No " .. keybindings_group_name.. " keybinding found for " .. action)
-    local kb
-    local kb_hl
-    if type(keybindings_group[action]) == 'string' then
-      kb = { keybindings_group[action], description, }
-      kb_hl = {
-        {{
-          nsid = constants.ns,
-          hl_group = constants.hl_keybinding,
-          col_start = 1,
-          col_end = #keybindings_group[action],
-        }},
-        {},
-      }
-    elseif type(keybindings_group[action]) == 'table' then
-      local kb_col = {}
-      local kb_hl_col = {}
-      local offset = 1
-      for i, kb_ in ipairs(keybindings_group[action]) do
-        table.insert(kb_col, kb_)
-        table.insert(kb_hl_col, {
-          nsid = constants.ns,
-          hl_group = constants.hl_keybinding,
-          col_start = offset,
-          col_end = offset + #kb_ - 1,
-        })
-        offset = offset + #kb_ + #kb_separator
-        if i < #keybindings_group[action] then
-          table.insert(kb_col, kb_separator)
-        end
-      end
-      kb = {table.concat(kb_col), description}
-      kb_hl = {kb_hl_col, {}}
-    else
-      error("Type of " .. keybindings_group_name.. " keybinding for" .. action .. " should be string or table")
-    end
-    table.insert(keybindings, kb)
-    table.insert(keybindings_highlights, kb_hl)
-  end
-  local aligned_keybindings = uw.align_waypoint_table(
-    keybindings,
-    {"string", "string"},
-    keybindings_highlights,
-    {
-      column_separator = "",
-      width_override = width_override,
-    }
-  )
-  for i=1,#keybindings do
-    table.insert(lines, aligned_keybindings[i])
-    local row_highlights = {}
-    for j=1,#keybindings_highlights[i] do
-      for k=1,#keybindings_highlights[i][j] do
-        table.insert(row_highlights, keybindings_highlights[i][j][k])
-      end
-    end
-    table.insert(highlights, row_highlights)
-  end
-end
-
----@param kb_group table
----@return integer
-local function find_max_keybinding_width(kb_group)
-  local kb_width_override = 0
-  for _,v in pairs(kb_group) do
-    local width
-    if type(v) == "string" then
-      width = u.vislen(v)
-    else
-      width = 0
-      for i, kb_ in ipairs(v) do
-        width = width + u.vislen(kb_)
-        if i < #v then
-          width = width + u.vislen(kb_separator)
-        end
-      end
-    end
-    kb_width_override = math.max(kb_width_override, width)
-  end
-  return kb_width_override
-end
-
 local function draw_help()
   set_modifiable(help_bufnr, true)
-  local lines = {}
-  local highlights = {}
-
-  -- update window config, used to update the footer a/b/c indicators and the size of the window
-  local win_opts, bg_win_opts = get_win_opts()
-  vim.api.nvim_win_set_config(winnr, win_opts)
-  vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
-
-  -- info about state
-  local prop_names = {
-    {"show_path", "Show file path:"},
-    {"show_line_num", "Show line number:"},
-    {"show_waypoint_text", "Show waypoint text:"},
-    "",
-    {"show_full_path", "Show full file path:"},
-    {"show_context", "Show context:"},
-    {"sort_by_file_and_line", "Sort by file and line number:"},
-  }
-
-  ---@type string[][]
-  local toggles = {}
-  ---@type waypoint.HighlightRange[][][]
-  local toggle_highlights = {}
-  for _,key_name in ipairs(prop_names) do
-    if key_name == "" then
-      table.insert(toggles, {"", ""})
-      table.insert(toggle_highlights, {{}, {}})
-    else
-      local key = key_name[1]
-      local name = key_name[2]
-      local on_off
-      local hl_group
-      if state[key] then
-        on_off = "ON"
-        hl_group = constants.hl_toggle_on
-      else
-        on_off = "OFF"
-        hl_group = constants.hl_toggle_off
-      end
-      table.insert(toggles, { name, on_off })
-      table.insert(toggle_highlights,
-        {{}, {{
-          nsid = constants.ns,
-          hl_group = hl_group,
-          col_start = 1,
-          col_end = #on_off,
-        }}}
-      )
-    end
-  end
-  local aligned_toggles = uw.align_waypoint_table(toggles, {"string", "string"}, toggle_highlights)
-  table.insert(lines, "Toggles")
-  table.insert(lines, "")
-  table.insert(highlights, {})
-  table.insert(highlights, {})
-  for i=1,#toggles do
-    table.insert(lines, aligned_toggles[i])
-    local row_highlights = {}
-    for j=1,#toggle_highlights[i] do
-      for k=1,#toggle_highlights[i][j] do
-        table.insert(row_highlights, toggle_highlights[i][j][k])
-      end
-    end
-    table.insert(highlights, row_highlights)
-  end
-
-  -- show keybindings
-
-  local kb_width_override = 0
-  kb_width_override = math.max(kb_width_override, find_max_keybinding_width(config.keybindings.global_keybindings))
-  kb_width_override = math.max(kb_width_override, find_max_keybinding_width(config.keybindings.waypoint_window_keybindings))
-  kb_width_override = math.max(kb_width_override, find_max_keybinding_width(config.keybindings.help_keybindings))
-
-  local width_override = {kb_width_override, nil}
-
-  insert_lines_for_keybindings(lines, highlights, config.keybindings.global_keybindings, M.global_keybindings_description, "Global", "global", width_override)
-  insert_lines_for_keybindings(lines, highlights, config.keybindings.waypoint_window_keybindings, M.waypoint_window_keybindings_description, "Waypoint window", "waypoint window", width_override)
-  insert_lines_for_keybindings(lines, highlights, config.keybindings.help_keybindings, M.help_keybindings_description, "Help", "help", width_override)
+  local lines, highlights = help_window.get_help_window_lines()
 
   vim.api.nvim_buf_set_lines(help_bufnr, 0, -1, true, lines)
   -- hlranges is the set of highlight ranges for this line of the help
@@ -1144,25 +933,25 @@ end
 
 function M.move_waypoint_up()
   crud.move_waypoints(-1)
-  draw_waypoint_window(M.WINDOW_ACTIONS.swap)
+  draw_waypoint_window(M.WINDOW_ACTIONS.swap, "widths")
   vim.cmd.normal("m.")
 end
 
 function M.move_waypoint_down()
   crud.move_waypoints(1)
-  draw_waypoint_window(M.WINDOW_ACTIONS.swap)
+  draw_waypoint_window(M.WINDOW_ACTIONS.swap, "widths")
   vim.cmd.normal("m.")
 end
 
 function M.move_waypoint_to_top()
   crud.move_waypoint_to_top()
-  draw_waypoint_window(M.WINDOW_ACTIONS.swap)
+  draw_waypoint_window(M.WINDOW_ACTIONS.swap, "widths")
   vim.cmd.normal("m.")
 end
 
 function M.move_waypoint_to_bottom()
   crud.move_waypoint_to_bottom()
-  draw_waypoint_window(M.WINDOW_ACTIONS.swap)
+  draw_waypoint_window(M.WINDOW_ACTIONS.swap, "widths")
   vim.cmd.normal("m.")
 end
 
@@ -1194,14 +983,14 @@ function M.reselect_visual()
     ignore_next_modechanged = true
     vim.cmd.normal(last_visual_mode)
 
-    draw_waypoint_window(M.WINDOW_ACTIONS.reselect_visual)
+    draw_waypoint_window(M.WINDOW_ACTIONS.reselect_visual, "lines")
   else
     state.vis_wpi = state.wpi
 
     ignore_next_modechanged = true
     vim.cmd.normal("v")
 
-    draw_waypoint_window()
+    draw_waypoint_window(nil, "lines")
   end
 end
 
@@ -1236,7 +1025,7 @@ function M.next_waypoint()
       end
     end
     if wp_bufnr then
-      draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
+      draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint, "lines")
     end
   end
 end
@@ -1272,7 +1061,7 @@ function M.prev_waypoint()
       end
     end
     if wp_bufnr then
-      draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
+      draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint, "lines")
     end
   end
 end
@@ -1464,7 +1253,7 @@ function M.toggle_sort()
   if help_bufnr then
     draw_help()
   else
-    draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
+    draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint, "widths")
   end
 end
 
@@ -1482,12 +1271,12 @@ end
 
 function M.move_to_first_waypoint()
   _, _, state.wpi, _ = uw.get_drawn_wpi()
-  draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
+  draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint, "lines")
 end
 
 function M.move_to_last_waypoint()
   _, _, _, state.wpi = uw.get_drawn_wpi()
-  draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint)
+  draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint, "lines")
 end
 
 ---@param source_file_path string
@@ -1518,7 +1307,7 @@ function M.move_waypoints_to_file(source_file_path, dest_file_path, allow_same_f
     end
   end
   if #wpis_in_file == 0 then
-    message.notify(message.no_waypoints_in_file(source_file_path), vim.log.levels.ERROR)
+    -- message.notify(message.no_waypoints_in_file(source_file_path), vim.log.levels.ERROR)
     return false
   end
 
@@ -1619,7 +1408,7 @@ function M.set_waypoint_for_cursor(_, override_ignore)
     end
   end
   state.wpi = cursor_wpi
-  draw_waypoint_window()
+  draw_waypoint_window(nil, "lines")
 end
 
 function M.resize(_)
@@ -1710,7 +1499,7 @@ function M.on_mode_change(arg, override_arg)
   elseif not old_is_visual and new_is_visual then
     state.vis_wpi = state.wpi
   end
-  draw_waypoint_window()
+  draw_waypoint_window(nil, "lines")
 end
 
 

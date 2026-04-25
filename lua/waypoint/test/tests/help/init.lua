@@ -3,6 +3,7 @@ local describe = test_list.describe
 
 local global_keybindings = require("waypoint.global_keybindings")
 local floating_window = require("waypoint.floating_window")
+local help_window = require("waypoint.help_window")
 local config = require("waypoint.config")
 local tu = require("waypoint.test.util")
 local u = require("waypoint.util")
@@ -40,20 +41,20 @@ describe('Help', function()
 
   -- assert a description exists for every keybinding
   for k,_ in pairs(config.keybindings.global_keybindings) do
-    assert(-1 ~= find_pair(floating_window.global_keybindings_description, k), k .. "has no description")
+    assert(-1 ~= find_pair(help_window.global_keybindings_description, k), k .. "has no description")
   end
   for k,_ in pairs(config.keybindings.waypoint_window_keybindings) do
-    assert(-1 ~= find_pair(floating_window.waypoint_window_keybindings_description, k), k .. "has no description")
+    assert(-1 ~= find_pair(help_window.waypoint_window_keybindings_description, k), k .. "has no description")
   end
   for k,_ in pairs(config.keybindings.help_keybindings) do
-    assert(-1 ~= find_pair(floating_window.help_keybindings_description, k), k .. "has no description")
+    assert(-1 ~= find_pair(help_window.help_keybindings_description, k), k .. "has no description")
   end
 
   local global_keybindings_len   = u.len(config.keybindings.global_keybindings)
   local waypoint_keybindings_len = u.len(config.keybindings.waypoint_window_keybindings)
   local help_keybindings_len     = u.len(config.keybindings.help_keybindings)
 
-  tu.assert_eq(global_keybindings_len,   #floating_window.global_keybindings_description)
-  tu.assert_eq(waypoint_keybindings_len, #floating_window.waypoint_window_keybindings_description)
-  tu.assert_eq(help_keybindings_len,     #floating_window.help_keybindings_description)
+  tu.assert_eq(global_keybindings_len,   #help_window.global_keybindings_description)
+  tu.assert_eq(waypoint_keybindings_len, #help_window.waypoint_window_keybindings_description)
+  tu.assert_eq(help_keybindings_len,     #help_window.help_keybindings_description)
 end)

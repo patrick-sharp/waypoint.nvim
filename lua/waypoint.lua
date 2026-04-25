@@ -3,6 +3,7 @@
 
 local M = {}
 
+local draw_cache = require("waypoint.draw_cache")
 local floating_window = require("waypoint.floating_window")
 local crud = require("waypoint.waypoint_crud")
 local file = require("waypoint.file")
@@ -89,6 +90,7 @@ function M.setup(opts)
       floating_window.clear_state()
       floating_window.clear_extmarks()
       file.load_wrapper()
+      draw_cache.invalidate_cache()
     end
   })
   vim.api.nvim_create_autocmd("BufReadPost", {

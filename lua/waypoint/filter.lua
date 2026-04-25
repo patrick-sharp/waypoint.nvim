@@ -6,8 +6,8 @@
 
 local M = {}
 
+local draw_cache = require("waypoint.draw_cache")
 local state = require("waypoint.state")
-local u = require("waypoint.util")
 local uw = require("waypoint.util_waypoint")
 
 -- before the filter, we save the file contents as a string so we can diff them with the new file contents
@@ -54,6 +54,7 @@ end
 -- This is a callback which will fix their positions after a filter.
 function M.fix_waypoint_positions()
   assert(pre_filter_buf_lines)
+  draw_cache.invalidate_cache()
 
   local post_filter_buf_lines = get_current_buffer_lines()
 

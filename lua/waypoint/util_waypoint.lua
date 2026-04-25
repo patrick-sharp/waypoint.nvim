@@ -2,6 +2,7 @@ local M = {}
 
 local config = require("waypoint.config")
 local constants = require("waypoint.constants")
+local draw_cache = require("waypoint.draw_cache")
 local highlight_treesitter = require("waypoint.highlight_treesitter")
 local highlight_vanilla = require("waypoint.highlight_vanilla")
 local message = require("waypoint.message")
@@ -92,10 +93,11 @@ end
 ---@class waypoint.WaypointContext
 ---@field extmark              waypoint.Extmark
 ---@field lines                string[] the lines of text from the file the waypoint is in. Includes the line the waypoint is on and the lines in the context around the waypoint.
+---@field unpadded_lines       string[] the lines of text before empty lines are added to the front and back to pad for missing lines before/after the file
 ---@field waypoint_linenr      integer the zero-indexed line number the waypoint is on within the file.
 ---@field context_start_linenr integer the zero-indexed line number within the file of the first line of the context
 ---@field context_end_linenr   integer the zero-indexed line number within the file of the last line of the context (meaning it's an inclusive bound)
----@field highlight_ranges     waypoint.HighlightRange[][] the syntax highlights for each line in lines. This table will have the same number of elements as lines.
+-----@field highlight_ranges     waypoint.HighlightRange[][] the syntax highlights for each line in lines. This table will have the same number of elements as lines.
 ---@field file_start_idx       integer index within lines where the start of the file is, or 1 if the file starts before the context
 ---@field file_end_idx         integer index within lines where the end of the file is, or #lines + 1 if the file ends after the context
 
@@ -145,12 +147,13 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after, is_
     return {
       extmark = nil,
       lines = lines,
+      unpadded_lines = lines,
       waypoint_linenr = num_lines_before,
       context_start_linenr = waypoint.linenr,
       context_end_linenr = waypoint.linenr,
       file_start_idx = num_lines_before + 1,
       file_end_idx = num_lines_before + 2,
-      highlight_ranges = hlranges,
+      -- highlight_ranges = hlranges,
     }
   end
 
@@ -183,109 +186,154 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after, is_
     lines = vim.api.nvim_buf_get_lines(bufnr, start_linenr - 1, end_linenr - 1, false)
   end
 
-  -- figure out how each line is highlighted
-  ---@type waypoint.HighlightRange[][]
-  local hlranges = {}
+  -- -- figure out how each line is highlighted
+  -- ---@type waypoint.HighlightRange[][]
+  -- local hlranges = {}
+  --
+  -- local has_highlights = is_in_view and u.any({
+  --   constants.highlights_on,
+  --   config.enable_highlight,
+  --   waypoint.annotation,
+  -- })
+  --
+  -- if has_highlights then
+  --   local file_uses_treesitter = vim.treesitter.highlighter.active[bufnr]
+  --   if file_uses_treesitter then
+  --     hlranges = highlight_treesitter.get_treesitter_syntax_highlights(bufnr, lines, start_linenr, end_linenr)
+  --   elseif pcall(vim.api.nvim_buf_get_var, bufnr, "current_syntax") then
+  --     hlranges = highlight_vanilla.get_vanilla_syntax_highlights(bufnr, lines, start_linenr, end_linenr)
+  --   else
+  --     for i=1,#lines do hlranges[i] = {} end
+  --   end
+  -- else
+  --   for i=1,#lines do hlranges[i] = {} end
+  -- end
+  --
+  -- assert(#lines == #hlranges, "#lines == " .. #lines ..", #hlranges == " .. #hlranges .. ", but they should be the same" )
 
+  -- if the waypoint context extends to before the start of the file or after
+  -- the end, pad to the length of the context with empty lines
+  local lines_before_start = start_linenr - (extmark_line_nr - num_lines_before)
+  local lines_after_end = (extmark_line_nr + 1 + num_lines_after) - end_linenr
+
+  local padded_lines = {}
+  -- local padded_hlranges = {}
+
+  for _=1, lines_before_start do
+    table.insert(padded_lines, "")
+    -- table.insert(padded_hlranges, {})
+  end
+
+  for i=1,#lines do
+    table.insert(padded_lines, lines[i])
+    -- table.insert(padded_hlranges, hlranges[i])
+  end
+
+  for _=1, lines_after_end do
+    table.insert(padded_lines, "")
+    -- table.insert(padded_hlranges, {})
+  end
+
+  -- assert(#padded_lines == #padded_hlranges)
+
+  return {
+    extmark = extmark,
+    lines = padded_lines,
+    unpadded_lines = lines,
+    waypoint_linenr = marked_line_idx + lines_before_start,
+    context_start_linenr = start_linenr,
+    context_end_linenr = end_linenr,
+    file_start_idx = lines_before_start + 1,
+    file_end_idx = #padded_lines - lines_after_end + 1,
+    -- highlight_ranges = padded_hlranges,
+  }
+end
+
+---@param waypoint waypoint.Waypoint
+---@param context waypoint.WaypointContext
+---@param num_lines_before integer
+---@param num_lines_after integer
+---@param is_in_view boolean
+---@param use_cache boolean
+---@param idx integer index of waypoint within the table of drawn waypoints.
+---@return waypoint.HighlightRange[][]
+function M.get_waypoint_highlights(waypoint, context, num_lines_before, num_lines_after, is_in_view, idx, use_cache)
+  ---@type waypoint.HighlightRange[][]
+  local result
+
+  local did_use_cache = false
+
+  local bufnr, ok = M.bufnr_from_waypoint(waypoint)
   local has_highlights = is_in_view and u.any({
     constants.highlights_on,
     config.enable_highlight,
     waypoint.annotation,
   })
+  if not context.extmark then
+    result = {{}}
+  elseif not has_highlights then
+    result = {}
+    for i=1,#context.lines do result[i] = {} end
+  elseif use_cache and draw_cache.highlight_cache[idx] then
+    -- have to deepcopy because the highlights will get aligned later.
+    -- It would save a little time to cache highlight alignment too, but then I
+    -- would have to invalidate the cache if the widths of columns change.
+    -- Getting highlights is the more expensive operation because we have to
+    -- traverse the treesitter tree, so I prefer to cache that.
+    result = vim.deepcopy(draw_cache.highlight_cache[idx])
+    did_use_cache = true
+  else
+    assert(ok)
 
-  -- if true or has_highlights then
-  if has_highlights then
+    local lines = context.unpadded_lines
     local file_uses_treesitter = vim.treesitter.highlighter.active[bufnr]
+    local start_linenr = context.context_start_linenr
+    local end_linenr = context.context_end_linenr
+    local hlranges
+
+    ---@type waypoint.HighlightRange[][]
     if file_uses_treesitter then
       hlranges = highlight_treesitter.get_treesitter_syntax_highlights(bufnr, lines, start_linenr, end_linenr)
     elseif pcall(vim.api.nvim_buf_get_var, bufnr, "current_syntax") then
       hlranges = highlight_vanilla.get_vanilla_syntax_highlights(bufnr, lines, start_linenr, end_linenr)
     else
-      for i=1,#lines do hlranges[i] = {} end
+      hlranges = {}
+      for i=1,#context.unpadded_lines do hlranges[i] = {} end
     end
-  else
-    for i=1,#lines do hlranges[i] = {} end
+
+    local extmark_line_nr = context.extmark[1]
+
+    -- if the waypoint context extends to before the start of the file or after
+    -- the end, pad to the length of the context with empty lines
+    local lines_before_start = start_linenr - (extmark_line_nr - num_lines_before)
+    local lines_after_end = (extmark_line_nr + 1 + num_lines_after) - end_linenr
+
+    local padded_hlranges = {}
+
+    for _=1, lines_before_start do
+      table.insert(padded_hlranges, {})
+    end
+
+    for i=1,#lines do
+      table.insert(padded_hlranges, hlranges[i])
+    end
+
+    for _=1, lines_after_end do
+      table.insert(padded_hlranges, {})
+    end
+
+    result = padded_hlranges
   end
 
-  assert(#lines == #hlranges, "#lines == " .. #lines ..", #hlranges == " .. #hlranges .. ", but they should be the same" )
-
-  -- if the waypoint context extends to before the start of the file or after
-  -- the end, pad to the length of the context with empty lines
-  local lines_before_start = start_linenr - (extmark_line_nr - num_lines_before)
-  local lines_after_end = (extmark_line_nr + 1 + num_lines_after) - end_linenr
-
-  local lines_ = {}
-  local hlranges_ = {}
-
-  for _=1, lines_before_start do
-    table.insert(lines_, "")
-    table.insert(hlranges_, {})
+  if #context.lines ~= #result then
+    error("#context.lines is " .. #context.lines .. ", #result is " .. #result)
   end
 
-  for i=1,#lines do
-    table.insert(lines_, lines[i])
-    table.insert(hlranges_, hlranges[i])
+  if not did_use_cache then
+    draw_cache.highlight_cache = draw_cache.highlight_cache or {}
+    draw_cache.highlight_cache[idx] = vim.deepcopy(result)
   end
-
-  for _=1, lines_after_end do
-    table.insert(lines_, "")
-    table.insert(hlranges_, {})
-  end
-
-  assert(#lines_ == #hlranges_)
-
-  return {
-    extmark = extmark,
-    lines = lines_,
-    waypoint_linenr = marked_line_idx + lines_before_start,
-    context_start_linenr = start_linenr,
-    context_end_linenr = end_linenr,
-    file_start_idx = lines_before_start + 1,
-    file_end_idx = #lines_ - lines_after_end + 1,
-    highlight_ranges = hlranges_,
-  }
-end
-
----@param bufnr integer
----@param context waypoint.WaypointContext
-function M.get_waypoint_highlights(bufnr, context, num_lines_before, num_lines_after)
-  local lines = context.lines
-  local file_uses_treesitter = vim.treesitter.highlighter.active[bufnr]
-  local start_linenr = context.context_start_linenr
-  local end_linenr = context.context_end_linenr
-  local hlranges
-  if file_uses_treesitter then
-    return highlight_treesitter.get_treesitter_syntax_highlights(bufnr, lines, start_linenr, end_linenr)
-  elseif pcall(vim.api.nvim_buf_get_var, bufnr, "current_syntax") then
-    return highlight_vanilla.get_vanilla_syntax_highlights(bufnr, lines, start_linenr, end_linenr)
-  else
-    for i=1,#context.lines do hlranges[i] = {} end
-  end
-
-  local extmark_line_nr = context.extmark[1]
-
-  -- if the waypoint context extends to before the start of the file or after
-  -- the end, pad to the length of the context with empty lines
-  local lines_before_start = start_linenr - (extmark_line_nr - num_lines_before)
-  local lines_after_end = (extmark_line_nr + 1 + num_lines_after) - end_linenr
-
-  local hlranges_ = {}
-
-  for _=1, lines_before_start do
-    table.insert(hlranges_, {})
-  end
-
-  for i=1,#lines do
-    table.insert(hlranges_, hlranges[i])
-  end
-
-  for _=1, lines_after_end do
-    table.insert(hlranges_, {})
-  end
-
-  assert(#lines == #hlranges_)
-
-  return hlranges
+  return result
 end
 
 ---@class waypoint.AlignTableOpts
@@ -293,135 +341,6 @@ end
 ---@field win_width integer? if this is non-nil, add spaces to the right of each row to pad to this width
 ---@field indents integer[]? if this is non-nil, add indent[i] levels of indentation waypoint[i]
 ---@field width_override (integer?)[]? if this is non-nil, override column i's width with width_override[i] if non-nil
-
----@param t string[][] rows x columns x content
----@param table_cell_types string[] type of each column
----@param highlights (string | waypoint.HighlightRange[])[][] rows x columns x (optionally) multiple highlights for a given column. This parameter is mutated to adjust the highlights of each line so they will work after the alignment.
----@param opts waypoint.AlignTableOpts?
----@return string[]
-function M._align_waypoint_table(t, table_cell_types, highlights, opts)
-  if #t == 0 then
-    return {}
-  end
-
-  assert(#t[1] == #table_cell_types, "#t[1] == " .. #t[1] ..", #table_cell_types == " .. #table_cell_types .. ", but they should be the same")
-  assert(#t == #highlights, "#t == " .. #t ..", #highlights == " .. #highlights .. ", but they should be the same")
-  if opts and opts.indents then
-    assert(#t == #opts.indents, "#t == " .. #t ..", #indents == " .. #opts.indents .. ", but they should be the same")
-  end
-
-  local nrows = #t
-  local ncols = #t[1]
-
-  -- figure out how wide each table column is
-  local widths = {}
-  for i=1,ncols do
-    local max_width = 0
-    local widest_column = nil
-    for j=1,nrows do
-      if t[j] ~= "" then
-        local field = t[j][i]
-        local field_len = u.vislen(field)
-        if (field_len > max_width) then
-          max_width = field_len
-          widest_column = i
-        end
-
-      end
-    end
-    local width_override = u.get_in(opts, {"width_override", i})
-    local width = width_override or max_width
-    if width_override then
-      assert(max_width <= width, "Max width of column " .. tostring(widest_column) .. "(" .. tostring(max_width) ..  ") is greater than width override of " .. tostring(width_override))
-    else
-      assert(max_width <= width, "Max width of column " .. tostring(widest_column) .. "(" .. tostring(max_width) ..  ") is greater than column width of " .. tostring(width))
-    end
-    table.insert(widths, width)
-  end
-
-  -- now that we know how wide each column is, we can figure out how the 
-  -- highlight groups of each line will be adjusted
-  for i,row_highlights in pairs(highlights) do
-    -- how much to add to col_start and col_end
-    -- note that this is a byte offset, not a character offset
-    local offset = 0
-    assert(#t[i] == #row_highlights, "#t[i] == " .. #t[i] ..", #row_highlights == " .. #row_highlights .. " for row " .. tostring(i) .. ", but they should be the same")
-    for j,col_highlights in pairs(row_highlights) do
-      local field = t[i][j]
-      local padded_byte_length = widths[j] - u.vislen(field) + #field
-      if type(col_highlights) == "string" then
-        -- accounting for tabs and unicode characters
-        row_highlights[j] = {{
-          nsid = constants.ns,
-          hl_group = vim.fn.hlID(col_highlights),
-          col_start = offset,
-          col_end = offset + padded_byte_length
-        }}
-      else
-        for _,hlrange in pairs(col_highlights) do
-          hlrange.col_start = hlrange.col_start + offset - 1
-          hlrange.col_end = hlrange.col_end + offset
-        end
-      end
-      if opts and opts.column_separator then
-        -- if applicable, highlight the table separator to the right of this column
-        if j < #row_highlights then
-          local separator_highlight_start = offset + padded_byte_length + 1
-          local separator_highlight_end = offset + padded_byte_length + 1 + #opts.column_separator
-          local col_highlights_ = row_highlights[j]
-          assert(type(col_highlights_) == "table")
-          table.insert(col_highlights_, {
-            nsid = constants.ns,
-            hl_group = 'WinSeparator',
-            col_start = separator_highlight_start,
-            col_end = separator_highlight_end
-          })
-        end
-
-        -- the extra 2 for the spaces on either side of the table separator
-        offset = offset + padded_byte_length + #opts.column_separator + 2
-      else
-        -- the extra 1 is the space between columns
-        offset = offset + padded_byte_length + 1
-      end
-    end
-  end
-
-  local result = {}
-  for i=1,nrows do
-    if t[i] == "" then
-      table.insert(result, "")
-    else
-      local fields = {}
-      assert(#table_cell_types == #t[i])
-      for j=1,ncols do
-        local field = t[i][j]
-        local padded
-        if table_cell_types[j] == "number" then
-          padded = string.rep(" ", widths[j] - u.vislen(field)) .. field
-        else
-          local num_padding_spaces = widths[j] - u.vislen(field)
-          padded = field .. string.rep(" ", num_padding_spaces)
-        end
-        table.insert(fields, padded)
-      end
-      if opts and opts.column_separator then
-        table.insert(result, table.concat(fields, " " .. opts.column_separator .. " "))
-      else
-        table.insert(result, table.concat(fields, " "))
-      end
-
-      if opts and opts.win_width then
-        local row_len = u.vislen(result[#result]) + ((opts and opts.indents and opts.indents[i]) or 0)
-        if row_len < opts.win_width then
-          local num_padding_spaces = opts.win_width - row_len
-          result[#result] = result[#result] .. string.rep(" ", num_padding_spaces)
-        end
-      end
-    end
-  end
-  return result
-end
 
 local concat = table.concat
 local s_rep = string.rep
@@ -443,45 +362,51 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
 
   ---@type integer[]
   local widths = {}
+  local width_override = opts and opts.width_override
+  if width_override then
+    widths = width_override
+  else
+    -- calculate widths
+    for c = 1, ncols do
+      local max_width = 0
 
-  -- calculate widths and cache vislens in a single pass
-  for i = 1, ncols do
-    local max_width = 0
-    local width_override = opts and opts.width_override and opts.width_override[i]
-
-    for j = 1, nrows do
-      local row = t[j]
-      if row ~= "" then
-        vislens[j] = vislens[j] or {}
-        local field = row[i]
-        local v_len = u.vislen(field)
-        vislens[j][i] = v_len
-        if v_len > max_width then max_width = v_len end
+      for r = 1, nrows do
+        local row = t[r]
+        if row ~= "" then
+          vislens[r] = vislens[r] or {}
+          local field = row[c]
+          local v_len = u.vislen(field)
+          vislens[r][c] = v_len
+          if v_len > max_width then max_width = v_len end
+        end
       end
-    end
 
-    local width = width_override or max_width
-    -- only run expensive string formatting for asserts if actually failing
-    if max_width > width then
-       error(string.format("Max width of col %d (%d) exceeds override (%d)", i, max_width, width))
+      widths[c] = max_width
     end
-    widths[i] = width
   end
 
-  -- adjust highlights (using cached vislens)
+  -- adjust highlights
   local col_sep = opts and opts.column_separator
   local col_sep_len = col_sep and #col_sep or 0
 
-  for i = 1, nrows do
-    local row_highlights = highlights[i]
-    local row_data = t[i]
+  for r = 1, nrows do
+    local row_highlights = highlights[r]
+    local row_data = t[r]
     if row_data ~= "" then
+      assert(ncols == #row_highlights)
       local offset = 0
-      for j = 1, ncols do
-        local field = row_data[j]
-        local v_len = vislens[i][j]
-        local padded_byte_length = widths[j] - v_len + #field
-        local col_highlights = row_highlights[j]
+      for c = 1, ncols do
+        local field = row_data[c]
+        vislens[r] = vislens[r] or {}
+        local v_len = vislens[r][c]
+        if not v_len then
+          v_len = u.vislen(field)
+          vislens[r][c] = v_len
+        end
+
+        assert(v_len)
+        local padded_byte_length = widths[c] - v_len + #field
+        local col_highlights = row_highlights[c]
 
         if type(col_highlights) == "string" then
           -- Cache the Highlight ID lookup
@@ -490,7 +415,7 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
             hl_id_cache[hl_group] = vim.fn.hlID(hl_group)
           end
 
-          row_highlights[j] = {{
+          row_highlights[c] = {{
             nsid = constants.ns,
             hl_group = hl_id_cache[hl_group],
             col_start = offset,
@@ -505,9 +430,9 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
         end
 
         if col_sep then
-          if j < ncols then
+          if c < ncols then
             local sep_start = offset + padded_byte_length + 1
-            local row_highlights_j = row_highlights[j]
+            local row_highlights_j = row_highlights[c]
             assert(type(row_highlights_j) ~= "string")
             row_highlights_j[#row_highlights_j+1] = {
               nsid = constants.ns,
@@ -524,7 +449,7 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
     end
   end
 
-  -- final String Assembly
+  -- final string assembly
   local result = {}
   local win_width = opts and opts.win_width
   local indents = opts and opts.indents
@@ -558,6 +483,89 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
   end
 
   return result, widths
+end
+
+
+---@param t string[][] rows x columns x content
+---@param table_cell_types string[] type of each column
+---@param highlights (string | waypoint.HighlightRange[])[][] rows x columns x (optionally) multiple highlights for a given column. This parameter is mutated to adjust the highlights of each line so they will work after the alignment.
+---@param opts waypoint.AlignTableOpts?
+function M.align_waypoint_highlights(t, table_cell_types, highlights, opts)
+  local nrows = #t
+  if nrows == 0 then return {}, {} end
+  local ncols = #table_cell_types
+
+  -- cache for vislen and hlIDs to avoid redundant calculations/bridge calls
+  local vislens = {} -- 2D map: vislens[row][col]
+  local hl_id_cache = {}
+
+  local widths = opts and opts.width_override
+  assert(widths, "This function is not intended to be called without width override")
+
+  ---@cast widths integer[]
+
+  -- adjust highlights
+  local col_sep = opts and opts.column_separator
+  local col_sep_len = col_sep and #col_sep or 0
+
+  for r = 1, nrows do
+    local row_highlights = highlights[r]
+    local row = t[r]
+    if row ~= "" then
+      assert(ncols == #row_highlights)
+      local offset = 0
+      for c = 1, ncols do
+        local field = row[c]
+        vislens[r] = vislens[r] or {}
+        local v_len = vislens[r][c]
+        if not v_len then
+          v_len = u.vislen(field)
+          vislens[r][c] = v_len
+        end
+
+        local padded_byte_length = widths[c] - v_len + #field
+        local col_highlights = row_highlights[c]
+
+        if type(col_highlights) == "string" then
+          -- Cache the Highlight ID lookup
+          local hl_group = col_highlights
+          if not hl_id_cache[hl_group] then
+            hl_id_cache[hl_group] = vim.fn.hlID(hl_group)
+          end
+
+          row_highlights[c] = {{
+            nsid = constants.ns,
+            hl_group = hl_id_cache[hl_group],
+            col_start = offset,
+            col_end = offset + padded_byte_length
+          }}
+        else
+          for k = 1, #col_highlights do
+            local hlrange = col_highlights[k]
+            hlrange.col_start = hlrange.col_start + offset - 1
+            hlrange.col_end = hlrange.col_end + offset
+          end
+        end
+
+        if col_sep then
+          if c < ncols then
+            local sep_start = offset + padded_byte_length + 1
+            local row_highlights_j = row_highlights[c]
+            assert(type(row_highlights_j) ~= "string")
+            row_highlights_j[#row_highlights_j+1] = {
+              nsid = constants.ns,
+              hl_group = win_separator,
+              col_start = sep_start,
+              col_end = sep_start + col_sep_len
+            }
+            offset = offset + padded_byte_length + col_sep_len + 2
+          end
+        else
+          offset = offset + padded_byte_length + 1
+        end
+      end
+    end
+  end
 end
 
 ---@param a waypoint.Waypoint
