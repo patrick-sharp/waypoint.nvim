@@ -230,9 +230,10 @@
 - [ ] speed up regular stress test (not stress syntax)
 - [ ] automatically disable highlights on a file if they took more than 200ms to generate (use highlight_threshold_ms)
 - [ ] make a better experience for the non-telescope "locate waypoints within file" command
-- [ ] remove the u.track calls I made to understand performance
+- [ ] remove the u.track and u.span calls I made to understand performance
 - [ ] fix bug where waypoints in file that doesn't exist are saved (stress syntax + quit + reopen)
 - [ ] fix behavior of ctrl-d and ctrl-u
+- [ ] fix bug where execution of autocmds fails sometimes
 - [ ] write docs
     - [ ] drawn vs not drawn waypoints
     - [ ] undo and file changes
@@ -292,3 +293,22 @@
 - [x] add soft deletes for waypoints
     - [x] handle the case where the extmark gets invalidated (hide the waypoint, but allow it to be brought back if they undo the extmark deletion)
     - [x] when you undo and that causes a soft delete (i.e. waypoint in new state has existing, but invalid extmark), display a message that waypoint is not shown because its extmark was deleted
+
+
+[2026-05-03 14:08:20.721] Print 151:
+"1" 103.63347244263 
+
+[2026-05-03 14:08:20.721] Print 152:
+"2" 3996.7181129456 
+
+[2026-05-03 14:08:20.722] Print 153:
+"3" 4472.0507545471 
+
+[2026-05-03 14:08:20.722] Print 154:
+"4" 7901.5739135742 
+
+[2026-05-03 14:08:20.722] Print 155:
+"5" 25.081275939941 
+
+[2026-05-03 14:08:20.722] Print 156:
+"6" 9.4609756469727 

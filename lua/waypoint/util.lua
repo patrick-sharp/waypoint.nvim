@@ -368,6 +368,7 @@ function M.end_timer()
 end
 
 
+-- debug code used for tracking overall cost of a computation over multiple draws
 M.track_data = {}
 
 function M.track(k, f)
@@ -385,6 +386,7 @@ function M.track(k, f)
   return result
 end
 
+-- debug code used for tracking overall cost of a span over multiple draws
 M.span_data = {}
 
 function M.span_start(k)
@@ -405,6 +407,32 @@ function M.span_end(k)
     error(k .. "not in span data")
   end
   x.total = x.total + x.timer:stop()
+end
+
+function M.log_spans()
+  local spans = {}
+  M.log("<SPANDATA>")
+  for k,v in pairs(u.span_data) do
+    spans[#spans+1] = {k, v}
+  end
+  table.sort(spans, function(a, b) return a[1] < b[1] end)
+  for _,v in ipairs(spans) do
+    M.log(v[1], v[2].total)
+  end
+  M.log("</SPANDATA>")
+end
+
+function M.log_tracked()
+  M.log("<TRACKDATA>")
+  local tracked = {}
+  for k,v in pairs(M.track_data) do
+    tracked[#tracked+1] = {k, v}
+  end
+  table.sort(tracked, function(a, b) return a[1] < b[1] end)
+  for _,v in ipairs(tracked) do
+    M.log(v[1], v[2].total)
+  end
+  M.log("</TRACKDATA>")
 end
 
 return M

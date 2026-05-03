@@ -325,6 +325,7 @@ local function draw_waypoint_window(action, reuse)
   ---Otherwise, apply each highlight in the table.
   local hlranges = {}
 
+  u.span_start("1")
   local num_lines_before, num_lines_after = uw.num_lines_before_after()
 
   local split = u.track("split_by_drawn", function() return uw.split_by_drawn() end)
@@ -357,8 +358,11 @@ local function draw_waypoint_window(action, reuse)
     bottom_view_threshold = cursor_linenr + (winheight - 1)
   end
 
+  u.span_end("1")
   ---@type waypoint.WaypointContext[]
   local waypoint_contexts = {}
+
+  u.span_start("2")
 
   for i, waypoint in ipairs(drawn) do
     local waypoint_topline = #table_rows + 1
@@ -508,6 +512,9 @@ local function draw_waypoint_window(action, reuse)
     end
   end
 
+  u.span_end("2")
+  u.span_start("3")
+
   assert(#table_rows == #indents, "#rows == " .. #table_rows ..", #indents == " .. #indents .. ", but they should be the same" )
   assert(#table_rows == #line_to_waypoint, "#rows == " .. #table_rows ..", #line_to_waypoint == " .. #line_to_waypoint .. ", but they should be the same" )
   assert(#table_rows == #hlranges, "#rows == " .. #table_rows ..", #hlranges == " .. #hlranges .. ", but they should be the same" )
@@ -595,45 +602,53 @@ local function draw_waypoint_window(action, reuse)
     -- Set text in the buffer
     vim.api.nvim_buf_set_lines(wp_bufnr, 0, -1, true, waypoint_window_lines)
   end
+  u.span_end("3")
 
+  u.span_start("4")
   -- highlight the text in the buffer
-  for linenr,line_hlranges in pairs(hlranges) do
-    for _,col_highlights in pairs(line_hlranges) do
-      if type(col_highlights) == "string" then
-        assert(false, "This should not happen, align_waypoint_table should change all column-wide highlights to a HighlightRange")
-      else
-        for i,hlrange in pairs(col_highlights) do
-          vim.api.nvim_buf_set_extmark(wp_bufnr, constants.ns, linenr - 1, hlrange.col_start + indents[linenr], {
-            end_col = hlrange.col_end + indents[linenr], -- 0-based exclusive column upper bound is the same as 1 based inclusive
-            hl_group = hlrange.hl_group,                 -- Highlight group to apply
-            -- need to set priority here because extmarks don't override each
-            -- other. I had a bug where the color of a highlighted range would
-            -- change every n keypresses, where n was something like 10. I have
-            -- no idea why, but the cause seems to be that in treesitter, some
-            -- highlights cover the exact same area but with a different color.
-            -- Treesitter seems to always return the highest priority highlight
-            -- range last, but in neovim it appears that if you draw an extmark,
-            -- then draw an extmark with a different color in the exact same
-            -- range as the other one, it won't necessarily override. to fix 
-            -- this, I set the priority of the extmark to be its position in the
-            -- list. This makes sure that highlights treesitter puts later get
-            -- higher priority.
-            priority=i,
-          })
+  for linenr,line_hlranges in ipairs(hlranges) do
+    -- skip highlights if they are outside our view 
+    if top_view_threshold and top_view_threshold <= linenr and linenr <= bottom_view_threshold then
+      for _,col_highlights in ipairs(line_hlranges) do
+        if type(col_highlights) == "string" then
+          assert(false, "This should not happen, align_waypoint_table should change all column-wide highlights to a HighlightRange")
+        else
+          for i,hlrange in ipairs(col_highlights) do
+            vim.api.nvim_buf_set_extmark(wp_bufnr, constants.ns, linenr - 1, hlrange.col_start + indents[linenr], {
+              end_col = hlrange.col_end + indents[linenr], -- 0-based exclusive column upper bound is the same as 1 based inclusive
+              hl_group = hlrange.hl_group,                 -- Highlight group to apply
+              -- need to set priority here because extmarks don't override each
+              -- other. I had a bug where the color of a highlighted range would
+              -- change every n keypresses, where n was something like 10. I have
+              -- no idea why, but the cause seems to be that in treesitter, some
+              -- highlights cover the exact same area but with a different color.
+              -- Treesitter seems to always return the highest priority highlight
+              -- range last, but in neovim it appears that if you draw an extmark,
+              -- then draw an extmark with a different color in the exact same
+              -- range as the other one, it won't necessarily override. to fix 
+              -- this, I set the priority of the extmark to be its position in the
+              -- list. This makes sure that highlights treesitter puts later get
+              -- higher priority.
+              priority=i,
+            })
 
-          -- commenting this out to use extmarks instead of highlight ranges
-          -- vim.api.nvim_buf_add_highlight(
-          --   bufnr,
-          --   hlrange.nsid,
-          --   hlrange.hl_group,
-          --   linenr - 1,
-          --   hlrange.col_start,
-          --   hlrange.col_end
-          -- )
+            -- commenting this out to use extmarks instead of highlight ranges
+            -- vim.api.nvim_buf_add_highlight(
+            --   bufnr,
+            --   hlrange.nsid,
+            --   hlrange.hl_group,
+            --   linenr - 1,
+            --   hlrange.col_start,
+            --   hlrange.col_end
+            -- )
+          end
         end
       end
     end
   end
+
+  u.span_end("4")
+  u.span_start("5")
 
   local waypoint_context_lines = (state.before_context + state.context + 1 + state.context + state.after_context)
   if (cursor_i) then
@@ -769,6 +784,9 @@ local function draw_waypoint_window(action, reuse)
     end
   end
 
+  u.span_end("5")
+  u.span_start("6")
+
   -- update window config, used to update the footer a/b/c indicators and the size of the window
   local win_opts, bg_win_opts = get_win_opts(split)
   vim.api.nvim_win_set_config(winnr, win_opts)
@@ -786,6 +804,8 @@ local function draw_waypoint_window(action, reuse)
   end
   draw_cache.prev_waypoint_window_lines = waypoint_window_lines
   most_recent_draw_succeeded = true
+
+  u.span_end("6")
 end
 
 ---@type table<integer, table<string, boolean>>

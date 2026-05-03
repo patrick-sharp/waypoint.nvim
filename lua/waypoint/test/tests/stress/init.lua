@@ -41,12 +41,6 @@ describe('Stress', function()
   end
   u.log("append waypoints", timer:stop())
 
-  u.log("<TRACKDATA>")
-  for k,v in pairs(u.track_data) do
-    u.log(k, v.total)
-  end
-  u.log("</TRACKDATA>")
-
   -- local timer = Timer.start()
   timer:reset()
   floating_window.open()
@@ -58,6 +52,9 @@ describe('Stress', function()
   floating_window.open()
   floating_window.close()
   u.log("draw with context 10", timer:stop())
+
+  u.log_tracked()
+  u.log_spans()
 end)
 
 describe('Stress syntax', function()
@@ -172,22 +169,4 @@ describe('Stress syntax', function()
   floating_window.open()
   floating_window.close()
   u.log("subsequent draw with context " .. state.context, timer:stop())
-
-  u.log("<TRACKDATA>")
-  for k,v in pairs(u.track_data) do
-    u.log(k, v.total)
-  end
-  u.log("</TRACKDATA>")
-
-  -- local spans = {}
-  -- u.log("<SPANDATA>")
-  -- for k,v in pairs(u.span_data) do
-  --   spans[#spans+1] = {k, v}
-  -- end
-  -- table.sort(spans, function(a, b) return a[1] < b[1] end)
-  -- for _,v in ipairs(spans) do
-  --   u.log(v[1], v[2].total)
-  -- end
-  -- u.log("</SPANDATA>")
-
 end)
