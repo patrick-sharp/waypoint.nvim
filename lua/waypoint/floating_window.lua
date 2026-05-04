@@ -698,21 +698,26 @@ local function draw_waypoint_window(action, reuse)
 
     if action == M.WINDOW_ACTIONS.context then
       -- move to the current waypoint's line and center the screen
+      ignore_next_cursormoved = true
       u.goto_line(cursor_line + 1)
       vim.api.nvim_command("normal! zz")
     elseif action == M.WINDOW_ACTIONS.exit_visual_mode then
+      ignore_next_cursormoved = true
       u.goto_line(cursor_line + 1)
     elseif action == M.WINDOW_ACTIONS.move_to_waypoint then
+      ignore_next_cursormoved = true
       u.goto_line(cursor_line + 1)
     elseif action == M.WINDOW_ACTIONS.reselect_visual then
       -- do nothing
     elseif action == M.WINDOW_ACTIONS.resize then
+      ignore_next_cursormoved = true
       u.goto_line(cursor_line + 1)
     elseif action == M.WINDOW_ACTIONS.scroll then
       -- do nothing
     elseif action == M.WINDOW_ACTIONS.set_waypoint_for_cursor then
       -- do nothing
     elseif action == M.WINDOW_ACTIONS.swap then
+      ignore_next_cursormoved = true
       u.goto_line(cursor_line + 1)
     end
 
@@ -761,9 +766,6 @@ local function draw_waypoint_window(action, reuse)
   vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
 
   set_modifiable(wp_bufnr, false)
-  if action ~= M.WINDOW_ACTIONS.set_waypoint_for_cursor then
-    ignore_next_cursormoved = true
-  end
 
   draw_cache.prev_widths = widths
   -- if we reuse lines, we don't touch the variable, so don't set this
@@ -1373,7 +1375,6 @@ function M.set_waypoint_for_cursor(_, override_ignore)
       state.should_ignore_autocmds,
     }
   })
-  u.log("IGNORE SET WP", should_ignore)
   if should_ignore then
     ignore_next_cursormoved = false
     return

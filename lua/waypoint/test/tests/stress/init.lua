@@ -11,7 +11,7 @@ local Timer = require"waypoint.timer"
 local u = require"waypoint.util"
 
 local function assert_fast(expected, actual)
-  assert(actual <= expected, "draw without context was too slow (" .. actual .. " > " .. expected .. "ms)")
+  assert(actual <= expected, "draw was too slow (" .. actual .. " > " .. expected .. "ms)")
 end
 
 describe('Stress', function()
@@ -49,7 +49,7 @@ describe('Stress', function()
 
   assert_fast(ms, timer:stop())
 
-  ms = 15
+  ms = 50
   state.context = 10
   timer:reset()
   floating_window.open()

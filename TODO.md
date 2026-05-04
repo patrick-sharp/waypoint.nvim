@@ -230,9 +230,9 @@
 - [x] speed up stress syntax
 - [x] remove the u.track and u.span calls I made to understand performance
 - [x] automatically disable highlights on a file if they took more than 200ms to generate (use highlight_threshold_ms)
+- [x] fix behavior of ctrl-d and ctrl-u
 - [ ] make a better experience for the non-telescope "locate waypoints within file" command
 - [ ] fix bug where waypoints in file that doesn't exist are saved (stress syntax + quit + reopen)
-- [ ] fix behavior of ctrl-d and ctrl-u
 - [ ] fix bug where execution of autocmds fails sometimes
       fails with filechangedpost files are the same
 - [ ] write docs

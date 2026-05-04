@@ -111,7 +111,7 @@ function M.setup(opts)
 
   -- these commands should be run from the root directory of this git repo
   if not constants.is_release then
-    vim.api.nvim_create_user_command('WaypointRunTests', test.run_tests, {})
+    vim.api.nvim_create_user_command('WaypointRunTests', function() test.run_tests(false) end, {})
     vim.api.nvim_create_user_command('WaypointRunTest', test.run_test, {nargs = 1})
     vim.api.nvim_create_user_command('WaypointRunTestsNoStress', function() test.run_tests(true) end, {})
   end
