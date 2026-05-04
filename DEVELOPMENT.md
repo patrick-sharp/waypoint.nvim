@@ -100,7 +100,7 @@ waypoint.nvim repo and run the command
 report of which tests passed and failed, and open that report
 file in neovim.
 
-`WaypointRunTests` runs a single test from the test suite.
+`WaypointRunTest` runs a single test from the test suite.
 
 To use `WaypointRunTest`, open neovim in the root of the
 waypoint.nvim repo and run the command with the name of the

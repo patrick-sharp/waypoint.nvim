@@ -324,7 +324,6 @@ local function draw_waypoint_window(action, reuse)
   ---Otherwise, apply each highlight in the table.
   local hlranges = {}
 
-  u.span_start("1")
   local num_lines_before, num_lines_after = uw.num_lines_before_after()
 
   local split = u.track("split_by_drawn", function() return uw.split_by_drawn() end)
@@ -357,11 +356,8 @@ local function draw_waypoint_window(action, reuse)
     bottom_view_threshold = cursor_linenr + (winheight - 1)
   end
 
-  u.span_end("1")
   ---@type waypoint.WaypointContext[]
   local waypoint_contexts = {}
-
-  u.span_start("2")
 
   for i, waypoint in ipairs(drawn) do
     local waypoint_topline = #table_rows + 1
@@ -383,13 +379,6 @@ local function draw_waypoint_window(action, reuse)
       waypoint_contexts[#waypoint_contexts+1] = waypoint_context
     end
 
-    -- TODO
-    -- local waypoint_file_text = uw.get_waypoint_context(
-    --   waypoint,
-    --   num_lines_before,
-    --   num_lines_after,
-    --   is_in_view
-    -- )
     local file_lines = waypoint_context.lines
     local waypoint_linenr = waypoint_context.waypoint_linenr -- zero-indexed
     local context_start_linenr = waypoint_context.context_start_linenr -- zero-indexed
@@ -410,7 +399,7 @@ local function draw_waypoint_window(action, reuse)
     if i == cursor_vis_i then
       vis_ctx_start = #table_rows
     end
-
+    local longest_number_len = 0
     for j, line_text in ipairs(file_lines) do
       local line_hlranges = {}
       ---@type waypoint.HighlightRange[]
@@ -446,12 +435,13 @@ local function draw_waypoint_window(action, reuse)
           -- if this is line the waypoint is on
           if state.show_full_path then
             -- if we're showing the full path
-            table.insert(row, uw.filepath_from_waypoint(waypoint))
+            local path = uw.drawn_filepath_from_waypoint(waypoint, false)
+            table.insert(row, path)
             table.insert(line_hlranges, constants.hl_directory)
           else
             -- if we're just showing the filename
-            local filename = vim.fn.fnamemodify(uw.filepath_from_waypoint(waypoint), ":t")
-            table.insert(row, filename)
+            local path = uw.drawn_filepath_from_waypoint(waypoint, true)
+            table.insert(row, path)
             table.insert(line_hlranges, constants.hl_directory)
           end
         else
@@ -473,7 +463,23 @@ local function draw_waypoint_window(action, reuse)
           end
         else
           if j >= file_start_idx and j < file_end_idx then
-            table.insert(row, tostring(context_start_linenr + j - file_start_idx))
+            -- this is a ridiculous hack to increase performance.
+            -- the tostring calls take a long time, so this avoids most of them
+            if is_in_view then
+              local linenr_str = tostring(context_start_linenr + j - file_start_idx)
+              if #linenr_str > longest_number_len then
+                longest_number_len = #linenr_str
+              end
+              table.insert(row, linenr_str)
+            else
+              local len = 1 + math.floor(math.log(context_start_linenr + j - file_start_idx, 10))
+              if len > longest_number_len then
+                longest_number_len = len
+                table.insert(row, string.rep(" ", len))
+              else
+                table.insert(row, "")
+              end
+            end
           else
             table.insert(row, "")
           end
@@ -511,14 +517,10 @@ local function draw_waypoint_window(action, reuse)
     end
   end
 
-  u.span_end("2")
-  u.span_start("3")
-
   assert(#table_rows == #indents, "#rows == " .. #table_rows ..", #indents == " .. #indents .. ", but they should be the same" )
   assert(#table_rows == #line_to_waypoint, "#rows == " .. #table_rows ..", #line_to_waypoint == " .. #line_to_waypoint .. ", but they should be the same" )
   assert(#table_rows == #hlranges, "#rows == " .. #table_rows ..", #hlranges == " .. #hlranges .. ", but they should be the same" )
 
-  u.span_start("3.1")
   local table_cell_types = {"number"}
   if state.show_path then
     table.insert(table_cell_types, "string")
@@ -529,78 +531,30 @@ local function draw_waypoint_window(action, reuse)
   if state.show_waypoint_text then
     table.insert(table_cell_types, "string")
   end
-  u.span_end("3.1")
 
   local win_width = M.get_floating_window_width()
 
-  u.span_start("3.2")
-  local waypoint_window_lines, widths
-  if false and reuse == "lines" and draw_cache.prev_waypoint_window_lines then
-    -- u.log("ONE", {
-    --     cursor_linenr = cursor_line + 1,
-    --     top_view_threshold=top_view_threshold,
-    --     bottom_view_threshold=bottom_view_threshold,
-    -- })
-    -- waypoint_window_lines, widths = draw_cache.prev_waypoint_window_lines, draw_cache.prev_widths
-    -- u.span_start("3.hl")
-    -- uw.align_waypoint_highlights(
-    --   table_rows, table_cell_types, hlranges,
-    --   {
-    --     column_separator = constants.table_separator,
-    --     win_width = win_width,
-    --     indents = indents,
-    --     width_override=widths,
-    --     top_view_threshold=top_view_threshold,
-    --     bottom_view_threshold=bottom_view_threshold,
-    --   }
-    -- )
-    -- u.span_end("3.hl")
-  else
-    -- u.log("TWO", {
-    --     cursor_linenr = cursor_line + 1,
-    --     top_view_threshold=top_view_threshold,
-    --     bottom_view_threshold=bottom_view_threshold,
-    --     delta=bottom_view_threshold - top_view_threshold,
-    -- })
-    ---@type integer[]?
-    local width_override = nil
-    if (reuse == "widths" or reuse == "lines") and draw_cache.prev_widths then
-      width_override = draw_cache.prev_widths
-    end
-      -- TODO
-      -- waypoint_window_lines, widths = uw.align_waypoint_table(
-      -- table_rows, table_cell_types, hlranges,
-      -- {
-      --   column_separator = constants.table_separator,
-      --   win_width = win_width,
-      --   indents = indents,
-      --   width_override=width_override,
-      -- })
-    u.track("align_waypoint_table", function()
-      waypoint_window_lines, widths = uw.align_waypoint_table(
-      table_rows, table_cell_types, hlranges,
-      {
-        column_separator = constants.table_separator,
-        win_width = win_width,
-        indents = indents,
-        width_override=width_override,
-        top_view_threshold=top_view_threshold,
-        bottom_view_threshold=bottom_view_threshold,
-        use_line_cache = reuse == "lines",
-      })
-    end)
-    u.span_start("3.2.1")
-    for i, line in pairs(waypoint_window_lines) do
-      local is_in_view = top_view_threshold <= i and i <= bottom_view_threshold
-      if is_in_view then
-        waypoint_window_lines[i] = string.rep(" ", indents[i]) .. line
-      end
-    end
-    u.span_end("3.2.1")
+  local width_override = nil
+  if (reuse == "widths" or reuse == "lines") and draw_cache.prev_widths then
+    width_override = draw_cache.prev_widths
   end
-  u.span_end("3.2")
-
-  u.span_start("3.3")
+  local waypoint_window_lines, widths = uw.align_waypoint_table(
+  table_rows, table_cell_types, hlranges,
+  {
+    column_separator = constants.table_separator,
+    win_width = win_width,
+    indents = indents,
+    width_override=width_override,
+    top_view_threshold=top_view_threshold,
+    bottom_view_threshold=bottom_view_threshold,
+    use_line_cache = reuse == "lines",
+  })
+  for i, line in pairs(waypoint_window_lines) do
+    local is_in_view = top_view_threshold <= i and i <= bottom_view_threshold
+    if is_in_view then
+      waypoint_window_lines[i] = string.rep(" ", indents[i]) .. line
+    end
+  end
   assert(waypoint_window_lines)
 
   if action == M.WINDOW_ACTIONS.exit_visual_mode then
@@ -624,14 +578,7 @@ local function draw_waypoint_window(action, reuse)
   end
 
   vim.api.nvim_buf_set_lines(wp_bufnr, 0, -1, true, waypoint_window_lines)
-  -- if reuse ~= "lines" then
-  --   -- Set text in the buffer
-  --   vim.api.nvim_buf_set_lines(wp_bufnr, 0, -1, true, waypoint_window_lines)
-  -- end
-  u.span_end("3.3")
-  u.span_end("3")
 
-  u.span_start("4")
   -- highlight the text in the buffer
   for linenr,line_hlranges in ipairs(hlranges) do
     -- skip highlights if they are outside our view 
@@ -673,9 +620,6 @@ local function draw_waypoint_window(action, reuse)
       end
     end
   end
-
-  u.span_end("4")
-  u.span_start("5")
 
   local waypoint_context_lines = (state.before_context + state.context + 1 + state.context + state.after_context)
   if (cursor_i) then
@@ -811,9 +755,6 @@ local function draw_waypoint_window(action, reuse)
     end
   end
 
-  u.span_end("5")
-  u.span_start("6")
-
   -- update window config, used to update the footer a/b/c indicators and the size of the window
   local win_opts, bg_win_opts = get_win_opts(split)
   vim.api.nvim_win_set_config(winnr, win_opts)
@@ -831,8 +772,6 @@ local function draw_waypoint_window(action, reuse)
   end
   draw_cache.prev_waypoint_window_lines = waypoint_window_lines
   most_recent_draw_succeeded = true
-
-  u.span_end("6")
 end
 
 ---@type table<integer, table<string, boolean>>

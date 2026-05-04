@@ -46,6 +46,27 @@ function M.filepath_from_waypoint(waypoint)
   return u.path_from_buf(waypoint.bufnr)
 end
 
+-- note that for speed, the path can be in a few different formats
+---@param waypoint waypoint.Waypoint
+---@param use_basename boolean
+---@return string
+function M.drawn_filepath_from_waypoint(waypoint, use_basename)
+  if not waypoint.has_buffer and waypoint.filepath then
+    if use_basename then
+      return vim.fn.fnamemodify(waypoint.filepath, ":t")
+    else
+      return waypoint.filepath
+    end
+  end
+  local path = vim.api.nvim_buf_get_name(waypoint.bufnr)
+  if use_basename then
+    path = vim.fn.fnamemodify(path, ":t")
+  else
+    path = vim.fn.fnamemodify(path, ":.")
+  end
+  return path
+end
+
 ---@param waypoint waypoint.Waypoint
 ---@return integer? the one-indexed line number a waypoint's extmark is on, or nil if it doesn't have one
 function M.linenr_from_waypoint(waypoint)

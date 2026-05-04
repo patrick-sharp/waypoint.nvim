@@ -64,7 +64,7 @@ local function log_test_output()
   local total_millis = 0
   for _,test in ipairs(test_list.tests) do
     test_name_length = math.max(test_name_length, u.vislen(test.name))
-    test_time_length = math.max(test_time_length, math.ceil(math.log(test.millis, 10)))
+    test_time_length = math.max(test_time_length, 1 + math.floor(math.log(test.millis, 10)))
     total_millis = total_millis + test.millis
     if test.pass then
       table.insert(pass, test)
@@ -140,25 +140,28 @@ local function cwd_is_repo_root()
   return result
 end
 
-function M.run_tests()
+---@param exclude_stress boolean?
+function M.run_tests(exclude_stress)
   if not cwd_is_repo_root() then return end
 
   clear_buffers()
   state.should_notify = false
   state.should_ignore_autocmds = true
   for _,test in ipairs(test_list.tests) do
-    floating_window.clear_and_close()
-    state.should_notify = false
-    state.should_ignore_autocmds = true
-    local timer = Timer.start()
-    _, test.err = xpcall(test.fn, debug.traceback)
-    test.millis = timer:stop()
-    test.pass = not test.err
-    floating_window.clear_and_close()
-    state.should_notify = false
-    state.should_ignore_autocmds = true
-    clear_buffers()
-    vim.cmd.normal(vim.api.nvim_replace_termcodes('<C-c>', true, false, true)) -- this resets vim.v.count and vim.v.count1, which can persist between tests otherwise
+    if not exclude_stress or not test.is_stress then
+      floating_window.clear_and_close()
+      state.should_notify = false
+      state.should_ignore_autocmds = true
+      local timer = Timer.start()
+      _, test.err = xpcall(test.fn, debug.traceback)
+      test.millis = timer:stop()
+      test.pass = not test.err
+      floating_window.clear_and_close()
+      state.should_notify = false
+      state.should_ignore_autocmds = true
+      clear_buffers()
+      vim.cmd.normal(vim.api.nvim_replace_termcodes('<C-c>', true, false, true)) -- this resets vim.v.count and vim.v.count1, which can persist between tests otherwise
+    end
   end
   state.should_notify = true
   state.should_ignore_autocmds = false

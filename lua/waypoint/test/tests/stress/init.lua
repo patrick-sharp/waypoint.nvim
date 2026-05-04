@@ -10,6 +10,10 @@ local state = require"waypoint.state"
 local Timer = require"waypoint.timer"
 local u = require"waypoint.util"
 
+local function assert_fast(expected, actual)
+  assert(actual <= expected, "draw without context was too slow (" .. actual .. " > " .. expected .. "ms)")
+end
+
 describe('Stress', function()
   local total_lines = 1000000
   local lines_between_waypoints = 1000
@@ -21,41 +25,37 @@ describe('Stress', function()
 
   state.should_notify = false
 
-  local timer = Timer.start()
   for _=1,total_lines do
     add_line("Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")
   end
-
-  u.log(timer:stop())
 
   local bufnr = vim.api.nvim_create_buf(true, false)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   vim.api.nvim_set_current_buf(bufnr)
 
-  timer:reset()
   local line = 1
   while line <= total_lines do
     u.goto_line(line)
     crud.append_waypoint_wrapper()
     line = line + lines_between_waypoints
   end
-  u.log("append waypoints", timer:stop())
 
-  -- local timer = Timer.start()
-  timer:reset()
+  local ms
+
+  ms = 15
+  local timer = Timer.start()
   floating_window.open()
   floating_window.close()
-  u.log("draw", timer:stop())
 
+  assert_fast(ms, timer:stop())
+
+  ms = 15
   state.context = 10
   timer:reset()
   floating_window.open()
   floating_window.close()
-  u.log("draw with context 10", timer:stop())
-
-  u.log_tracked()
-  u.log_spans()
-end)
+  assert_fast(ms, timer:stop())
+end, true)
 
 describe('Stress syntax', function()
   local total_lines = 50000
@@ -135,38 +135,27 @@ describe('Stress syntax', function()
   -- vim.api.nvim_set_option_value("filetype", "text", { buf = bufnr })
   -- vim.api.nvim_set_option_value("syntax", "text", { buf = bufnr })
 
-  local timer = Timer.start()
 
-  timer:reset()
   local line = 1
   while line <= total_lines do
     u.goto_line(line)
     crud.append_waypoint_wrapper()
     line = line + lines_between_waypoints
   end
-  u.log("append waypoints", timer:stop())
 
-  -- local timer = Timer.start()
-  timer:reset()
+  local ms
+
+  -- getting highlights from treesitter means this can be slow
+  ms = 150
+  local timer = Timer.start()
   floating_window.open()
   floating_window.close()
-  u.log("draw", timer:stop())
+  assert_fast(ms, timer:stop())
 
-  timer:reset()
-  floating_window.open()
-  floating_window.close()
-  u.log("subsequent draw", timer:stop())
-
+  ms = 150
   state.context = 28
   timer:reset()
   floating_window.open()
   floating_window.close()
-  u.log("draw with context " .. state.context, timer:stop())
-
-  u.track_data = {}
-
-  timer:reset()
-  floating_window.open()
-  floating_window.close()
-  u.log("subsequent draw with context " .. state.context, timer:stop())
-end)
+  assert_fast(ms, timer:stop())
+end, true)
