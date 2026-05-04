@@ -97,7 +97,11 @@ function M.get_treesitter_syntax_highlights(bufnr, lines, start_line, end_line)
   ---@type waypoint.TreesitterHighlight[]
   local treesitter_highlights = M.get_nodes_with_highlights(bufnr, start_line - 1, end_line - 1)
   if timer:stop() > constants.highlight_threshold_ms then
-    message.notify("Disabling highlighting for " .. u.path_from_buf(bufnr) .. " because highlighting took too long", vim.log.levels.ERROR)
+    local buffer_name = u.path_from_buf(bufnr)
+    if buffer_name == "" then
+      buffer_name = "buffer " .. bufnr
+    end
+    message.notify("Disabling highlighting for " .. buffer_name .. " because highlighting took too long", vim.log.levels.ERROR)
     hl_disabled_bufs[bufnr] = true
     return hlranges
   end
