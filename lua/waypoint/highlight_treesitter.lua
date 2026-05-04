@@ -36,39 +36,34 @@ function M.get_nodes_with_highlights(bufnr, start_line, end_line)
     local q = buf_highlighter:get_query(tree:lang())
     local query = q:query()
     local iter = query:iter_captures(root, buf_highlighter.bufnr, start_line, end_line)
-    u.track("iter", function()
-      for id, node in iter do
-        u.track("iter_body", function()
-          ---@type string?
-          local hl_group = capture_cache[id]
+    for id, node in iter do
+      ---@type string?
+      local hl_group = capture_cache[id]
 
-          if not capture_cache[id] then
-            local capture = query.captures[id] -- name of the capture in the query, e.g. "number"
-            if capture ~= nil then
-              -- 0-indexed, inclusive lower bound, exclusive upper bound
-              hl_group = '@' .. capture .. '.' .. tree:lang()
-              capture_cache[id] = hl_group
-            end
-          end
-
-          if hl_group then
-            local start_row, start_col, end_row, end_col = node:range()
-            table.insert(results,
-              {
-                range = {
-                  start_row,
-                  start_col,
-                  end_row,
-                  end_col,
-                },
-                hl_name = hl_group,
-                hl_id = vim.api.nvim_get_hl_id_by_name(hl_group)
-              })
-          end
+      if not capture_cache[id] then
+        local capture = query.captures[id] -- name of the capture in the query, e.g. "number"
+        if capture ~= nil then
+          -- 0-indexed, inclusive lower bound, exclusive upper bound
+          hl_group = '@' .. capture .. '.' .. tree:lang()
+          capture_cache[id] = hl_group
         end
-        )
       end
-    end)
+
+      if hl_group then
+        local start_row, start_col, end_row, end_col = node:range()
+        table.insert(results,
+          {
+            range = {
+              start_row,
+              start_col,
+              end_row,
+              end_col,
+            },
+            hl_name = hl_group,
+            hl_id = vim.api.nvim_get_hl_id_by_name(hl_group)
+          })
+      end
+    end
   end)
 
   return results
@@ -83,7 +78,7 @@ function M.get_treesitter_syntax_highlights(bufnr, lines, start_line, end_line)
   assert(#lines == end_line - start_line)
 
   ---@type waypoint.TreesitterHighlight[]
-  local treesitter_highlights = u.track("get_ts_nodes", function() return M.get_nodes_with_highlights(bufnr, start_line - 1, end_line - 1) end)-- this function takes zero-indexed parameters
+  local treesitter_highlights = M.get_nodes_with_highlights(bufnr, start_line - 1, end_line - 1)
   ---@type waypoint.HighlightRange[]
   local hlranges = {}
   for _=1, #lines do

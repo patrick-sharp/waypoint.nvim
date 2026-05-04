@@ -326,7 +326,7 @@ local function draw_waypoint_window(action, reuse)
 
   local num_lines_before, num_lines_after = uw.num_lines_before_after()
 
-  local split = u.track("split_by_drawn", function() return uw.split_by_drawn() end)
+  local split = uw.split_by_drawn()
   local drawn = split.drawn
   local cursor_i = split.cursor_i
   local cursor_vis_i = split.cursor_vis_i
@@ -370,12 +370,12 @@ local function draw_waypoint_window(action, reuse)
     if reuse == "lines" and draw_cache.prev_waypoint_contexts then
       waypoint_context = draw_cache.prev_waypoint_contexts[i]
     else
-      waypoint_context = u.track("context", function() return uw.get_waypoint_context(
+      waypoint_context = uw.get_waypoint_context(
         waypoint,
         num_lines_before,
         num_lines_after,
         is_in_view
-      ) end)
+      )
       waypoint_contexts[#waypoint_contexts+1] = waypoint_context
     end
 
