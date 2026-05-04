@@ -29,7 +29,6 @@ local bg_winnr
 -- if the user does something to move the cursor to another line, we want to set
 -- the new selected waypoint to whatever waypoint the cursor is currently on
 local line_to_waypoint
-local longest_line_len
 
 -- vis_cursor means last position of cursor in visual mode
 -- vis_v means last position of other side of visual selection
@@ -519,6 +518,7 @@ local function draw_waypoint_window(action, reuse)
   assert(#table_rows == #line_to_waypoint, "#rows == " .. #table_rows ..", #line_to_waypoint == " .. #line_to_waypoint .. ", but they should be the same" )
   assert(#table_rows == #hlranges, "#rows == " .. #table_rows ..", #hlranges == " .. #hlranges .. ", but they should be the same" )
 
+  u.span_start("3.1")
   local table_cell_types = {"number"}
   if state.show_path then
     table.insert(table_cell_types, "string")
@@ -529,22 +529,39 @@ local function draw_waypoint_window(action, reuse)
   if state.show_waypoint_text then
     table.insert(table_cell_types, "string")
   end
+  u.span_end("3.1")
 
   local win_width = M.get_floating_window_width()
 
+  u.span_start("3.2")
   local waypoint_window_lines, widths
-  if reuse == "lines" and draw_cache.prev_waypoint_window_lines then
-    waypoint_window_lines, widths = draw_cache.prev_waypoint_window_lines, draw_cache.prev_widths
-    uw.align_waypoint_highlights(
-      table_rows, table_cell_types, hlranges,
-      {
-        column_separator = constants.table_separator,
-        win_width = win_width,
-        indents = indents,
-        width_override=widths,
-      }
-    )
+  if false and reuse == "lines" and draw_cache.prev_waypoint_window_lines then
+    -- u.log("ONE", {
+    --     cursor_linenr = cursor_line + 1,
+    --     top_view_threshold=top_view_threshold,
+    --     bottom_view_threshold=bottom_view_threshold,
+    -- })
+    -- waypoint_window_lines, widths = draw_cache.prev_waypoint_window_lines, draw_cache.prev_widths
+    -- u.span_start("3.hl")
+    -- uw.align_waypoint_highlights(
+    --   table_rows, table_cell_types, hlranges,
+    --   {
+    --     column_separator = constants.table_separator,
+    --     win_width = win_width,
+    --     indents = indents,
+    --     width_override=widths,
+    --     top_view_threshold=top_view_threshold,
+    --     bottom_view_threshold=bottom_view_threshold,
+    --   }
+    -- )
+    -- u.span_end("3.hl")
   else
+    -- u.log("TWO", {
+    --     cursor_linenr = cursor_line + 1,
+    --     top_view_threshold=top_view_threshold,
+    --     bottom_view_threshold=bottom_view_threshold,
+    --     delta=bottom_view_threshold - top_view_threshold,
+    -- })
     ---@type integer[]?
     local width_override = nil
     if (reuse == "widths" or reuse == "lines") and draw_cache.prev_widths then
@@ -567,15 +584,23 @@ local function draw_waypoint_window(action, reuse)
         win_width = win_width,
         indents = indents,
         width_override=width_override,
+        top_view_threshold=top_view_threshold,
+        bottom_view_threshold=bottom_view_threshold,
+        use_line_cache = reuse == "lines",
       })
     end)
-    longest_line_len = 0
+    u.span_start("3.2.1")
     for i, line in pairs(waypoint_window_lines) do
-      waypoint_window_lines[i] = string.rep(" ", indents[i]) .. line
-      longest_line_len = math.max(longest_line_len, vim.fn.strchars(waypoint_window_lines[i]))
+      local is_in_view = top_view_threshold <= i and i <= bottom_view_threshold
+      if is_in_view then
+        waypoint_window_lines[i] = string.rep(" ", indents[i]) .. line
+      end
     end
+    u.span_end("3.2.1")
   end
+  u.span_end("3.2")
 
+  u.span_start("3.3")
   assert(waypoint_window_lines)
 
   if action == M.WINDOW_ACTIONS.exit_visual_mode then
@@ -598,10 +623,12 @@ local function draw_waypoint_window(action, reuse)
     vis_cursor_offset = v_pos[4]
   end
 
-  if reuse ~= "lines" then
-    -- Set text in the buffer
-    vim.api.nvim_buf_set_lines(wp_bufnr, 0, -1, true, waypoint_window_lines)
-  end
+  vim.api.nvim_buf_set_lines(wp_bufnr, 0, -1, true, waypoint_window_lines)
+  -- if reuse ~= "lines" then
+  --   -- Set text in the buffer
+  --   vim.api.nvim_buf_set_lines(wp_bufnr, 0, -1, true, waypoint_window_lines)
+  -- end
+  u.span_end("3.3")
   u.span_end("3")
 
   u.span_start("4")

@@ -234,6 +234,7 @@
 - [ ] fix bug where waypoints in file that doesn't exist are saved (stress syntax + quit + reopen)
 - [ ] fix behavior of ctrl-d and ctrl-u
 - [ ] fix bug where execution of autocmds fails sometimes
+      fails with filechangedpost files are the same
 - [ ] write docs
     - [ ] drawn vs not drawn waypoints
     - [ ] undo and file changes

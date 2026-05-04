@@ -341,11 +341,15 @@ end
 ---@field win_width integer? if this is non-nil, add spaces to the right of each row to pad to this width
 ---@field indents integer[]? if this is non-nil, add indent[i] levels of indentation waypoint[i]
 ---@field width_override (integer?)[]? if this is non-nil, override column i's width with width_override[i] if non-nil
+---@field top_view_threshold integer? 
+---@field bottom_view_threshold integer? 
+---@field use_line_cache boolean?
 
 local concat = table.concat
 local s_rep = string.rep
 local win_separator = vim.fn.hlID('WinSeparator')
 
+-- if you include top_view_threshold and bottom_view_threshold in opts, only align what's in view
 ---@param t string[][] rows x columns x content
 ---@param table_cell_types string[] type of each column
 ---@param highlights (string | waypoint.HighlightRange[])[][] rows x columns x (optionally) multiple highlights for a given column. This parameter is mutated to adjust the highlights of each line so they will work after the alignment.
@@ -360,6 +364,7 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
   local vislens = {} -- 2D map: vislens[row][col]
   local hl_id_cache = {}
 
+  u.span_start("3.get_widths")
   ---@type integer[]
   local widths = {}
   local width_override = opts and opts.width_override
@@ -384,15 +389,21 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
       widths[c] = max_width
     end
   end
+  u.span_end("3.get_widths")
 
+  u.span_start("3.rest")
   -- adjust highlights
   local col_sep = opts and opts.column_separator
   local col_sep_len = col_sep and #col_sep or 0
 
   for r = 1, nrows do
+    local is_in_view = true
+    if opts and opts.top_view_threshold and opts.bottom_view_threshold then
+      is_in_view = opts.top_view_threshold <= r and r <= opts.bottom_view_threshold
+    end
     local row_highlights = highlights[r]
     local row_data = t[r]
-    if row_data ~= "" then
+    if is_in_view and row_data ~= "" then
       assert(ncols == #row_highlights)
       local offset = 0
       for c = 1, ncols do
@@ -448,7 +459,9 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
       end
     end
   end
+  u.span_end("3.rest")
 
+  u.span_start("3.concat")
   -- final string assembly
   local result = {}
   local win_width = opts and opts.win_width
@@ -458,34 +471,51 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
     if t[i] == "" then
       result[#result+1] = ""
     else
-      local fields = {}
-      for j = 1, ncols do
-        local field = t[i][j]
-        local padding = widths[j] - vislens[i][j]
-
-        if table_cell_types[j] == "number" then
-          fields[j] = s_rep(" ", padding) .. field
-        else
-          fields[j] = field .. s_rep(" ", padding)
-        end
+      local is_in_view = true
+      if opts and opts.top_view_threshold and opts.bottom_view_threshold then
+        is_in_view = opts.top_view_threshold <= i and i <= opts.bottom_view_threshold
       end
+      ---@type string
+      local line
+      if is_in_view then
+        local fields = {}
+        for j = 1, ncols do
+          local field = t[i][j]
+          -- local padding = widths[j] - vislens[i][j]
+          local padding = widths[j] - (vislens[i] and vislens[i][j] or 0)
 
-      local line = concat(fields, col_sep and (" " .. col_sep .. " ") or " ")
+          if table_cell_types[j] == "number" then
+            fields[j] = s_rep(" ", padding) .. field
+          else
+            fields[j] = field .. s_rep(" ", padding)
+          end
+        end
 
-      if win_width then
-        local row_len = u.vislen(line) + (indents and indents[i] or 0)
-        if row_len < win_width then
-          line = line .. s_rep(" ", win_width - row_len)
+        line = concat(fields, col_sep and (" " .. col_sep .. " ") or " ")
+
+        if win_width then
+          local row_len = u.vislen(line) + (indents and indents[i] or 0)
+          if row_len < win_width then
+            line = line .. s_rep(" ", win_width - row_len)
+          end
+        end
+      else
+        if opts and opts.use_line_cache and draw_cache.prev_waypoint_window_lines then
+          line = draw_cache.prev_waypoint_window_lines[i]
+        else
+          line = concat(t[i])
         end
       end
       result[#result+1] = line
     end
   end
+  u.span_end("3.concat")
 
   return result, widths
 end
 
 
+-- if you include top_view_threshold and bottom_view_threshold, will only align highlights for lines currently in view
 ---@param t string[][] rows x columns x content
 ---@param table_cell_types string[] type of each column
 ---@param highlights (string | waypoint.HighlightRange[])[][] rows x columns x (optionally) multiple highlights for a given column. This parameter is mutated to adjust the highlights of each line so they will work after the alignment.
@@ -508,10 +538,19 @@ function M.align_waypoint_highlights(t, table_cell_types, highlights, opts)
   local col_sep = opts and opts.column_separator
   local col_sep_len = col_sep and #col_sep or 0
 
+  -- local num_in_view = 0
+
   for r = 1, nrows do
+    local is_in_view = true
+    if opts and opts.top_view_threshold and opts.bottom_view_threshold then
+      is_in_view = opts.top_view_threshold <= r and r <= opts.bottom_view_threshold
+    end
     local row_highlights = highlights[r]
     local row = t[r]
-    if row ~= "" then
+    if is_in_view and row ~= "" then
+    -- if row ~= "" then
+      -- num_in_view = num_in_view + 1
+      u.span_start("3.in_view")
       assert(ncols == #row_highlights)
       local offset = 0
       for c = 1, ncols do
@@ -564,8 +603,10 @@ function M.align_waypoint_highlights(t, table_cell_types, highlights, opts)
           offset = offset + padded_byte_length + 1
         end
       end
+      u.span_end("3.in_view")
     end
   end
+  -- u.log("IN_VIEW", num_in_view)
 end
 
 ---@param a waypoint.Waypoint
