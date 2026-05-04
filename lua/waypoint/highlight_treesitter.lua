@@ -1,6 +1,9 @@
 local M = {}
+
 local highlighter = vim.treesitter.highlighter
 local constants = require("waypoint.constants")
+local message = require("waypoint.message")
+local Timer = require("waypoint.Timer")
 local u = require("waypoint.util")
 
 ---@class waypoint.TreesitterHighlight
@@ -69,6 +72,11 @@ function M.get_nodes_with_highlights(bufnr, start_line, end_line)
   return results
 end
 
+-- if getting highlights takes too long, I want to disable highlighting on the buffer.
+-- since neovim never reuses bufnrs, this is fine to keep around forever
+---@type table<integer, boolean>
+local hl_disabled_bufs = {}
+
 ---@param bufnr      integer
 ---@param lines      string[] the lines of text in the file that we're getting the highlights for
 ---@param start_line integer one-indexed, inclusive
@@ -77,13 +85,23 @@ end
 function M.get_treesitter_syntax_highlights(bufnr, lines, start_line, end_line)
   assert(#lines == end_line - start_line)
 
-  ---@type waypoint.TreesitterHighlight[]
-  local treesitter_highlights = M.get_nodes_with_highlights(bufnr, start_line - 1, end_line - 1)
   ---@type waypoint.HighlightRange[]
   local hlranges = {}
   for _=1, #lines do
     table.insert(hlranges, {})
   end
+
+  if hl_disabled_bufs[bufnr] then return hlranges end
+
+  local timer = Timer.start()
+  ---@type waypoint.TreesitterHighlight[]
+  local treesitter_highlights = M.get_nodes_with_highlights(bufnr, start_line - 1, end_line - 1)
+  if timer:stop() > constants.highlight_threshold_ms then
+    message.notify("Disabling highlighting for " .. u.path_from_buf(bufnr) .. " because highlighting took too long", vim.log.levels.ERROR)
+    hl_disabled_bufs[bufnr] = true
+    return hlranges
+  end
+
   for _,ts_highlight in ipairs(treesitter_highlights) do
     local hl_start_line = ts_highlight.range[1] + 1 -- one-indexed
     local hl_end_line = ts_highlight.range[3] + 1   -- one-indexed

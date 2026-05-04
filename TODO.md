@@ -219,10 +219,9 @@
     - [x] telescope integration
     - [x] deleting waypoints doesn't delete undrawn waypoints
     - [x] have waypoints, delete one, delete text to make extmarks invalid, undo, check num waypoints
-    - [ ] load test
+    - [x] load test
         - 1000 waypoints
-        - all max context
-        - <= 10ms draw time
+        - with large context
 - [x] fix bug with FileChangedShell and relocating with the same file
 - [x] fix bugs where is_in_view is set incorrectly
 - [x] fix bug where sometimes waypoints in view aren't highlighted
@@ -230,7 +229,7 @@
 - [x] speed up regular stress test (not stress syntax)
 - [x] speed up stress syntax
 - [x] remove the u.track and u.span calls I made to understand performance
-- [ ] automatically disable highlights on a file if they took more than 200ms to generate (use highlight_threshold_ms)
+- [x] automatically disable highlights on a file if they took more than 200ms to generate (use highlight_threshold_ms)
 - [ ] make a better experience for the non-telescope "locate waypoints within file" command
 - [ ] fix bug where waypoints in file that doesn't exist are saved (stress syntax + quit + reopen)
 - [ ] fix behavior of ctrl-d and ctrl-u
@@ -246,6 +245,11 @@
     - [ ] highlighting
     - [ ] extmarks
     - [ ] tutorial
+    - [ ] things I'm not happy with in the codebase
+        - [ ] all the hoops I had to jump through since I don't do virtualization of the buffer (so search with / works)
+             - [ ] this makes perf pretty slow for large amounts of waypoints
+        - [ ] zero and one indexed variables, no standard
+        - [ ] tagged union vs megastruct 
 
 ### ADVANCED FEATURES:
 

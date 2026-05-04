@@ -5,7 +5,7 @@ local window_augroup = "waypoint.window"
 ---@field augroup string
 ---@field window_augroup string
 ---@field highlights_on boolean
----@field highlight_threshold_ms integer if calculating highlights takes longer than this, highlights will be disabled for that buffer in subsequent draws
+---@field highlight_threshold_ms integer if calculating highlights for any individual waypoint takes longer than this, highlights will be disabled for that buffer in subsequent draws
 ---@field hl_group string
 ---@field hl_selected string
 ---@field hl_sign string
@@ -38,7 +38,7 @@ local M = {
   error_line_oob =             "Error: line number is out of bounds",
   error_no_matching_waypoint = "Error: could not find a close enough match for this waypoint",
   highlights_on = true,
-  highlight_threshold_ms = 200,
+  highlight_threshold_ms = 50,
   hl_directory =             "waypoint_hl_directory",
   hl_footer_after_context =  "waypoint_hl_footer_a",
   hl_footer_before_context = "waypoint_hl_footer_b",
