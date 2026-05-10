@@ -165,30 +165,7 @@
     - [x] investigate extmark_from_id vs buf_get_extmark (I removed extmark_from_id)
 - [x] double check undo/redo messages for everything
     - [x] in message, show which waypoints are restored to be visible
-- [ ] remove all asserts from the code
-    - [ ] replace them with something that will only panic in debug mode, and just log in release mode
-    - [ ] make this function use error with level 2 (or 3 or whatev) to keep the traceback clean
-- [ ] write documentation
-    - [ ] quickstart workflow
-    - [ ] screenshot tutorial
-- [ ] write alternatives
-    - [ ] vim marks
-        - can't reorder/indent
-        - finite number
-        - can only be per file or global, not per project
-        - can't see context around mark
-        - no syntax highlighting
-        - tons of noise from the automatically populated marks
-    - [ ] bookmarks.nvim
-        - can't reorder/indent
-        - state gets stale easily
-        - can't see context around bookmark
-        - no syntax highlighting
-    - [ ] harpoon
-        - only supports one mark per file
-        - can't reorder/indent
-        - can't see context around mark
-- [ ] write tests
+- [x] write tests
     - [x] don't affect state of deleted waypoints 
     - [x] reselect visual after deleting waypoints
     - [x] bulk delete, undo, redo
@@ -231,6 +208,27 @@
 - [x] remove the u.track and u.span calls I made to understand performance
 - [x] automatically disable highlights on a file if they took more than 200ms to generate (use highlight_threshold_ms)
 - [x] fix behavior of ctrl-d and ctrl-u
+- [x] fix bug with reopening with context (I forget how to trigger this.)
+- [ ] write documentation
+    - [ ] quickstart workflow
+    - [ ] screenshot tutorial
+- [ ] write alternatives
+    - [ ] vim marks
+        - can't reorder/indent
+        - finite number
+        - can only be per file or global, not per project
+        - can't see context around mark
+        - no syntax highlighting
+        - tons of noise from the automatically populated marks
+    - [ ] bookmarks.nvim
+        - can't reorder/indent
+        - state gets stale easily
+        - can't see context around bookmark
+        - no syntax highlighting
+    - [ ] harpoon
+        - only supports one mark per file
+        - can't reorder/indent
+        - can't see context around mark
 - [ ] make a better experience for the non-telescope "locate waypoints within file" command
 - [ ] fix bug where waypoints in file that doesn't exist are saved (stress syntax + quit + reopen)
 - [ ] fix bug where execution of autocmds fails sometimes

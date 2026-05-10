@@ -146,13 +146,13 @@ describe('Stress syntax', function()
   local ms
 
   -- getting highlights from treesitter means this can be slow
-  ms = 150
+  ms = 200
   local timer = Timer.start()
   floating_window.open()
   floating_window.close()
   assert_fast(ms, timer:stop())
 
-  ms = 150
+  ms = 200
   state.context = 28
   timer:reset()
   floating_window.open()

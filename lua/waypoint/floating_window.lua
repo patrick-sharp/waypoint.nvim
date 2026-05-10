@@ -146,6 +146,7 @@ function M.get_current_waypoint()
   else
     waypoints = state.waypoints
   end
+  assert(waypoints)
   return waypoints[state.wpi]
 end
 
@@ -373,8 +374,7 @@ local function draw_waypoint_window(action, reuse)
       waypoint_context = uw.get_waypoint_context(
         waypoint,
         num_lines_before,
-        num_lines_after,
-        is_in_view
+        num_lines_after
       )
       waypoint_contexts[#waypoint_contexts+1] = waypoint_context
     end
@@ -382,7 +382,6 @@ local function draw_waypoint_window(action, reuse)
     local file_lines = waypoint_context.lines
     local waypoint_linenr = waypoint_context.waypoint_linenr -- zero-indexed
     local context_start_linenr = waypoint_context.context_start_linenr -- zero-indexed
-    -- local waypoint_hlranges = waypoint_context.highlight_ranges
     local waypoint_hlranges = uw.get_waypoint_highlights(
       waypoint, waypoint_context, num_lines_before, num_lines_after,
       is_in_view, i, reuse == "lines"
@@ -993,6 +992,7 @@ function M.next_waypoint()
   else
     waypoints = state.waypoints
   end
+  assert(waypoints)
   local count = 0
   local selection_top, selection_bottom, _, bottom = uw.get_drawn_wpi()
   if state.vis_wpi then
@@ -1029,6 +1029,7 @@ function M.prev_waypoint()
   else
     waypoints = state.waypoints
   end
+  assert(waypoints)
   local count = 0
   local selection_top, selection_bottom, top, _ = uw.get_drawn_wpi()
   if state.vis_wpi then
@@ -1224,6 +1225,8 @@ function M.toggle_sort()
     waypoints = state.waypoints
     other_waypoints = state.sorted_waypoints
   end
+  assert(waypoints)
+  assert(other_waypoints)
 
   local curr_waypoint = waypoints[state.wpi]
   local new_wpi = nil
@@ -1309,13 +1312,15 @@ end
 
 ---@param opts vim.api.keyset.create_user_command.command_args
 function M.move_waypoints_to_file_command(opts)
-  local new_file = opts.args
-  local waypoint = M.get_current_waypoint()
-  if waypoint == nil then
-    message.notify("No current waypoint")
+  -- this command does not support files with spaces in their path
+  local files = u.split(opts.args, " ")
+  if #files ~= 2 then
+    message.notify(constants.command_relocate .. " expected 2 arguments but received " .. #files, vim.log.levels.ERROR)
     return
   end
-  M.move_waypoints_to_file(uw.filepath_from_waypoint(waypoint), new_file)
+  local old_file = files[1]
+  local new_file = files[2]
+  M.move_waypoints_to_file(old_file, new_file)
 end
 
 function M.move_waypoints_to_file_wrapper()
@@ -1327,7 +1332,10 @@ function M.move_waypoints_to_file_wrapper()
   end
 
   if not has_telescope then
-    vim.fn.feedkeys(':MoveWaypointsToFile ', 'n')
+    local command = table.concat({
+      ':', constants.command_relocate, uw.filepath_from_waypoint(waypoint),
+    })
+    vim.fn.feedkeys(command, 'n')
   else
     local builtin = require('telescope.builtin')
     local actions = require('telescope.actions')
@@ -1456,11 +1464,10 @@ end
 ---@param arg table?
 ---@param override_arg table?
 function M.on_mode_change(arg, override_arg)
-  assert(is_open)
   arg = override_arg or arg
   assert(arg)
   local should_ignore = u.any({
-    -- state.should_ignore_autocmds,
+    not is_open,
     not most_recent_draw_succeeded,
     override_arg == nil and u.any{
       ignore_next_modechanged,
@@ -1494,8 +1501,6 @@ end
 function M.open()
   if is_open then
     return
-  else
-    is_open = true
   end
   if state.wpi == nil and #state.waypoints > 0 then
     state.wpi = 1
@@ -1538,6 +1543,13 @@ function M.open()
     callback = M.on_mode_change,
   })
 
+  -- normally we make the sorted waypoint array when we need to draw, but if
+  -- this is the first open after loading a file with waypoint sorting enabled,
+  -- then it won't exist yet.
+  if state.sort_by_file_and_line and not state.sorted_waypoints then
+    uw.make_sorted_waypoints()
+  end
+
   local win_opts, bg_win_opts = get_win_opts()
 
   -- Create the background
@@ -1560,8 +1572,9 @@ function M.open()
   -- I'm sure there are a bunch of other edge cases like this lurking around
   vim.api.nvim_set_option_value('wrap', false, {win = winnr})
 
-  set_waypoint_keybinds()
+  is_open = true
 
+  set_waypoint_keybinds()
   draw_waypoint_window("move_to_waypoint")
   highlight.highlight_custom_groups()
 end

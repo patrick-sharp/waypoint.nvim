@@ -118,16 +118,14 @@ end
 ---@field waypoint_linenr      integer the zero-indexed line number the waypoint is on within the file.
 ---@field context_start_linenr integer the zero-indexed line number within the file of the first line of the context
 ---@field context_end_linenr   integer the zero-indexed line number within the file of the last line of the context (meaning it's an inclusive bound)
------@field highlight_ranges     waypoint.HighlightRange[][] the syntax highlights for each line in lines. This table will have the same number of elements as lines.
 ---@field file_start_idx       integer index within lines where the start of the file is, or 1 if the file starts before the context
 ---@field file_end_idx         integer index within lines where the end of the file is, or #lines + 1 if the file ends after the context
 
 ---@param waypoint waypoint.Waypoint
 ---@param num_lines_before integer
 ---@param num_lines_after integer
----@param is_in_view boolean? whether the waypoint is visible in the current view of the waypoint window (false/nil if offscreen)
 ---@return waypoint.WaypointContext
-function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after, is_in_view)
+function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
   local bufnr, ok = M.bufnr_from_waypoint(waypoint)
   local maybe_extmark = M.extmark_from_waypoint(waypoint)
 
@@ -153,16 +151,9 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after, is_
         table.insert(lines, constants.error_line_oob)
       end
     end
-    table.insert(hlranges, {{
-      nsid = constants.ns,
-      hl_group = "WarningMsg",
-      col_start = 1,
-      col_end = #lines[#lines],
-    }})
 
     for _=1, num_lines_after do
       table.insert(lines, "")
-      table.insert(hlranges, {})
     end
 
     return {
@@ -174,7 +165,6 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after, is_
       context_end_linenr = waypoint.linenr,
       file_start_idx = num_lines_before + 1,
       file_end_idx = num_lines_before + 2,
-      -- highlight_ranges = hlranges,
     }
   end
 
@@ -206,31 +196,6 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after, is_
   else
     lines = vim.api.nvim_buf_get_lines(bufnr, start_linenr - 1, end_linenr - 1, false)
   end
-
-  -- -- figure out how each line is highlighted
-  -- ---@type waypoint.HighlightRange[][]
-  -- local hlranges = {}
-  --
-  -- local has_highlights = is_in_view and u.any({
-  --   constants.highlights_on,
-  --   config.enable_highlight,
-  --   waypoint.annotation,
-  -- })
-  --
-  -- if has_highlights then
-  --   local file_uses_treesitter = vim.treesitter.highlighter.active[bufnr]
-  --   if file_uses_treesitter then
-  --     hlranges = highlight_treesitter.get_treesitter_syntax_highlights(bufnr, lines, start_linenr, end_linenr)
-  --   elseif pcall(vim.api.nvim_buf_get_var, bufnr, "current_syntax") then
-  --     hlranges = highlight_vanilla.get_vanilla_syntax_highlights(bufnr, lines, start_linenr, end_linenr)
-  --   else
-  --     for i=1,#lines do hlranges[i] = {} end
-  --   end
-  -- else
-  --   for i=1,#lines do hlranges[i] = {} end
-  -- end
-  --
-  -- assert(#lines == #hlranges, "#lines == " .. #lines ..", #hlranges == " .. #hlranges .. ", but they should be the same" )
 
   -- if the waypoint context extends to before the start of the file or after
   -- the end, pad to the length of the context with empty lines
@@ -270,6 +235,8 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after, is_
   }
 end
 
+local warning_hl_id = vim.fn.hlID("WarningMsg")
+
 ---@param waypoint waypoint.Waypoint
 ---@param context waypoint.WaypointContext
 ---@param num_lines_before integer
@@ -291,7 +258,20 @@ function M.get_waypoint_highlights(waypoint, context, num_lines_before, num_line
     waypoint.annotation,
   })
   if not context.extmark then
-    result = {{}}
+    result = {}
+    local waypoint_i = context.waypoint_linenr + 1
+    for i=1,#context.lines do
+      if i == waypoint_i then
+        result[i] = {{
+          nsid = constants.ns,
+          hl_group = warning_hl_id,
+          col_start = 1,
+          col_end = #context.lines[i],
+        }}
+      else
+        result[i] = {}
+      end
+    end
   elseif not has_highlights then
     result = {}
     for i=1,#context.lines do result[i] = {} end
@@ -385,7 +365,6 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
   local vislens = {} -- 2D map: vislens[row][col]
   local hl_id_cache = {}
 
-  u.span_start("3.get_widths")
   ---@type integer[]
   local widths = {}
   local width_override = opts and opts.width_override
@@ -410,9 +389,7 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
       widths[c] = max_width
     end
   end
-  u.span_end("3.get_widths")
 
-  u.span_start("3.rest")
   -- adjust highlights
   local col_sep = opts and opts.column_separator
   local col_sep_len = col_sep and #col_sep or 0
@@ -480,9 +457,7 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
       end
     end
   end
-  u.span_end("3.rest")
 
-  u.span_start("3.concat")
   -- final string assembly
   local result = {}
   local win_width = opts and opts.win_width
@@ -530,7 +505,6 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
       result[#result+1] = line
     end
   end
-  u.span_end("3.concat")
 
   return result, widths
 end
@@ -559,8 +533,6 @@ function M.align_waypoint_highlights(t, table_cell_types, highlights, opts)
   local col_sep = opts and opts.column_separator
   local col_sep_len = col_sep and #col_sep or 0
 
-  -- local num_in_view = 0
-
   for r = 1, nrows do
     local is_in_view = true
     if opts and opts.top_view_threshold and opts.bottom_view_threshold then
@@ -569,9 +541,6 @@ function M.align_waypoint_highlights(t, table_cell_types, highlights, opts)
     local row_highlights = highlights[r]
     local row = t[r]
     if is_in_view and row ~= "" then
-    -- if row ~= "" then
-      -- num_in_view = num_in_view + 1
-      u.span_start("3.in_view")
       assert(ncols == #row_highlights)
       local offset = 0
       for c = 1, ncols do
@@ -624,10 +593,8 @@ function M.align_waypoint_highlights(t, table_cell_types, highlights, opts)
           offset = offset + padded_byte_length + 1
         end
       end
-      u.span_end("3.in_view")
     end
   end
-  -- u.log("IN_VIEW", num_in_view)
 end
 
 ---@param a waypoint.Waypoint
@@ -774,6 +741,7 @@ function M.get_drawn_wpi()
   else
     waypoints = state.waypoints
   end
+  assert(waypoints)
 
   ---@type integer?
   local result_top = nil
@@ -883,6 +851,7 @@ function M.split_by_drawn()
   else
     waypoints = state.waypoints
   end
+  assert(waypoints)
 
   ---@type waypoint.Waypoint[]
   local drawn = {}

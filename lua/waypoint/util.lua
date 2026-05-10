@@ -435,4 +435,9 @@ function M.log_tracked()
   M.log("</TRACKDATA>")
 end
 
+-- get highlight id from highlight name
+function M.get_hl_id(hlname)
+  return vim.fn.hlID(hlname)
+end
+
 return M

@@ -147,7 +147,6 @@ function M.run_tests(exclude_stress)
   clear_buffers()
   state.should_notify = false
   state.should_ignore_autocmds = true
-    u.log(exclude_stress)
   for _,test in ipairs(test_list.tests) do
     if not exclude_stress or not test.is_stress then
       floating_window.clear_and_close()

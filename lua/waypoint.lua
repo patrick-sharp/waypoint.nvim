@@ -116,21 +116,11 @@ function M.setup(opts)
     vim.api.nvim_create_user_command('WaypointRunTestsNoStress', function() test.run_tests(true) end, {})
   end
 
-  -- why does vim not allow you specify a command with just 2 args???
-  -- I would like to have the syntax be :MoveWaypointsToFile <src> <dest>,
-  -- however that gets complicated when file paths have spaces. The autocomplete
-  -- in the vim command mode doesn't escape spaces in paths. If I wanted to have
-  -- the two-arg syntax, then you would have to separate the file paths by
-  -- unescaped spaces and escape whatever spaces may be in your file path.
-  -- Unfortunately, if you do that, then anyone moving files with spaces in the
-  -- path won't get autocomplete, which is a really bad experience. To avoid
-  -- that, I've decided to make the command move the current waypoint's file's
-  -- waypoints to the new path.
-  -- If someone actually wants to all this programatically, they can use the floating_window.move_waypoints_to_file function directly
+  -- Unfortunately, neovim doesn't allow for quoted args, so 
   vim.api.nvim_create_user_command(
     constants.command_relocate,
     floating_window.move_waypoints_to_file_command,
-    {nargs = 1}
+    {nargs = '*'}
   )
 
   vim.api.nvim_create_user_command(
@@ -138,13 +128,6 @@ function M.setup(opts)
     floating_window.clear_state_with_confirmation,
     {nargs = 0}
   )
-
-  -- vim.api.nvim_create_user_command(
-  --   "PATRICK",
-  --   function(arg) p(arg) end,
-  --   {nargs = '*'}
-  -- )
-
 end
 
 return M
