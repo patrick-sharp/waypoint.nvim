@@ -212,26 +212,26 @@
 - [x] make a better experience for the non-telescope "locate waypoints within file" command
 - [x] fix bug where waypoints in file that doesn't exist are saved (stress syntax + quit + reopen)
 - [x] fix bug where execution of autocmds fails sometimes (fails with filechangedpost files are the same)
-- [ ] write documentation
-    - [ ] quickstart workflow
-    - [ ] screenshot tutorial
-- [ ] write alternatives
-    - [ ] vim marks
+- [x] write alternatives
+    - [x] vim marks
         - can't reorder/indent
         - finite number
         - can only be per file or global, not per project
         - can't see context around mark
         - no syntax highlighting
         - tons of noise from the automatically populated marks
-    - [ ] bookmarks.nvim
+    - [x] bookmarks.nvim
         - can't reorder/indent
         - state gets stale easily
         - can't see context around bookmark
         - no syntax highlighting
-    - [ ] harpoon
+    - [x] harpoon
         - only supports one mark per file
         - can't reorder/indent
         - can't see context around mark
+- [ ] write documentation
+    - [ ] quickstart workflow
+    - [ ] screenshot tutorial
 - [ ] write docs
     - [ ] drawn vs not drawn waypoints
     - [ ] undo and file changes
