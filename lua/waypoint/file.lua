@@ -59,7 +59,7 @@ local function encode()
   for _, waypoint in pairs(state.waypoints) do
     local waypoint_to_encode = nil
     if waypoint.has_buffer then
-      if uw.should_draw_waypoint(waypoint) then
+      if vim.api.nvim_buf_get_name(waypoint.bufnr) ~= "" and uw.should_draw_waypoint(waypoint) then
         local filepath = uw.filepath_from_waypoint(waypoint)
         local linenr = uw.linenr_from_waypoint(waypoint)
         if linenr then
@@ -349,8 +349,8 @@ function M.locate_waypoints_in_file(src_filepath, dest_filepath, wpis, change_wp
 
   state.wpi = change_wpi
 
-  local undo_msg = message.moved_waypoints_to_file(#wpis, dest_filepath, src_filepath)
-  local redo_msg = message.moved_waypoints_to_file(#wpis, src_filepath, dest_filepath)
+  local undo_msg = message.transferred_waypoints_to_file(#wpis, dest_filepath, src_filepath)
+  local redo_msg = message.transferred_waypoints_to_file(#wpis, src_filepath, dest_filepath)
 
   M.save_change(undo_msg, redo_msg, nil, wpis)
 end

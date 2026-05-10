@@ -842,29 +842,29 @@ local function set_waypoint_keybinds()
     return
   end
 
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "indent",                  M.indent)
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "unindent",                M.unindent)
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "reset_waypoint_indent",   M.reset_current_indent)
-  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "reset_all_indent",        M.reset_all_indent)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "indent",                      M.indent)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "unindent",                    M.unindent)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "reset_waypoint_indent",       M.reset_current_indent)
+  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "reset_all_indent",            M.reset_all_indent)
 
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "prev_waypoint",           M.prev_waypoint)
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "next_waypoint",           M.next_waypoint)
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "first_waypoint",          M.move_to_first_waypoint)
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "last_waypoint",           M.move_to_last_waypoint)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "prev_waypoint",               M.prev_waypoint)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "next_waypoint",               M.next_waypoint)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "first_waypoint",              M.move_to_first_waypoint)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "last_waypoint",               M.move_to_last_waypoint)
 
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_up",        M.move_waypoint_up)
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_down",      M.move_waypoint_down)
-  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "jump_to_waypoint",        M.jump_to_waypoint)
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_top",    M.move_waypoint_to_top)
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_bottom", M.move_waypoint_to_bottom)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_up",            M.move_waypoint_up)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_down",          M.move_waypoint_down)
+  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "jump_to_waypoint",            M.jump_to_waypoint)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_top",        M.move_waypoint_to_top)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_bottom",     M.move_waypoint_to_bottom)
 
-  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "delete_waypoint",         M.delete)
-  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "move_waypoints_to_file",  M.move_waypoints_to_file_wrapper)
+  bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "delete_waypoint",             M.delete)
+  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "transfer_waypoints_to_file",  M.transfer_waypoints_to_file_wrapper)
 
-  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "undo",                    M.undo)
-  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "redo",                    M.redo)
+  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "undo",                        M.undo)
+  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "redo",                        M.redo)
 
-  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "reselect_visual",         M.reselect_visual)
+  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "reselect_visual",             M.reselect_visual)
 end
 
 local function draw_help()
@@ -1273,8 +1273,9 @@ end
 ---@param source_file_path string
 ---@param dest_file_path string
 ---@param allow_same_file boolean?
+---@param allow_no_waypoints boolean?
 ---@return boolean # if the move was successful
-function M.move_waypoints_to_file(source_file_path, dest_file_path, allow_same_file)
+function M.transfer_waypoints_to_file(source_file_path, dest_file_path, allow_same_file, allow_no_waypoints)
   if not allow_same_file and source_file_path == dest_file_path then
     message.notify(message.files_same(source_file_path), vim.log.levels.ERROR)
     return false
@@ -1297,13 +1298,13 @@ function M.move_waypoints_to_file(source_file_path, dest_file_path, allow_same_f
       table.insert(wpis_in_file, i)
     end
   end
-  if #wpis_in_file == 0 then
-    -- message.notify(message.no_waypoints_in_file(source_file_path), vim.log.levels.ERROR)
+  if #wpis_in_file == 0 and not allow_no_waypoints then
+    message.notify(message.no_waypoints_in_file(source_file_path), vim.log.levels.ERROR)
     return false
   end
 
   file.locate_waypoints_in_file(source_file_path, dest_file_path, wpis_in_file, change_wpi)
-  message.notify(message.moved_waypoints_to_file(#wpis_in_file, source_file_path, dest_file_path), vim.log.levels.INFO)
+  message.notify(message.transferred_waypoints_to_file(#wpis_in_file, source_file_path, dest_file_path), vim.log.levels.INFO)
 
   draw_waypoint_window()
   vim.cmd.normal('m.')
@@ -1311,7 +1312,7 @@ function M.move_waypoints_to_file(source_file_path, dest_file_path, allow_same_f
 end
 
 ---@param opts vim.api.keyset.create_user_command.command_args
-function M.move_waypoints_to_file_command(opts)
+function M.transfer_waypoints_to_file_command(opts)
   -- this command does not support files with spaces in their path
   local files = u.split(opts.args, " ")
   if #files ~= 2 then
@@ -1320,10 +1321,10 @@ function M.move_waypoints_to_file_command(opts)
   end
   local old_file = files[1]
   local new_file = files[2]
-  M.move_waypoints_to_file(old_file, new_file)
+  M.transfer_waypoints_to_file(old_file, new_file)
 end
 
-function M.move_waypoints_to_file_wrapper()
+function M.transfer_waypoints_to_file_wrapper()
   local has_telescope, _ = pcall(require, "telescope")
   local waypoint = M.get_current_waypoint()
   if waypoint == nil then
@@ -1360,7 +1361,7 @@ function M.move_waypoints_to_file_wrapper()
 
           if choice == 1 then
             M.open()
-            M.move_waypoints_to_file(filepath, path)
+            M.transfer_waypoints_to_file(filepath, path)
           end
         end)
         return true

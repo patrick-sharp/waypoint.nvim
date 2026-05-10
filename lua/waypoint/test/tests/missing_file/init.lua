@@ -40,31 +40,30 @@ describe('Missing file', function()
   local result
   local msg
 
-  result = floating_window.move_waypoints_to_file(nonexistent_file, nonexistent_file)
+  result = floating_window.transfer_waypoints_to_file(nonexistent_file, nonexistent_file)
   msg = tu.get_last_message()
   assert(not result)
   tu.assert_eq(msg, message.files_same(nonexistent_file))
 
-  result = floating_window.move_waypoints_to_file(nonexistent_file, nonexistent_file_other)
+  result = floating_window.transfer_waypoints_to_file(nonexistent_file, nonexistent_file_other)
   msg = tu.get_last_message()
   assert(not result)
   tu.assert_eq(msg, message.file_dne(nonexistent_file_other))
 
-  result = floating_window.move_waypoints_to_file(nonexistent_file_other, nonexistent_file)
+  result = floating_window.transfer_waypoints_to_file(nonexistent_file_other, nonexistent_file)
   msg = tu.get_last_message()
   assert(not result)
   tu.assert_eq(message.file_dne(nonexistent_file), msg)
 
-  result = floating_window.move_waypoints_to_file(nonexistent_file_other, file_1)
+  result = floating_window.transfer_waypoints_to_file(nonexistent_file_other, file_1)
   msg = tu.get_last_message()
   assert(not result)
-  -- TODO
-  -- tu.assert_eq(message.no_waypoints_in_file(nonexistent_file_other), msg)
+  tu.assert_eq(message.no_waypoints_in_file(nonexistent_file_other), msg)
 
-  result = floating_window.move_waypoints_to_file(nonexistent_file, file_1)
+  result = floating_window.transfer_waypoints_to_file(nonexistent_file, file_1)
   msg = tu.get_last_message()
   tu.assert_eq(true, result)
-  tu.assert_eq(message.moved_waypoints_to_file(2, nonexistent_file, file_1), msg)
+  tu.assert_eq(message.transferred_waypoints_to_file(2, nonexistent_file, file_1), msg)
 
   -- assert that we opened file_1 to put waypoints in it
   local file_1_bufnr = vim.fn.bufnr(file_1)

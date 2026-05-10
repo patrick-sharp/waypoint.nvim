@@ -209,6 +209,9 @@
 - [x] automatically disable highlights on a file if they took more than 200ms to generate (use highlight_threshold_ms)
 - [x] fix behavior of ctrl-d and ctrl-u
 - [x] fix bug with reopening with context (I forget how to trigger this.)
+- [x] make a better experience for the non-telescope "locate waypoints within file" command
+- [x] fix bug where waypoints in file that doesn't exist are saved (stress syntax + quit + reopen)
+- [x] fix bug where execution of autocmds fails sometimes (fails with filechangedpost files are the same)
 - [ ] write documentation
     - [ ] quickstart workflow
     - [ ] screenshot tutorial
@@ -229,10 +232,6 @@
         - only supports one mark per file
         - can't reorder/indent
         - can't see context around mark
-- [ ] make a better experience for the non-telescope "locate waypoints within file" command
-- [ ] fix bug where waypoints in file that doesn't exist are saved (stress syntax + quit + reopen)
-- [ ] fix bug where execution of autocmds fails sometimes
-      fails with filechangedpost files are the same
 - [ ] write docs
     - [ ] drawn vs not drawn waypoints
     - [ ] undo and file changes

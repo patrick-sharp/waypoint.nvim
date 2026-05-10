@@ -34,10 +34,10 @@ describe('Missing file complex', function()
   local result
   local msg
 
-  result = floating_window.move_waypoints_to_file(nonexistent_file, file_1)
+  result = floating_window.transfer_waypoints_to_file(nonexistent_file, file_1)
   msg = tu.get_last_message()
   assert(result)
-  tu.assert_eq(msg, message.moved_waypoints_to_file(2, nonexistent_file, file_1))
+  tu.assert_eq(msg, message.transferred_waypoints_to_file(2, nonexistent_file, file_1))
 
   local file_1_bufnr = vim.fn.bufnr(file_1)
   tu.assert_neq(-1, file_1_bufnr)

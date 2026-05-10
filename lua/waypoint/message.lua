@@ -16,8 +16,8 @@ table.insert(sorted_mode_err_msg_table, " to toggle sort")
 M.sorted_mode_err_msg = table.concat(sorted_mode_err_msg_table)
 
 local missing_file_err_msg_table = {constants.error_file_dne, ". Press "}
-local move_waypoints_to_file = config.keybindings.waypoint_window_keybindings.move_waypoints_to_file
-u.add_stringifed_keybindings_to_table(missing_file_err_msg_table, move_waypoints_to_file)
+local transfer_waypoints_to_file = config.keybindings.waypoint_window_keybindings.transfer_waypoints_to_file
+u.add_stringifed_keybindings_to_table(missing_file_err_msg_table, transfer_waypoints_to_file)
 table.insert(missing_file_err_msg_table, " to move this file's waypoint's to a new file")
 
 M.missing_file_err_msg = table.concat(missing_file_err_msg_table)
@@ -63,7 +63,7 @@ end
 ---@param src string
 ---@param dst string
 ---@return string
-function M.moved_waypoints_to_file(num_waypoints, src, dst)
+function M.transferred_waypoints_to_file(num_waypoints, src, dst)
   return "Moved " .. tostring(num_waypoints) .. " waypoints from " .. src .. " to " .. dst
 end
 

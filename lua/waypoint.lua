@@ -54,11 +54,7 @@ function M.setup(opts)
     callback = file.load_wrapper,
     once = true,
   })
-  vim.api.nvim_create_autocmd("VimLeavePre", {
-    group = constants.augroup,
-    callback = file.save,
-    once = true,
-  })
+  -- I don't save waypoints on VimLeavePre because all buffers get unloaded before VimLeavePre, which confuses my save logic.
   vim.api.nvim_create_autocmd("FilterWritePre", {
     group = constants.augroup,
     callback = filter.save_file_contents,
@@ -73,7 +69,7 @@ function M.setup(opts)
   vim.api.nvim_create_autocmd("FileChangedShellPost", {
     group = constants.augroup,
     callback = function(arg)
-      floating_window.move_waypoints_to_file(arg.file, arg.file, true)
+      floating_window.transfer_waypoints_to_file(arg.file, arg.file, true, true)
     end
   })
   vim.api.nvim_create_autocmd("DirChangedPre", {
@@ -119,7 +115,7 @@ function M.setup(opts)
   -- Unfortunately, neovim doesn't allow for quoted args, so 
   vim.api.nvim_create_user_command(
     constants.command_relocate,
-    floating_window.move_waypoints_to_file_command,
+    floating_window.transfer_waypoints_to_file_command,
     {nargs = '*'}
   )
 

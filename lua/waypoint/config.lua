@@ -64,7 +64,7 @@
 ---@field jump_to_waypoint        waypoint.Keybinding
 ---@field move_waypoint_down      waypoint.Keybinding
 ---@field move_waypoint_up        waypoint.Keybinding
----@field move_waypoints_to_file  waypoint.Keybinding
+---@field transfer_waypoints_to_file  waypoint.Keybinding
 ---@field move_waypoint_to_top    waypoint.Keybinding
 ---@field move_waypoint_to_bottom waypoint.Keybinding
 ---@field undo                    waypoint.Keybinding
@@ -142,7 +142,7 @@
 ---@field jump_to_waypoint        waypoint.Keybinding?
 ---@field move_waypoint_down      waypoint.Keybinding?
 ---@field move_waypoint_up        waypoint.Keybinding?
----@field move_waypoints_to_file  waypoint.Keybinding?
+---@field transfer_waypoints_to_file  waypoint.Keybinding?
 ---@field move_waypoint_to_top    waypoint.Keybinding?
 ---@field move_waypoint_to_bottom waypoint.Keybinding?
 ---@field undo                    waypoint.Keybinding?
@@ -182,40 +182,40 @@ local M = {
       delete_waypoint           = "md",
     },
     waypoint_window_keybindings = {
-      exit_waypoint_window    = {"ms", "<esc>", "<C-c>"},
-      increase_context        = "c",
-      decrease_context        = "C",
-      increase_before_context = "b",
-      decrease_before_context = "B",
-      increase_after_context  = "a",
-      decrease_after_context  = "A",
-      reset_context           = {"R", "rc"},
-      toggle_path             = "sp",
-      toggle_line_num         = "sn",
-      toggle_full_path        = "sf",
-      toggle_file_text        = "st",
-      toggle_context          = "sc",
-      toggle_sort             = "ss",
-      show_help               = "g?",
-      set_quickfix_list       = "Q",
-      indent                  = ">",
-      unindent                = "<",
-      reset_waypoint_indent   = "ri",
-      reset_all_indent        = "rI",
-      prev_waypoint           = "k",
-      next_waypoint           = "j",
-      first_waypoint          = "gg",
-      last_waypoint           = "G",
-      delete_waypoint         = "d",
-      jump_to_waypoint        = "<CR>",
-      move_waypoint_up        = "K",
-      move_waypoint_down      = "J",
-      move_waypoint_to_top    = "sgg",
-      move_waypoint_to_bottom = "sG",
-      move_waypoints_to_file  = "rw",
-      undo                    = "u",
-      redo                    = "<C-r>",
-      reselect_visual         = "gv",
+      exit_waypoint_window        = {"ms", "<esc>", "<C-c>"},
+      increase_context            = "c",
+      decrease_context            = "C",
+      increase_before_context     = "b",
+      decrease_before_context     = "B",
+      increase_after_context      = "a",
+      decrease_after_context      = "A",
+      toggle_path                 = "mp",
+      toggle_line_num             = "mn",
+      toggle_full_path            = "mf",
+      toggle_file_text            = "mt",
+      toggle_context              = "mc",
+      toggle_sort                 = "ms",
+      show_help                   = "g?",
+      set_quickfix_list           = "Q",
+      indent                      = ">",
+      unindent                    = "<",
+      reset_context               = "rc",
+      reset_waypoint_indent       = "ri",
+      reset_all_indent            = "rI",
+      prev_waypoint               = "k",
+      next_waypoint               = "j",
+      first_waypoint              = "gg",
+      last_waypoint               = "G",
+      delete_waypoint             = "d",
+      jump_to_waypoint            = "<CR>",
+      move_waypoint_up            = "K",
+      move_waypoint_down          = "J",
+      move_waypoint_to_top        = "mgg",
+      move_waypoint_to_bottom     = "mG",
+      transfer_waypoints_to_file  = "mt",
+      undo                        = "u",
+      redo                        = "<C-r>",
+      reselect_visual             = "gv",
     },
     help_keybindings = {
       exit_help = {"q", "<esc>", "g?"}
