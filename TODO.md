@@ -229,10 +229,22 @@
         - only supports one mark per file
         - can't reorder/indent
         - can't see context around mark
+- [ ] Address feedback
+    - [x] label context and toggles in footer
+    - [x] remove ABC color coding
+    - [x] move help keybind message to the right of the footer
+    - [x] cluster ABC
+    - [x] cluster toggles
+    - [x] move waypoint number and total to the left of the footer
+    - [x] choose a different color for the ON toggles (less intense)
+    - [x] remove colons from help window text
+    - [ ] add annotation as separate column
+    - [ ] add ability to edit an annotation
+    - [ ] indent sections of the help window
+    - [ ] make <n>G jump to waypoint <n>
 - [ ] write documentation
     - [ ] quickstart workflow
     - [ ] screenshot tutorial
-- [ ] write docs
     - [ ] drawn vs not drawn waypoints
     - [ ] undo and file changes
     - [ ] buffer vs bufferless waypoints

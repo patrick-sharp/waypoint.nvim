@@ -211,9 +211,10 @@ local function get_win_opts(split)
 
   -- between the A, B, and C indicators
   local sep = {" ─── ", 'FloatBorder' } -- give it the background of the rest of the floating window
-  local a = {"A: " .. state.after_context, constants.hl_footer_after_context }
-  local b = {"B: " .. state.before_context, constants.hl_footer_before_context }
-  local c = {"C: " .. state.context, constants.hl_footer_context }
+  local spc = {" ", 'FloatBorder' } -- give it the background of the rest of the floating window
+  local a = {"A:" .. state.after_context, 'FloatBorder' }
+  local b = {"B:" .. state.before_context, 'FloatBorder' }
+  local c = {"C:" .. state.context, 'FloatBorder' }
 
   -- toggles
   local num =        {"N", get_toggle_hl(state.show_line_num) }
@@ -239,9 +240,10 @@ local function get_win_opts(split)
   end
   bg_win_opts.footer = {
     { "─ ", 'FloatBorder'},
+    wpi_info, sep,
+    {"Context ", 'FloatBorder'}, a, spc, b, spc, c, sep,
+    {"Toggles ", 'FloatBorder'}, path, num, text, spc, full_path, context, sort, sep,
     { "Press g? for help", constants.hl_selected },
-    sep, a, sep, b, sep, c, sep, wpi_info, sep,
-    path, num, text, sep, full_path, context, sort,
     { " ", 'FloatBorder'},
   }
 
@@ -1343,7 +1345,7 @@ function M.transfer_waypoints_to_file_wrapper()
     local action_state = require('telescope.actions.state')
 
     builtin.find_files({
-      prompt_title = "Move waypoints to file",
+      prompt_title = "Transfer waypoints to file",
       attach_mappings = function(prompt_bufnr, _)
         actions.select_default:replace(function()
           actions.close(prompt_bufnr)
@@ -1354,7 +1356,7 @@ function M.transfer_waypoints_to_file_wrapper()
           local filepath = uw.filepath_from_waypoint(waypoint)
 
           local choice = vim.fn.confirm(
-            "Move waypoints?\nfrom: " ..
+            "Transfer waypoints?\nfrom: " ..
             filepath ..
             "\nto:   " .. path, "&yes\n&no", 2
           )

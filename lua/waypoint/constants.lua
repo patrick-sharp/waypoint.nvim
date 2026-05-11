@@ -10,10 +10,7 @@ local window_augroup = "waypoint.window"
 ---@field hl_selected string
 ---@field hl_sign string
 ---@field hl_directory string
----@field hl_footer_after_context string
 ---@field hl_linenr string
----@field hl_footer_before_context string
----@field hl_footer_context string
 ---@field hl_footer_waypoint_nr string
 ---@field hl_toggle_on string
 ---@field hl_toggle_off string
@@ -40,9 +37,6 @@ local M = {
   highlights_on = true,
   highlight_threshold_ms = 50,
   hl_directory =             "waypoint_hl_directory",
-  hl_footer_after_context =  "waypoint_hl_footer_a",
-  hl_footer_before_context = "waypoint_hl_footer_b",
-  hl_footer_context =        "waypoint_hl_footer_c",
   hl_footer_waypoint_nr =    "waypoint_hl_footer_nr",
   hl_group =                 "waypoint_hl",
   hl_keybinding =            "waypoint_hl_keybinding",

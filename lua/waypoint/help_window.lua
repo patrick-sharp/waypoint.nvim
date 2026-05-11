@@ -49,7 +49,7 @@ M.waypoint_window_keybindings_description = {
   {"prev_waypoint"             , "Move to the previous waypoint in the waypoint window"}        ,
   {"first_waypoint"            , "Move to the first waypoint in the waypoint window"}           ,
   {"last_waypoint"             , "Move to the last waypoint in the waypoint window"}            ,
-  {"transfer_waypoints_to_file", "Move all waypoints in one file to another file"}              ,
+  {"transfer_waypoints_to_file", "Transfer waypoints from one file to another file"}            ,
   {"undo"                      , "Undo the last change to the waypoints"}                       ,
   {"redo"                      , "Redo the last undone change to the waypoints"}                ,
 }
@@ -193,13 +193,13 @@ function M.get_help_window_lines()
 
   -- info about state
   local prop_names = {
-    {"show_path", "Show file path:"},
-    {"show_line_num", "Show line number:"},
-    {"show_waypoint_text", "Show waypoint text:"},
+    {"show_path", "Show file path"},
+    {"show_line_num", "Show line number"},
+    {"show_waypoint_text", "Show waypoint text"},
     "",
-    {"show_full_path", "Show full file path:"},
-    {"show_context", "Show context:"},
-    {"sort_by_file_and_line", "Sort by file and line number:"},
+    {"show_full_path", "Show full file path"},
+    {"show_context", "Show context"},
+    {"sort_by_file_and_line", "Sort by file and line number"},
   }
 
   ---@type string[][]
