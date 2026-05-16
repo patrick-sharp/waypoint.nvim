@@ -44,6 +44,7 @@
 ---@field increase_after_context     waypoint.Keybinding
 ---@field decrease_after_context     waypoint.Keybinding
 ---@field reset_context              waypoint.Keybinding
+---@field toggle_name                waypoint.Keybinding
 ---@field toggle_path                waypoint.Keybinding
 ---@field toggle_full_path           waypoint.Keybinding
 ---@field toggle_line_num            waypoint.Keybinding
@@ -122,6 +123,7 @@
 ---@field increase_after_context     waypoint.Keybinding?
 ---@field decrease_after_context     waypoint.Keybinding?
 ---@field reset_context              waypoint.Keybinding?
+---@field toggle_name                waypoint.Keybinding?
 ---@field toggle_path                waypoint.Keybinding?
 ---@field toggle_full_path           waypoint.Keybinding?
 ---@field toggle_line_num            waypoint.Keybinding?
@@ -160,6 +162,7 @@ local M = {
   color_footer_before_context = "#77ff77",
   color_footer_context = "#7777ff",
   color_toggle_on = "#50C878",
+  -- color_toggle_on = "#04a307",
   color_toggle_off = "#777777",
   window_width = 0.85,
   window_height = 0.85,
@@ -189,14 +192,15 @@ local M = {
       decrease_before_context     = "B",
       increase_after_context      = "a",
       decrease_after_context      = "A",
+      toggle_name                 = "mn",
       toggle_path                 = "mp",
-      toggle_line_num             = "mn",
-      toggle_full_path            = "mf",
+      toggle_line_num             = "ml",
       toggle_file_text            = "mt",
+      toggle_full_path            = "mf",
       toggle_context              = "mc",
       toggle_sort                 = "ms",
       show_help                   = "g?",
-      set_quickfix_list           = "Q",
+      set_quickfix_list           = "mq",
       indent                      = ">",
       unindent                    = "<",
       reset_context               = "rc",

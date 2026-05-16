@@ -46,6 +46,7 @@
 ---@field context                integer the number of lines above and below the waypoint that will also appear in the waypoint window. adds with before_context and after_context.
 ---@field before_context         integer the number of lines above the waypoint that will also appear in the waypoint window. adds with context and after_context.
 ---@field after_context          integer the number of lines below the waypoint that will also appear in the waypoint window. adds with context and before_context.
+---@field show_name              boolean
 ---@field show_path              boolean
 ---@field show_full_path         boolean
 ---@field show_line_num          boolean
@@ -65,12 +66,13 @@ local M = {
   before_context   = 0,
   after_context    = 0,
 
+  show_name        = true,
   show_path        = true,
-  show_full_path   = false,
   show_line_num    = true,
   show_waypoint_text   = true,
-  show_context     = true,
 
+  show_full_path   = false,
+  show_context     = true,
   sort_by_file_and_line = false,
 
   should_notify = true,

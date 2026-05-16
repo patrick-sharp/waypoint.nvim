@@ -186,56 +186,38 @@ local function insert_lines_for_keybindings(lines, highlights, keybindings_group
   end
 end
 
+local function on_off(toggle)
+  if toggle then
+    return "ON    ", constants.hl_toggle_on
+  else
+    return "OFF   ", constants.hl_toggle_off
+  end
+end
+
 function M.get_help_window_lines()
   local lines = {}
   local highlights = {}
 
-  -- info about state
-  local prop_names = {
-    {"show_path", "Show file path"},
-    {"show_line_num", "Show line number"},
-    {"show_waypoint_text", "Show waypoint text"},
-    "",
-    {"show_full_path", "Show full file path"},
-    {"show_context", "Show context"},
-    {"sort_by_file_and_line", "Sort by file and line number"},
-  }
+  local show_path, show_path_hl = on_off(state.show_path)
+  local show_line_num, show_line_num_hl = on_off(state.show_line_num)
+  local show_waypoint_text, show_waypoint_text_hl = on_off(state.show_waypoint_text)
+  local show_name, show_name_hl = on_off(state.show_name)
+  local show_full_path, show_full_path_hl = on_off(state.show_full_path)
+  local show_context, show_context_hl = on_off(state.show_context)
+  local sort, sort_hl = on_off(state.sort_by_file_and_line)
 
-  ---@type string[][]
-  local toggles = {}
-  ---@type waypoint.HighlightRange[][][]
-  local toggle_highlights = {}
-  ---@integer[]
-  local indents = {}
-  for _,key_name in ipairs(prop_names) do
-    indents[#indents+1] = 2
-    if key_name == "" then
-      table.insert(toggles, {"", ""})
-      table.insert(toggle_highlights, {{}, {}})
-    else
-      local key = key_name[1]
-      local name = key_name[2]
-      local on_off
-      local hl_group
-      if state[key] then
-        on_off = "ON"
-        hl_group = constants.hl_toggle_on
-      else
-        on_off = "OFF"
-        hl_group = constants.hl_toggle_off
-      end
-      table.insert(toggles, { name, on_off })
-      table.insert(toggle_highlights,
-        {{}, {{
-          nsid = constants.ns,
-          hl_group = hl_group,
-          col_start = 1,
-          col_end = #on_off,
-        }}}
-      )
-    end
-  end
-  local aligned_toggles = uw.align_waypoint_table(toggles, {"string", "string"}, toggle_highlights, { indents = indents})
+  local toggles = {
+    {"Show waypoint name", show_name, "Show file path", show_path, "Show line number", show_line_num, "Show waypoint text", show_waypoint_text},
+    {"Show context", show_context, "Show full file path", show_full_path, "Sort by file and line number", sort, "", ""},
+  }
+  local toggle_highlights = {
+    {constants.hl_keybinding, show_name_hl,    constants.hl_keybinding, show_path_hl, constants.hl_keybinding, show_line_num_hl, constants.hl_keybinding, show_waypoint_text_hl},
+    {constants.hl_keybinding, show_context_hl, constants.hl_keybinding, show_full_path_hl, constants.hl_keybinding, sort_hl, {}, {}},
+  }
+  local indents = { 2, 2 }
+  local col_types = {"string", "string", "string", "string", "string", "string", "string", "string"}
+  local aligned_toggles = uw.align_waypoint_table(toggles, col_types, toggle_highlights, { indents = indents})
+  -- local aligned_toggles = uw.align_waypoint_table(toggles, {"string", "string"}, toggle_highlights, { indents = indents})
   table.insert(lines, "Toggles")
   table.insert(highlights, {})
   for i=1,#toggles do

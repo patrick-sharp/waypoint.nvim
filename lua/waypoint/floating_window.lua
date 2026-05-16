@@ -217,7 +217,8 @@ local function get_win_opts(split)
   local c = {"C:" .. state.context, 'FloatBorder' }
 
   -- toggles
-  local num =        {"N", get_toggle_hl(state.show_line_num) }
+  local name =       {"N", get_toggle_hl(state.show_name) }
+  local line_num =   {"L", get_toggle_hl(state.show_line_num) }
   local path =       {"P", get_toggle_hl(state.show_path) }
   local full_path =  {"F", get_toggle_hl(state.show_full_path) }
   local text =       {"T", get_toggle_hl(state.show_waypoint_text) }
@@ -242,7 +243,7 @@ local function get_win_opts(split)
     { "─ ", 'FloatBorder'},
     wpi_info, sep,
     {"Context ", 'FloatBorder'}, a, spc, b, spc, c, sep,
-    {"Toggles ", 'FloatBorder'}, path, num, text, spc, full_path, context, sort, sep,
+    {"Toggles ", 'FloatBorder'}, name, path, line_num, text, spc, full_path, context, sort, sep,
     { "Press g? for help", constants.hl_selected },
     { " ", 'FloatBorder'},
   }
@@ -819,6 +820,7 @@ local function set_shared_keybinds(bufnr)
   bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "decrease_after_context",  M.decrease_after_context)
   bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "reset_context",           M.reset_context)
 
+  bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "toggle_name",             M.toggle_name)
   bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "toggle_path",             M.toggle_path)
   bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "toggle_full_path",        M.toggle_full_path)
   bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "toggle_line_num",         M.toggle_line_number)
@@ -875,7 +877,7 @@ local function draw_help()
   local lines, highlights = help_window.get_help_window_lines()
 
   vim.api.nvim_buf_set_lines(help_bufnr, 0, -1, true, lines)
-  -- hlranges is the set of highlight ranges for this line of the help
+  -- hlranges is the set of highlight ranges for this line of the help window
   for i,hlranges in pairs(highlights) do
     for _,hlrange in pairs(hlranges) do
       vim.api.nvim_buf_set_extmark(help_bufnr, constants.ns, i - 1, hlrange.col_start, {
@@ -885,6 +887,9 @@ local function draw_help()
     end
   end
   set_modifiable(help_bufnr, false)
+  local win_opts, bg_win_opts = get_win_opts()
+  vim.api.nvim_win_set_config(winnr, win_opts)
+  vim.api.nvim_win_set_config(bg_winnr, bg_win_opts)
 end
 
 local function open_help()
@@ -1218,6 +1223,15 @@ function M.reset_context()
   state.before_context = 0
   state.after_context = 0
   draw_waypoint_window(M.WINDOW_ACTIONS.context)
+end
+
+function M.toggle_name()
+  state.show_name = not state.show_name
+  if help_bufnr then
+    draw_help()
+  else
+    draw_waypoint_window()
+  end
 end
 
 function M.toggle_path()
