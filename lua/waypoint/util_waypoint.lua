@@ -403,7 +403,6 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
     local row_highlights = highlights[r]
     local row_data = t[r]
     if is_in_view and row_data ~= "" then
-      u.log(ncols, #row_highlights, t[r],row_highlights)
       assert(ncols == #row_highlights)
       local offset = indents and indents[r] or 0
       for c = 1, ncols do

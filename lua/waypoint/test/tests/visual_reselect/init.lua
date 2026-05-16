@@ -253,7 +253,6 @@ describe('Visual reselect deleted', function()
 end)
 
 describe('Visual reselect invisible', function()
-  print(state.wpi, state.vis_wpi)
   assert(u.file_exists(file_0))
   assert(u.file_exists(file_1))
   local waypoints_json = "lua/waypoint/test/tests/visual_reselect/waypoints.json"
