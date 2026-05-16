@@ -19,6 +19,7 @@ M.global_keybindings_description = {
 
 M.waypoint_window_keybindings_description = {
   {"jump_to_waypoint"          , "Jump to the current waypoint's location"}                     ,
+  {"move_to_waypoint"          , "Move to waypoint [count], defaulting to the last waypoint"}   ,
   {"delete_waypoint"           , "Delete the current waypoint from the waypoint list"}          ,
   {"move_waypoint_down"        , "Move the current waypoint before the previous waypoint"}      ,
   {"move_waypoint_up"          , "Move the current waypoint after the next waypoint"}           ,

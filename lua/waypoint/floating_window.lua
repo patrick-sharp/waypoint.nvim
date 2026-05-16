@@ -858,6 +858,7 @@ local function set_waypoint_keybinds()
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_up",            M.move_waypoint_up)
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_down",          M.move_waypoint_down)
   bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "jump_to_waypoint",            M.jump_to_waypoint)
+  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "move_to_waypoint",            M.move_to_waypoint)
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_top",        M.move_waypoint_to_top)
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_bottom",     M.move_waypoint_to_bottom)
 
@@ -1089,6 +1090,58 @@ function M.jump_to_waypoint()
   vim.api.nvim_win_set_buf(0, waypoint_bufnr)
   vim.api.nvim_win_set_cursor(0, { extmark[1], 0 })
   vim.api.nvim_command("normal! zz")
+end
+
+---@param count integer? used for overriding the count during tests
+function M.move_to_waypoint(count)
+  if state.wpi == nil then return end
+
+  count = count or vim.v.count
+
+  if count == 0 then
+    M.move_to_last_waypoint()
+  else
+    local num = 1
+    local wpi = 1
+    local waypoints
+    if state.sort_by_file_and_line then
+      waypoints = state.sorted_waypoints
+    else
+      waypoints = state.waypoints
+    end
+    assert(waypoints)
+    while num < count and wpi < #waypoints do
+      if uw.should_draw_waypoint(waypoints[wpi]) then
+        num = num + 1
+      end
+      wpi = wpi + 1
+    end
+    state.wpi = wpi
+    draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint, "lines")
+  end
+
+  -- local waypoint
+  -- if waypoint.bufnr == -1 or 0 == vim.fn.bufloaded(waypoint.bufnr) then
+  --   message.notify(message.missing_file_err_msg, vim.log.levels.ERROR)
+  --   return
+  -- end
+  --
+  -- local extmark = uw.extmark_from_waypoint(waypoint)
+  -- if not extmark then
+  --   message.notify(constants.error_line_oob, vim.log.levels.ERROR)
+  --   return
+  -- end
+  --
+  -- if extmark == nil then
+  --   return
+  -- end
+  --
+  -- if wp_bufnr then M.leave() end
+  --
+  -- local waypoint_bufnr = uw.bufnr_from_waypoint(waypoint)
+  -- vim.api.nvim_win_set_buf(0, waypoint_bufnr)
+  -- vim.api.nvim_win_set_cursor(0, { extmark[1], 0 })
+  -- vim.api.nvim_command("normal! zz")
 end
 
 local function reduce_context_to_fit_window()

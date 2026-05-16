@@ -238,10 +238,10 @@
     - [x] move waypoint number and total to the left of the footer
     - [x] choose a different color for the ON toggles (less intense)
     - [x] remove colons from help window text
+    - [x] indent sections of the help window
+    - [x] make nG move to waypoint n
     - [ ] add annotation as separate column
     - [ ] add ability to edit an annotation
-    - [ ] indent sections of the help window
-    - [ ] make <n>G jump to waypoint <n>
 - [ ] write documentation
     - [ ] quickstart workflow
     - [ ] screenshot tutorial

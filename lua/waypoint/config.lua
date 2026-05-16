@@ -36,40 +36,41 @@
 ---@field delete_waypoint           waypoint.Keybinding
 
 ---@class waypoint.WaypointWindowKeybindings
----@field exit_waypoint_window    waypoint.Keybinding
----@field increase_context        waypoint.Keybinding
----@field decrease_context        waypoint.Keybinding
----@field increase_before_context waypoint.Keybinding
----@field decrease_before_context waypoint.Keybinding
----@field increase_after_context  waypoint.Keybinding
----@field decrease_after_context  waypoint.Keybinding
----@field reset_context           waypoint.Keybinding
----@field toggle_path             waypoint.Keybinding
----@field toggle_full_path        waypoint.Keybinding
----@field toggle_line_num         waypoint.Keybinding
----@field toggle_file_text        waypoint.Keybinding
----@field toggle_context          waypoint.Keybinding
----@field toggle_sort             waypoint.Keybinding
----@field show_help               waypoint.Keybinding
----@field set_quickfix_list       waypoint.Keybinding
----@field indent                  waypoint.Keybinding
----@field unindent                waypoint.Keybinding
----@field reset_waypoint_indent   waypoint.Keybinding
----@field reset_all_indent        waypoint.Keybinding
----@field next_waypoint           waypoint.Keybinding
----@field prev_waypoint           waypoint.Keybinding
----@field first_waypoint          waypoint.Keybinding
----@field last_waypoint           waypoint.Keybinding
----@field delete_waypoint         waypoint.Keybinding
----@field jump_to_waypoint        waypoint.Keybinding
----@field move_waypoint_down      waypoint.Keybinding
----@field move_waypoint_up        waypoint.Keybinding
----@field transfer_waypoints_to_file  waypoint.Keybinding
----@field move_waypoint_to_top    waypoint.Keybinding
----@field move_waypoint_to_bottom waypoint.Keybinding
----@field undo                    waypoint.Keybinding
----@field redo                    waypoint.Keybinding
----@field reselect_visual         waypoint.Keybinding
+---@field exit_waypoint_window       waypoint.Keybinding
+---@field increase_context           waypoint.Keybinding
+---@field decrease_context           waypoint.Keybinding
+---@field increase_before_context    waypoint.Keybinding
+---@field decrease_before_context    waypoint.Keybinding
+---@field increase_after_context     waypoint.Keybinding
+---@field decrease_after_context     waypoint.Keybinding
+---@field reset_context              waypoint.Keybinding
+---@field toggle_path                waypoint.Keybinding
+---@field toggle_full_path           waypoint.Keybinding
+---@field toggle_line_num            waypoint.Keybinding
+---@field toggle_file_text           waypoint.Keybinding
+---@field toggle_context             waypoint.Keybinding
+---@field toggle_sort                waypoint.Keybinding
+---@field show_help                  waypoint.Keybinding
+---@field set_quickfix_list          waypoint.Keybinding
+---@field indent                     waypoint.Keybinding
+---@field unindent                   waypoint.Keybinding
+---@field reset_waypoint_indent      waypoint.Keybinding
+---@field reset_all_indent           waypoint.Keybinding
+---@field next_waypoint              waypoint.Keybinding
+---@field prev_waypoint              waypoint.Keybinding
+---@field first_waypoint             waypoint.Keybinding
+---@field last_waypoint              waypoint.Keybinding
+---@field delete_waypoint            waypoint.Keybinding
+---@field jump_to_waypoint           waypoint.Keybinding
+---@field move_to_waypoint           waypoint.Keybinding
+---@field move_waypoint_down         waypoint.Keybinding
+---@field move_waypoint_up           waypoint.Keybinding
+---@field transfer_waypoints_to_file waypoint.Keybinding
+---@field move_waypoint_to_top       waypoint.Keybinding
+---@field move_waypoint_to_bottom    waypoint.Keybinding
+---@field undo                       waypoint.Keybinding
+---@field redo                       waypoint.Keybinding
+---@field reselect_visual            waypoint.Keybinding
 
 ---@class waypoint.HelpKeybindings
 ---@field exit_help string | string[]
@@ -114,40 +115,41 @@
 ---@field delete_waypoint           waypoint.Keybinding?
 
 ---@class waypoint.WaypointWindowKeybindingsOverride
----@field exit_waypoint_window    waypoint.Keybinding?
----@field increase_context        waypoint.Keybinding?
----@field decrease_context        waypoint.Keybinding?
----@field increase_before_context waypoint.Keybinding?
----@field decrease_before_context waypoint.Keybinding?
----@field increase_after_context  waypoint.Keybinding?
----@field decrease_after_context  waypoint.Keybinding?
----@field reset_context           waypoint.Keybinding?
----@field toggle_path             waypoint.Keybinding?
----@field toggle_full_path        waypoint.Keybinding?
----@field toggle_line_num         waypoint.Keybinding?
----@field toggle_file_text        waypoint.Keybinding?
----@field toggle_context          waypoint.Keybinding?
----@field toggle_sort             waypoint.Keybinding?
----@field show_help               waypoint.Keybinding?
----@field set_quickfix_list       waypoint.Keybinding?
----@field indent                  waypoint.Keybinding?
----@field unindent                waypoint.Keybinding?
----@field reset_waypoint_indent   waypoint.Keybinding?
----@field reset_all_indent        waypoint.Keybinding?
----@field next_waypoint           waypoint.Keybinding?
----@field prev_waypoint           waypoint.Keybinding?
----@field first_waypoint          waypoint.Keybinding?
----@field last_waypoint           waypoint.Keybinding?
----@field delete_waypoint         waypoint.Keybinding?
----@field jump_to_waypoint        waypoint.Keybinding?
----@field move_waypoint_down      waypoint.Keybinding?
----@field move_waypoint_up        waypoint.Keybinding?
----@field transfer_waypoints_to_file  waypoint.Keybinding?
----@field move_waypoint_to_top    waypoint.Keybinding?
----@field move_waypoint_to_bottom waypoint.Keybinding?
----@field undo                    waypoint.Keybinding?
----@field redo                    waypoint.Keybinding?
----@field reselect_visual         waypoint.Keybinding?
+---@field exit_waypoint_window       waypoint.Keybinding?
+---@field increase_context           waypoint.Keybinding?
+---@field decrease_context           waypoint.Keybinding?
+---@field increase_before_context    waypoint.Keybinding?
+---@field decrease_before_context    waypoint.Keybinding?
+---@field increase_after_context     waypoint.Keybinding?
+---@field decrease_after_context     waypoint.Keybinding?
+---@field reset_context              waypoint.Keybinding?
+---@field toggle_path                waypoint.Keybinding?
+---@field toggle_full_path           waypoint.Keybinding?
+---@field toggle_line_num            waypoint.Keybinding?
+---@field toggle_file_text           waypoint.Keybinding?
+---@field toggle_context             waypoint.Keybinding?
+---@field toggle_sort                waypoint.Keybinding?
+---@field show_help                  waypoint.Keybinding?
+---@field set_quickfix_list          waypoint.Keybinding?
+---@field indent                     waypoint.Keybinding?
+---@field unindent                   waypoint.Keybinding?
+---@field reset_waypoint_indent      waypoint.Keybinding?
+---@field reset_all_indent           waypoint.Keybinding?
+---@field next_waypoint              waypoint.Keybinding?
+---@field prev_waypoint              waypoint.Keybinding?
+---@field first_waypoint             waypoint.Keybinding?
+---@field last_waypoint              waypoint.Keybinding?
+---@field delete_waypoint            waypoint.Keybinding?
+---@field jump_to_waypoint           waypoint.Keybinding?
+---@field move_to_waypoint           waypoint.Keybinding?
+---@field move_waypoint_down         waypoint.Keybinding?
+---@field move_waypoint_up           waypoint.Keybinding?
+---@field transfer_waypoints_to_file waypoint.Keybinding?
+---@field move_waypoint_to_top       waypoint.Keybinding?
+---@field move_waypoint_to_bottom    waypoint.Keybinding?
+---@field undo                       waypoint.Keybinding?
+---@field redo                       waypoint.Keybinding?
+---@field reselect_visual            waypoint.Keybinding?
 
 ---@class waypoint.HelpKeybindingsOverride
 ---@field exit_help nil | string | string[]
@@ -207,9 +209,10 @@ local M = {
       prev_waypoint               = "k",
       next_waypoint               = "j",
       first_waypoint              = "gg",
-      last_waypoint               = "G",
+      last_waypoint               = "_G",
       delete_waypoint             = "d",
       jump_to_waypoint            = "<CR>",
+      move_to_waypoint            = "G",
       move_waypoint_up            = "K",
       move_waypoint_down          = "J",
       move_waypoint_to_top        = "mgg",
