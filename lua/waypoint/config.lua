@@ -59,7 +59,6 @@
 ---@field next_waypoint              waypoint.Keybinding
 ---@field prev_waypoint              waypoint.Keybinding
 ---@field first_waypoint             waypoint.Keybinding
----@field last_waypoint              waypoint.Keybinding
 ---@field delete_waypoint            waypoint.Keybinding
 ---@field jump_to_waypoint           waypoint.Keybinding
 ---@field move_to_waypoint           waypoint.Keybinding
@@ -138,7 +137,6 @@
 ---@field next_waypoint              waypoint.Keybinding?
 ---@field prev_waypoint              waypoint.Keybinding?
 ---@field first_waypoint             waypoint.Keybinding?
----@field last_waypoint              waypoint.Keybinding?
 ---@field delete_waypoint            waypoint.Keybinding?
 ---@field jump_to_waypoint           waypoint.Keybinding?
 ---@field move_to_waypoint           waypoint.Keybinding?
@@ -161,9 +159,7 @@ local M = {
   color_footer_after_context = "#ff7777",
   color_footer_before_context = "#77ff77",
   color_footer_context = "#7777ff",
-  -- color_toggle_on = "#00ff00",
   color_toggle_on = "#50C878",
-  -- color_toggle_on = "#04a307",
   color_toggle_off = "#777777",
   window_width = 0.85,
   window_height = 0.85,
@@ -209,7 +205,6 @@ local M = {
       prev_waypoint               = "k",
       next_waypoint               = "j",
       first_waypoint              = "gg",
-      last_waypoint               = "_G",
       delete_waypoint             = "d",
       jump_to_waypoint            = "<CR>",
       move_to_waypoint            = "G",
