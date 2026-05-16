@@ -1,0 +1,44 @@
+{
+  "wpi": 1,
+  "sort_by_file_and_line": false,
+  "show_context": true,
+  "show_waypoint_text": true,
+  "show_full_path": true,
+  "show_path": true,
+  "show_line_num": true,
+  "context": 0,
+  "after_context": 0,
+  "before_context": 0,
+  "waypoints": [
+    {
+      "indent": 0,
+      "text": "  return nil",
+      "linenr": 4,
+      "filepath": "lua/waypoint/test/tests/common/file_0.lua"
+    },
+    {
+      "indent": 0,
+      "text": "  print(nil)",
+      "linenr": 8,
+      "filepath": "lua/waypoint/test/tests/common/file_0.lua"
+    },
+    {
+      "indent": 0,
+      "text": "return M",
+      "linenr": 17,
+      "filepath": "lua/waypoint/test/tests/common/file_0.lua"
+    },
+    {
+      "indent": 0,
+      "text": "function M.fn_0()",
+      "linenr": 3,
+      "filepath": "lua/waypoint/test/tests/common/file_0.lua"
+    },
+    {
+      "indent": 0,
+      "text": "local M = {}",
+      "linenr": 1,
+      "filepath": "lua/waypoint/test/tests/common/file_0.lua"
+    }
+  ]
+}
