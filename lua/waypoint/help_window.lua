@@ -113,18 +113,16 @@ kb_description_width_override = math.max(kb_description_width_override, find_max
 ---@param width_override (integer?)[]?
 local function insert_lines_for_keybindings(lines, highlights, keybindings_group, keybindings_description, keybindings_group_title, keybindings_group_name, width_override)
   table.insert(lines, "")
-  table.insert(lines, "")
   table.insert(lines, keybindings_group_title .. " keybindings")
-  table.insert(lines, "")
-  table.insert(highlights, {})
-  table.insert(highlights, {})
   table.insert(highlights, {})
   table.insert(highlights, {})
 
   local keybindings = {}
   local keybindings_highlights = {}
+  local indents = {}
 
   for _, action_and_description in pairs(keybindings_description) do
+    indents[#indents+1] = 2
     local action = action_and_description[1]
     local description = action_and_description[2]
     assert(keybindings_group[action], "No " .. keybindings_group_name.. " keybinding found for " .. action)
@@ -173,6 +171,7 @@ local function insert_lines_for_keybindings(lines, highlights, keybindings_group
     {
       column_separator = "",
       width_override = width_override,
+      indents = indents,
     }
   )
   for i=1,#keybindings do
@@ -206,7 +205,10 @@ function M.get_help_window_lines()
   local toggles = {}
   ---@type waypoint.HighlightRange[][][]
   local toggle_highlights = {}
+  ---@integer[]
+  local indents = {}
   for _,key_name in ipairs(prop_names) do
+    indents[#indents+1] = 2
     if key_name == "" then
       table.insert(toggles, {"", ""})
       table.insert(toggle_highlights, {{}, {}})
@@ -233,10 +235,8 @@ function M.get_help_window_lines()
       )
     end
   end
-  local aligned_toggles = uw.align_waypoint_table(toggles, {"string", "string"}, toggle_highlights)
+  local aligned_toggles = uw.align_waypoint_table(toggles, {"string", "string"}, toggle_highlights, { indents = indents})
   table.insert(lines, "Toggles")
-  table.insert(lines, "")
-  table.insert(highlights, {})
   table.insert(highlights, {})
   for i=1,#toggles do
     table.insert(lines, aligned_toggles[i])
@@ -257,6 +257,7 @@ function M.get_help_window_lines()
   insert_lines_for_keybindings(lines, highlights, config.keybindings.waypoint_window_keybindings, M.waypoint_window_keybindings_description, "Waypoint window", "waypoint window", width_override)
   insert_lines_for_keybindings(lines, highlights, config.keybindings.help_keybindings, M.help_keybindings_description, "Help", "help", width_override)
 
+  assert(#lines == #highlights)
   return lines, highlights
 end
 

@@ -540,22 +540,23 @@ local function draw_waypoint_window(action, reuse)
     width_override = draw_cache.prev_widths
   end
   local waypoint_window_lines, widths = uw.align_waypoint_table(
-  table_rows, table_cell_types, hlranges,
-  {
-    column_separator = constants.table_separator,
-    win_width = win_width,
-    indents = indents,
-    width_override=width_override,
-    top_view_threshold=top_view_threshold,
-    bottom_view_threshold=bottom_view_threshold,
-    use_line_cache = reuse == "lines",
-  })
-  for i, line in pairs(waypoint_window_lines) do
-    local is_in_view = top_view_threshold <= i and i <= bottom_view_threshold
-    if is_in_view then
-      waypoint_window_lines[i] = string.rep(" ", indents[i]) .. line
-    end
-  end
+    table_rows, table_cell_types, hlranges,
+    {
+      column_separator = constants.table_separator,
+      win_width = win_width,
+      indents = indents,
+      width_override=width_override,
+      top_view_threshold=top_view_threshold,
+      bottom_view_threshold=bottom_view_threshold,
+      use_line_cache = reuse == "lines",
+    }
+  )
+  -- for i, line in pairs(waypoint_window_lines) do
+  --   local is_in_view = top_view_threshold <= i and i <= bottom_view_threshold
+  --   if is_in_view then
+  --     waypoint_window_lines[i] = string.rep(" ", indents[i]) .. line
+  --   end
+  -- end
   assert(waypoint_window_lines)
 
   if action == M.WINDOW_ACTIONS.exit_visual_mode then
@@ -590,7 +591,7 @@ local function draw_waypoint_window(action, reuse)
         else
           for i,hlrange in ipairs(col_highlights) do
             vim.api.nvim_buf_set_extmark(wp_bufnr, constants.ns, linenr - 1, hlrange.col_start + indents[linenr], {
-              end_col = hlrange.col_end + indents[linenr], -- 0-based exclusive column upper bound is the same as 1 based inclusive
+              end_col = hlrange.col_end, -- 0-based exclusive column upper bound is the same as 1 based inclusive
               hl_group = hlrange.hl_group,                 -- Highlight group to apply
               -- need to set priority here because extmarks don't override each
               -- other. I had a bug where the color of a highlighted range would

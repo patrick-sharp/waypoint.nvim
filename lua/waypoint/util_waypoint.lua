@@ -393,6 +393,7 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
   -- adjust highlights
   local col_sep = opts and opts.column_separator
   local col_sep_len = col_sep and #col_sep or 0
+  local indents = opts and opts.indents
 
   for r = 1, nrows do
     local is_in_view = true
@@ -403,7 +404,7 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
     local row_data = t[r]
     if is_in_view and row_data ~= "" then
       assert(ncols == #row_highlights)
-      local offset = 0
+      local offset = indents and indents[r] or 0
       for c = 1, ncols do
         local field = row_data[c]
         vislens[r] = vislens[r] or {}
@@ -461,7 +462,6 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
   -- final string assembly
   local result = {}
   local win_width = opts and opts.win_width
-  local indents = opts and opts.indents
 
   for i = 1, nrows do
     if t[i] == "" then
@@ -474,27 +474,34 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
       ---@type string
       local line
       if is_in_view then
-        local fields = {}
+        local fields = {string.rep(" ", indents and indents[i] or 0)}
         for j = 1, ncols do
           local field = t[i][j]
-          -- local padding = widths[j] - vislens[i][j]
           local padding = widths[j] - (vislens[i] and vislens[i][j] or 0)
 
           if table_cell_types[j] == "number" then
-            fields[j] = s_rep(" ", padding) .. field
+            fields[#fields+1] = s_rep(" ", padding)
+            fields[#fields+1] = field
+            if j < ncols then
+              fields[#fields+1] = col_sep and (" " .. col_sep .. " ") or " "
+            end
           else
-            fields[j] = field .. s_rep(" ", padding)
+            fields[#fields+1] = field
+            fields[#fields+1] = s_rep(" ", padding)
+            if j < ncols then
+              fields[#fields+1] = col_sep and (" " .. col_sep .. " ") or " "
+            end
           end
         end
-
-        line = concat(fields, col_sep and (" " .. col_sep .. " ") or " ")
 
         if win_width then
           local row_len = u.vislen(line) + (indents and indents[i] or 0)
           if row_len < win_width then
-            line = line .. s_rep(" ", win_width - row_len)
+            fields[#fields+1] = s_rep(" ", win_width - row_len)
           end
         end
+
+        line = concat(fields)
       else
         if opts and opts.use_line_cache and draw_cache.prev_waypoint_window_lines then
           line = draw_cache.prev_waypoint_window_lines[i]
