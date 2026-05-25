@@ -240,9 +240,9 @@
     - [x] remove colons from help window text
     - [x] indent sections of the help window
     - [x] make nG move to waypoint n
-    - [ ] add annotation as separate column
-    - [ ] add ability to edit an annotation
-- [ ] fix that bug where undoing / redoing bulk delete of waypoints doesn't seem to restore the window
+    - [x] add annotation as separate column
+    - [x] add ability to edit an annotation
+- [x] fix that bug where undoing / redoing bulk delete of waypoints doesn't seem to restore the window
 - [ ] write documentation
     - [ ] quickstart workflow
     - [ ] screenshot tutorial
