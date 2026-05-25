@@ -3,10 +3,12 @@ local describe = test_list.describe
 local file_0 = test_list.file_0
 local file_1 = test_list.file_1
 
+local crud = require'waypoint.waypoint_crud'
 local floating_window = require("waypoint.floating_window")
 local file = require'waypoint.file'
 local message = require'waypoint.message'
 local u = require("waypoint.util")
+local uw = require("waypoint.util_waypoint")
 local tu = require'waypoint.test.util'
 local state = require'waypoint.state'
 
@@ -106,10 +108,45 @@ describe('Visual delete undo', function()
   floating_window.open()
   floating_window.undo()
 
+  tu.assert_eq(6, #state.waypoints)
+  tu.assert_eq(false, uw.should_draw_waypoint(state.waypoints[1]))
+  tu.assert_eq(false, uw.should_draw_waypoint(state.waypoints[2]))
+
   local msg = tu.get_last_message()
 
   assert(msg)
   tu.assert_string_contains(msg, 2 .. message.not_shown_suffix)
+end)
+
+describe('Visual delete undo wpi', function()
+  assert(u.file_exists(file_0))
+  assert(u.file_exists(file_1))
+  local waypoints_json = "lua/waypoint/test/tests/visual_delete/waypoints.json"
+  assert(u.file_exists(waypoints_json))
+
+  file.load_from_file(waypoints_json)
+  local waypoints = vim.deepcopy(state.waypoints)
+  floating_window.open()
+
+  -- delete two waypoints
+  floating_window.next_waypoint()
+  floating_window.next_waypoint()
+  tu.enter_visual_mode()
+  floating_window.next_waypoint()
+  floating_window.delete()
+
+  tu.assert_eq(4, #state.waypoints)
+  tu.assert_waypoints_eq(waypoints[1], state.waypoints[1])
+  tu.assert_waypoints_eq(waypoints[2], state.waypoints[2])
+  tu.assert_waypoints_eq(waypoints[5], state.waypoints[3])
+  tu.assert_waypoints_eq(waypoints[6], state.waypoints[4])
+
+  floating_window.open()
+  floating_window.undo()
+
+  tu.assert_eq(6, #state.waypoints)
+  -- since we deleted waypoints 3-4, our cursor should be on waypoint 3
+  tu.assert_eq(3, state.wpi)
 end)
 
 describe('Visual delete with undrawn', function()

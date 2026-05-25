@@ -161,7 +161,10 @@ function M.run_tests(exclude_stress)
       state.should_notify = false
       state.should_ignore_autocmds = true
       clear_buffers()
-      vim.cmd.normal(vim.api.nvim_replace_termcodes('<C-c>', true, false, true)) -- this resets vim.v.count and vim.v.count1, which can persist between tests otherwise
+      -- this used to be necessary because I used normal! <count>G to jump to a line.
+      -- now that I use u.goto_line, it is no longer necessary.
+      -- this resets vim.v.count and vim.v.count1, which can persist between tests otherwise
+      --vim.cmd.normal(vim.api.nvim_replace_termcodes('<C-c>', true, false, true))
     end
   end
   state.should_notify = true

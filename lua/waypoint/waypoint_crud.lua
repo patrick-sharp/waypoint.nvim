@@ -419,10 +419,10 @@ function M.remove_waypoints()
       -- move waypoints that shouldn't be deleted into the new waypoint array
       new_waypoints[#new_waypoints+1] = wp
       waypoint_map[wp] = true
+    else
       if change_wpi == nil then
         change_wpi = i
       end
-    else
       affected_wpis.deleted[#affected_wpis.deleted+1] = i
       if wp.extmark_id ~= -1 then
         uw.set_wp_extmark_visible(wp, false)
@@ -452,6 +452,7 @@ function M.remove_waypoints()
   local undo_msg = message.restored_waypoints .. tostring(split.top) .. "-" .. tostring(split.bottom)
   state.wpi = start_i
 
+  u.log(change_wpi)
   file.save_change(undo_msg, redo_msg, change_wpi, affected_wpis)
 end
 
