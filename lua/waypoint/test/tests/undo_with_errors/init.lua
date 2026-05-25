@@ -22,9 +22,9 @@ describe('Undo with errors', function()
 
   tu.edit_file(file_0)
   u.goto_line(4)
-  crud.append_waypoint_wrapper()
+  crud.append_waypoint_end_wrapper()
   u.goto_line(17)
-  crud.append_waypoint_wrapper()
+  crud.append_waypoint_end_wrapper()
 
   tu.assert_eq(8, #state.waypoints)
   tu.assert_eq("string", type(state.waypoints[1].error))

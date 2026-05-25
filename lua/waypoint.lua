@@ -89,6 +89,9 @@ function M.setup(opts)
       floating_window.clear_extmarks()
       file.load_wrapper()
       draw_cache.invalidate_cache()
+      if floating_window.is_open() then
+        floating_window.close()
+      end
     end
   })
   vim.api.nvim_create_autocmd("BufReadPost", {

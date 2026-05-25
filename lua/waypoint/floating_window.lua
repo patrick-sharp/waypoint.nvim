@@ -816,7 +816,6 @@ local function bind_key(bufnr, modes, keybindings, action, fn)
   end
   local keybinding = keybindings[action]
   if type(keybinding) == "string" then
-    u.log(keybinding, action)
     vim.keymap.set(modes, keybinding, fn, keymap_opts(bufnr))
   elseif type(keybinding) == "table" then
     for i, v in ipairs(keybinding) do

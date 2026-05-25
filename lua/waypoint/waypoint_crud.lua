@@ -64,7 +64,6 @@ function M.insert_waypoint_beginning(filepath, line_nr, annotation)
   else
     ---@type waypoint.Waypoint[]
     local new_waypoints = {waypoint}
-    state.wpi = state.wpi + 1
     for i = 1,#state.waypoints do
       new_waypoints[i+1] = state.waypoints[i]
     end

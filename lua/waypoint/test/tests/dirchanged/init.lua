@@ -19,7 +19,8 @@ local file = require'waypoint.file'
 local u = require("waypoint.util")
 local tu = require'waypoint.test.util'
 
-describe('DirChanged', function()
+-- I wrap the actual logic for the test so we can always reset the directory to the original
+local function dir_changed()
   assert(u.file_exists(file_0))
   assert(u.file_exists(file_1))
   assert(u.file_exists(waypoints_json))
@@ -52,4 +53,11 @@ describe('DirChanged', function()
   tu.assert_eq(wp_1_text, lines[1][4])
   tu.assert_eq(wp_2_text, lines[2][4])
   tu.assert_eq(wp_3_text, lines[3][4])
+end
+
+describe('DirChanged', function()
+  local succeeded = pcall(dir_changed)
+  if not succeeded then
+    vim.api.nvim_set_current_dir(dir_old)
+  end
 end)

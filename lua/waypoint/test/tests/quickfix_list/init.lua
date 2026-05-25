@@ -7,13 +7,14 @@ local waypoints_json = test_list.waypoints_json
 local floating_window = require("waypoint.floating_window")
 local file = require'waypoint.file'
 local u = require("waypoint.util")
+local uw = require("waypoint.util_waypoint")
 local tu = require'waypoint.test.util'
 
 describe('Quickfix list', function()
   local qflist
 
   floating_window.open()
-  floating_window.set_quickfix_list()
+  uw.set_quickfix_list()
   qflist = vim.fn.getqflist()
 
   tu.assert_eq(0, u.len(qflist))
@@ -25,7 +26,7 @@ describe('Quickfix list', function()
   file.load_from_file(waypoints_json)
   floating_window.open()
 
-  floating_window.set_quickfix_list()
+  uw.set_quickfix_list()
   qflist = vim.fn.getqflist()
 
   tu.assert_eq(test_list.num_waypoints, u.len(qflist))

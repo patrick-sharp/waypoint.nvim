@@ -28,11 +28,13 @@ describe('Undo move', function()
   crud.append_waypoint_wrapper()
 
   tu.assert_eq(3, #state.waypoints)
+  tu.assert_eq(3, state.wpi)
   tu.assert_eq( 7, uw.linenr_from_waypoint(state.waypoints[1]))
   tu.assert_eq( 8, uw.linenr_from_waypoint(state.waypoints[2]))
   tu.assert_eq(12, uw.linenr_from_waypoint(state.waypoints[3]))
 
   floating_window.open()
+  floating_window.move_to_first_waypoint()
   floating_window.move_waypoint_down()
 
   tu.assert_eq( 8, uw.linenr_from_waypoint(state.waypoints[1]))

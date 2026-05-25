@@ -193,7 +193,7 @@ function M.undo()
 
   local curr_waypoints = state.waypoints
   state.waypoints = M.waypoints_from_undo_node_waypoints(prev_state.waypoints)
-  state.wpi = curr_state.wpi
+  state.wpi = #state.waypoints > 0 and curr_state.wpi or nil
   M.set_extmarks_for_state()
   message.notify(message.from_undo(curr_state.undo_msg) .. M.wpis_shown_msg_for_undo(curr_state, curr_waypoints), vim.log.levels.INFO)
   save.schedule_save()
