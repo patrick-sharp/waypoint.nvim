@@ -3,16 +3,18 @@
 
 local M = {}
 
-local draw_cache = require("waypoint.draw_cache")
-local floating_window = require("waypoint.floating_window")
-local crud = require("waypoint.waypoint_crud")
-local file = require("waypoint.file")
-local constants = require("waypoint.constants")
-local config = require("waypoint.config")
-local filter = require("waypoint.filter")
-local test = require("waypoint.test")
-local global_keybindings = require("waypoint.global_keybindings")
-local buffer_callbacks = require("waypoint.buffer_callbacks")
+local draw_cache = require"waypoint.draw_cache"
+local floating_window = require"waypoint.floating_window"
+local crud = require"waypoint.waypoint_crud"
+local file = require"waypoint.file"
+local constants = require"waypoint.constants"
+local config = require"waypoint.config"
+local filter = require"waypoint.filter"
+local save = require"waypoint.save"
+local test = require"waypoint.test"
+local global_keybindings = require"waypoint.global_keybindings"
+local buffer_callbacks = require"waypoint.buffer_callbacks"
+local uw = require"waypoint.util_waypoint"
 
 ---@param opts waypoint.ConfigOverride
 function M.setup(opts)
@@ -76,7 +78,7 @@ function M.setup(opts)
     group = constants.augroup,
     callback = function(arg)
       if arg.match == "global" then
-        file.save()
+        save.save()
       end
     end
   })
@@ -101,9 +103,10 @@ function M.setup(opts)
   global_keybindings.bind_key(config.keybindings.global_keybindings, "open_waypoint_window",      floating_window.open)
   global_keybindings.bind_key(config.keybindings.global_keybindings, "delete_waypoint",           crud.delete_waypoint)
   global_keybindings.bind_key(config.keybindings.global_keybindings, "append_waypoint",           crud.append_waypoint_wrapper)
-  global_keybindings.bind_key(config.keybindings.global_keybindings, "insert_waypoint",           crud.insert_waypoint_wrapper)
-  global_keybindings.bind_key(config.keybindings.global_keybindings, "append_annotated_waypoint", crud.append_annotated_waypoint)
-  global_keybindings.bind_key(config.keybindings.global_keybindings, "insert_annotated_waypoint", crud.insert_annotated_waypoint)
+  global_keybindings.bind_key(config.keybindings.global_keybindings, "append_waypoint_end",       crud.append_waypoint_end_wrapper)
+  global_keybindings.bind_key(config.keybindings.global_keybindings, "insert_waypoint_beginning", crud.insert_waypoint_beginning_wrapper)
+  global_keybindings.bind_key(config.keybindings.global_keybindings, "edit_waypoint_name",        crud.edit_waypoint_name_wrapper)
+  global_keybindings.bind_key(config.keybindings.global_keybindings, "set_quickfix_list",         uw.set_quickfix_list)
 
   -- these commands should be run from the root directory of this git repo
   if not constants.is_release then

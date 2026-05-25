@@ -66,10 +66,10 @@ local M = {
   before_context   = 0,
   after_context    = 0,
 
-  show_name        = true,
-  show_path        = true,
-  show_line_num    = true,
-  show_waypoint_text   = true,
+  show_name          = true,
+  show_path          = true,
+  show_line_num      = true,
+  show_waypoint_text = true,
 
   show_full_path   = false,
   show_context     = true,

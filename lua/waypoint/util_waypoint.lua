@@ -184,7 +184,7 @@ function M.get_waypoint_context(waypoint, num_lines_before, num_lines_after)
   -- this function takes zero indexed-parameters, inclusive lower bound, exclusive upper bound
   ---@type string[]
   local lines
-  if waypoint.annotation then
+  if false and waypoint.annotation then
     lines = {}
     for _=start_linenr, extmark_line_nr-1 do
       table.insert(lines, "")
@@ -403,7 +403,9 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
     local row_highlights = highlights[r]
     local row_data = t[r]
     if is_in_view and row_data ~= "" then
-      assert(ncols == #row_highlights)
+      if ncols ~= #row_highlights then
+        error("ncols = " .. ncols .. ", #row_highlights = " .. #row_highlights .. "\nfor row         " .. vim.inspect(row_data) .. "\nwith highlights " .. vim.inspect(row_highlights))
+      end
       local offset = indents and indents[r] or 0
       for c = 1, ncols do
         local field = row_data[c]
@@ -969,6 +971,27 @@ function M.num_lines_before_after()
     num_lines_after = 0
   end
   return num_lines_before, num_lines_after
+end
+
+function M.set_quickfix_list()
+  local qflist = {}
+  for _,waypoint in pairs(state.waypoints) do
+    local bufnr = waypoint.bufnr or vim.fn.bufnr(waypoint.filepath)
+    local filepath = waypoint.filepath or u.path_from_buf(bufnr)
+    local extmark = M.buf_get_extmark(bufnr, waypoint.extmark_id)
+    if extmark then
+      local lnum = extmark[1]
+      local line = vim.api.nvim_buf_get_lines(bufnr, lnum - 1, lnum, false)[1]
+      table.insert(qflist, {
+        filename = filepath,
+        lnum = lnum,
+        col = 0,
+        text = line,
+      })
+    end
+  end
+  vim.fn.setqflist(qflist, 'r')
+  vim.cmd('copen')
 end
 
 return M

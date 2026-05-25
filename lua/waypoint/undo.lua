@@ -4,6 +4,7 @@ local config = require"waypoint.config"
 local message = require"waypoint.message"
 local ring_buffer = require"waypoint.ring_buffer"
 local state = require"waypoint.state"
+local save = require"waypoint.save"
 local u = require"waypoint.util"
 local uw = require"waypoint.util_waypoint"
 local Timer = require"waypoint.timer"
@@ -181,6 +182,7 @@ function M.undo()
 
   local curr_state, prev_state, ok
 
+  ---@type waypoint.UndoNode
   curr_state, ok = ring_buffer.peek(M.states)
   assert(ok)
   _, ok = ring_buffer.pop(M.states)
@@ -191,9 +193,10 @@ function M.undo()
 
   local curr_waypoints = state.waypoints
   state.waypoints = M.waypoints_from_undo_node_waypoints(prev_state.waypoints)
-  state.wpi = prev_state.wpi
+  state.wpi = curr_state.wpi
   M.set_extmarks_for_state()
   message.notify(message.from_undo(curr_state.undo_msg) .. M.wpis_shown_msg_for_undo(curr_state, curr_waypoints), vim.log.levels.INFO)
+  save.schedule_save()
   return true
 end
 
@@ -211,6 +214,7 @@ function M.redo()
   M.set_extmarks_for_state()
 
   message.notify(message.from_redo(next_state.redo_msg) .. M.wpis_shown_msg_for_redo(next_state), vim.log.levels.INFO)
+  save.schedule_save()
   return true
 end
 

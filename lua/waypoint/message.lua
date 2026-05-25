@@ -30,6 +30,9 @@ M.deleted_waypoint = "Deleted waypoint "
 M.restored_waypoint = "Restored waypoint "
 M.deleted_waypoints = "Deleted waypoints "
 M.restored_waypoints = "Restored waypoints "
+M.edited_waypoint_name = "Edited name for waypoint "
+M.cleared_waypoint_name = "Cleared name for waypoint "
+M.restored_waypoint_name = "Restored name for waypoint "
 
 ---@param file string?
 function M.restored_before_load(file)
@@ -85,7 +88,7 @@ end
 
 ---@param position integer
 function M.insert_waypoint(position)
-  return "Inserted waypoint at position " .. tostring(position)
+  return "Added waypoint at position " .. tostring(position)
 end
 
 ---@param position integer

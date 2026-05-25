@@ -16,58 +16,50 @@ describe('Annotation', function()
 
   local annotation_1 = "Annotation #1"
   local annotation_2 = "Annotation #2"
-  local annotation_3 = "Annotation #3"
 
   tu.edit_file(file_0)
   u.goto_line(7)
-  crud.append_annotated_waypoint(annotation_1) -- waypoint 1
+  crud.append_waypoint_wrapper()                                 -- waypoint 1
+  -- don't bother programatically entering stuff into the prompt
+  state.waypoints[#state.waypoints].annotation = annotation_1
   tu.edit_file(file_1)
   u.goto_line(8)
-  crud.append_waypoint_wrapper()               -- waypoint 2
+  crud.append_waypoint_wrapper()                                 -- waypoint 2
   u.goto_line(5)
-  crud.append_annotated_waypoint(annotation_2) -- waypoint 5
+  crud.append_waypoint_wrapper()                                 -- waypoint 3
+  state.waypoints[#state.waypoints].annotation = annotation_2
   tu.edit_file(file_0)
   u.goto_line(3)
-  crud.append_waypoint_wrapper()               -- waypoint 6
+  crud.append_waypoint_wrapper()                                 -- waypoint 4
 
-  -- test insert
-  floating_window.next_waypoint()
-  u.goto_line(17)
-  crud.insert_annotated_waypoint(annotation_3) -- waypoint 3
-  u.goto_line(15)
-  crud.insert_waypoint_wrapper()               -- waypoint 4
+  tu.assert_eq(4, #state.waypoints)
 
   floating_window.open()
   local lines = tu.get_waypoint_buffer_lines_trimmed()
-
-  tu.assert_eq(6, #state.waypoints)
 
   local i
 
   i = 1
   tu.assert_eq(7, uw.linenr_from_waypoint(state.waypoints[i]))
   tu.assert_eq(annotation_1, state.waypoints[i].annotation)
-  tu.assert_eq(annotation_1, lines[i][4])
+  tu.assert_eq(annotation_1, lines[i][2])
+  tu.assert_eq("function M.fn_1()", lines[i][5])
 
   i = 2
   tu.assert_eq(8, uw.linenr_from_waypoint(state.waypoints[i]))
-  tu.assert_eq("table.insert(t, i)", lines[i][4])
+  tu.assert_eq(nil, state.waypoints[i].annotation)
+  tu.assert_eq("", lines[i][2])
+  tu.assert_eq("table.insert(t, i)", lines[i][5])
 
   i = 3
-  tu.assert_eq(17, uw.linenr_from_waypoint(state.waypoints[i]))
-  tu.assert_eq(annotation_3, state.waypoints[i].annotation)
-  tu.assert_eq(annotation_3, lines[i][4])
-
-  i = 4
-  tu.assert_eq(15, uw.linenr_from_waypoint(state.waypoints[i]))
-  tu.assert_eq("end", lines[i][4])
-
-  i = 5
   tu.assert_eq(5, uw.linenr_from_waypoint(state.waypoints[i]))
   tu.assert_eq(annotation_2, state.waypoints[i].annotation)
-  tu.assert_eq(annotation_2, lines[i][4])
+  tu.assert_eq(annotation_2, lines[i][2])
+  tu.assert_eq("function M.fn_0()", lines[i][5])
 
-  i = 6
+  i = 4
   tu.assert_eq(3, uw.linenr_from_waypoint(state.waypoints[i]))
-  tu.assert_eq("function M.fn_0()", lines[i][4])
+  tu.assert_eq(nil, state.waypoints[i].annotation)
+  tu.assert_eq("", lines[i][2])
+  tu.assert_eq("function M.fn_0()", lines[i][5])
 end)

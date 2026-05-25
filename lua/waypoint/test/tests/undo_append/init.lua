@@ -43,7 +43,7 @@ describe('Undo append', function()
   tu.assert_eq(message.at_earliest_change, tu.get_last_message())
 
   floating_window.redo()
-  local redo_msg = message.from_redo(message.append_waypoint(1))
+  local redo_msg = message.from_redo(message.insert_waypoint(1))
   tu.assert_eq(1, #state.waypoints)
   tu.assert_eq(7, uw.linenr_from_waypoint(state.waypoints[1]))
   tu.assert_eq(1, state.wpi)

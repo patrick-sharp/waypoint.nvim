@@ -336,6 +336,15 @@ local function draw_waypoint_window(action, reuse)
   local cursor_vis_i = split.cursor_vis_i
   local wpi_from_drawn_i = split.wpi_from_drawn_i
 
+  -- if no waypoint has a name, don't even draw the name column
+  local any_waypoint_has_name = false
+  for _, wp in ipairs(drawn) do
+    if wp.annotation then
+      any_waypoint_has_name = true
+      break
+    end
+  end
+
   -- In general, we don't want to be updating state on draw calls, but this simplifies things a lot.
   -- This basically updates the wpi if either the cursor or the vis cursor are on an undrawn waypoint.
   if cursor_i then
@@ -431,6 +440,17 @@ local function draw_waypoint_window(action, reuse)
         table.insert(line_hlranges, {})
       end
 
+      -- waypoint name
+      if state.show_name and any_waypoint_has_name then
+        if j == waypoint_linenr + 1 then
+          table.insert(row, waypoint.annotation or "")
+          table.insert(line_hlranges, {})
+        else
+          table.insert(row, "")
+          table.insert(line_hlranges, {})
+        end
+      end
+
       -- file path
       if state.show_path then
         if j == waypoint_linenr + 1 then
@@ -524,6 +544,9 @@ local function draw_waypoint_window(action, reuse)
   assert(#table_rows == #hlranges, "#rows == " .. #table_rows ..", #hlranges == " .. #hlranges .. ", but they should be the same" )
 
   local table_cell_types = {"number"}
+  if state.show_name and any_waypoint_has_name then
+    table.insert(table_cell_types, "string")
+  end
   if state.show_path then
     table.insert(table_cell_types, "string")
   end
@@ -793,6 +816,7 @@ local function bind_key(bufnr, modes, keybindings, action, fn)
   end
   local keybinding = keybindings[action]
   if type(keybinding) == "string" then
+    u.log(keybinding, action)
     vim.keymap.set(modes, keybinding, fn, keymap_opts(bufnr))
   elseif type(keybinding) == "table" then
     for i, v in ipairs(keybinding) do
@@ -828,7 +852,7 @@ local function set_shared_keybinds(bufnr)
   bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "toggle_context",          M.toggle_context)
   bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "toggle_sort",             M.toggle_sort)
 
-  bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "set_quickfix_list",       M.set_quickfix_list)
+  bind_key(bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "set_quickfix_list",       uw.set_quickfix_list)
 end
 
 local function set_help_keybinds()
@@ -863,6 +887,8 @@ local function set_waypoint_keybinds()
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_top",        M.move_waypoint_to_top)
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "move_waypoint_to_bottom",     M.move_waypoint_to_bottom)
 
+  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "edit_waypoint_name",          M.edit_waypoint_name)
+  bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "clear_waypoint_name",         M.clear_waypoint_name)
   bind_key(wp_bufnr, { 'n', 'v' }, config.keybindings.waypoint_window_keybindings, "delete_waypoint",             M.delete)
   bind_key(wp_bufnr, { 'n' },      config.keybindings.waypoint_window_keybindings, "transfer_waypoints_to_file",  M.transfer_waypoints_to_file_wrapper)
 
@@ -1487,7 +1513,7 @@ function M.resize(_)
 end
 
 function M.delete()
-  crud.delete_curr()
+  crud.delete_selected_waypoints()
   local action
   if u.is_in_visual_mode() then
     action = M.WINDOW_ACTIONS.exit_visual_mode
@@ -1498,25 +1524,24 @@ function M.delete()
   vim.cmd.normal("m.")
 end
 
-function M.set_quickfix_list()
-  local qflist = {}
-  for _,waypoint in pairs(state.waypoints) do
-    local bufnr = waypoint.bufnr or vim.fn.bufnr(waypoint.filepath)
-    local filepath = waypoint.filepath or u.path_from_buf(bufnr)
-    local extmark = uw.buf_get_extmark(bufnr, waypoint.extmark_id)
-    if extmark then
-      local lnum = extmark[1]
-      local line = vim.api.nvim_buf_get_lines(bufnr, lnum - 1, lnum, false)[1]
-      table.insert(qflist, {
-        filename = filepath,
-        lnum = lnum,
-        col = 0,
-        text = line,
-      })
-    end
+function M.edit_waypoint_name()
+  local wpi = state.wpi
+  if not wpi then
+    return
   end
-  vim.fn.setqflist(qflist, 'r')
-  vim.cmd('copen')
+  crud.edit_waypoint_name(wpi)
+  draw_waypoint_window()
+  vim.cmd.normal("m.")
+end
+
+function M.clear_waypoint_name()
+  local wpi = state.wpi
+  if not wpi then
+    return
+  end
+  crud.clear_waypoint_name(wpi)
+  draw_waypoint_window()
+  vim.cmd.normal("m.")
 end
 
 function M.toggle_help()
@@ -1694,6 +1719,7 @@ function M.clear_state()
   state.before_context   = 0
   state.context          = 0
 
+  state.show_name        = true
   state.show_path        = true
   state.show_full_path   = false
   state.show_line_num    = true

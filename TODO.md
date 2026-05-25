@@ -242,6 +242,7 @@
     - [x] make nG move to waypoint n
     - [ ] add annotation as separate column
     - [ ] add ability to edit an annotation
+- [ ] fix that bug where undoing / redoing bulk delete of waypoints doesn't seem to restore the window
 - [ ] write documentation
     - [ ] quickstart workflow
     - [ ] screenshot tutorial

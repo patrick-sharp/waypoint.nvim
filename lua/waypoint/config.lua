@@ -30,9 +30,9 @@
 ---@class waypoint.GlobalKeybindings
 ---@field open_waypoint_window      waypoint.Keybinding
 ---@field append_waypoint           waypoint.Keybinding
----@field insert_waypoint           waypoint.Keybinding
----@field append_annotated_waypoint waypoint.Keybinding
----@field insert_annotated_waypoint waypoint.Keybinding
+-----@field insert_waypoint           waypoint.Keybinding
+---@field append_waypoint_end       waypoint.Keybinding
+---@field insert_waypoint_beginning waypoint.Keybinding
 ---@field delete_waypoint           waypoint.Keybinding
 
 ---@class waypoint.WaypointWindowKeybindings
@@ -65,6 +65,8 @@
 ---@field move_to_waypoint           waypoint.Keybinding
 ---@field move_waypoint_down         waypoint.Keybinding
 ---@field move_waypoint_up           waypoint.Keybinding
+---@field edit_waypoint_name         waypoint.Keybinding
+---@field clear_waypoint_name        waypoint.Keybinding
 ---@field transfer_waypoints_to_file waypoint.Keybinding
 ---@field move_waypoint_to_top       waypoint.Keybinding
 ---@field move_waypoint_to_bottom    waypoint.Keybinding
@@ -109,9 +111,9 @@
 ---@class waypoint.GlobalKeybindingsOverride
 ---@field open_waypoint_window      waypoint.Keybinding?
 ---@field append_waypoint           waypoint.Keybinding?
----@field insert_waypoint           waypoint.Keybinding?
----@field append_annotated_waypoint waypoint.Keybinding?
----@field insert_annotated_waypoint waypoint.Keybinding?
+-----@field insert_waypoint           waypoint.Keybinding?
+---@field append_waypoint_end       waypoint.Keybinding?
+---@field insert_waypoint_beginning waypoint.Keybinding?
 ---@field delete_waypoint           waypoint.Keybinding?
 
 ---@class waypoint.WaypointWindowKeybindingsOverride
@@ -144,6 +146,8 @@
 ---@field move_to_waypoint           waypoint.Keybinding?
 ---@field move_waypoint_down         waypoint.Keybinding?
 ---@field move_waypoint_up           waypoint.Keybinding?
+---@field edit_waypoint_name         waypoint.Keybinding?
+---@field clear_waypoint_name        waypoint.Keybinding?
 ---@field transfer_waypoints_to_file waypoint.Keybinding?
 ---@field move_waypoint_to_top       waypoint.Keybinding?
 ---@field move_waypoint_to_bottom    waypoint.Keybinding?
@@ -162,7 +166,6 @@ local M = {
   color_footer_before_context = "#77ff77",
   color_footer_context = "#7777ff",
   color_toggle_on = "#50C878",
-  -- color_toggle_on = "#04a307",
   color_toggle_off = "#777777",
   window_width = 0.85,
   window_height = 0.85,
@@ -177,49 +180,52 @@ local M = {
   waypoint_dir = vim.fn.stdpath("state") .. "/waypoint/",
   keybindings = {
     global_keybindings = {
-      open_waypoint_window      = {"ms"},
+      open_waypoint_window      = "ms",
       append_waypoint           = "ma",
-      insert_waypoint           = "mi",
-      append_annotated_waypoint = "mA",
-      insert_annotated_waypoint = "mI",
+      append_waypoint_end       = "me",
+      insert_waypoint_beginning = "mb",
+      edit_waypoint_name        = "mc",
       delete_waypoint           = "md",
+      set_quickfix_list         = "mq",
     },
     waypoint_window_keybindings = {
-      exit_waypoint_window        = {"ms", "<esc>", "<C-c>"},
-      increase_context            = "c",
-      decrease_context            = "C",
-      increase_before_context     = "b",
-      decrease_before_context     = "B",
-      increase_after_context      = "a",
-      decrease_after_context      = "A",
-      toggle_name                 = "mn",
-      toggle_path                 = "mp",
-      toggle_line_num             = "ml",
-      toggle_file_text            = "mt",
-      toggle_full_path            = "mf",
-      toggle_context              = "mc",
-      toggle_sort                 = "ms",
-      show_help                   = "g?",
-      set_quickfix_list           = "mq",
-      indent                      = ">",
-      unindent                    = "<",
-      reset_context               = "rc",
-      reset_waypoint_indent       = "ri",
-      reset_all_indent            = "rI",
-      prev_waypoint               = "k",
-      next_waypoint               = "j",
-      first_waypoint              = "gg",
-      delete_waypoint             = "d",
-      jump_to_waypoint            = "<CR>",
-      move_to_waypoint            = "G",
-      move_waypoint_up            = "K",
-      move_waypoint_down          = "J",
-      move_waypoint_to_top        = "mgg",
-      move_waypoint_to_bottom     = "mG",
-      transfer_waypoints_to_file  = "mT",
-      undo                        = "u",
-      redo                        = "<C-r>",
-      reselect_visual             = "gv",
+      exit_waypoint_window       = {"ms", "<esc>", "<C-c>"},
+      increase_context           = "c",
+      decrease_context           = "C",
+      increase_before_context    = "b",
+      decrease_before_context    = "B",
+      increase_after_context     = "a",
+      decrease_after_context     = "A",
+      toggle_name                = "sn",
+      toggle_path                = "sp",
+      toggle_line_num            = "sl",
+      toggle_file_text           = "st",
+      toggle_full_path           = "sf",
+      toggle_context             = "sc",
+      toggle_sort                = "ss",
+      show_help                  = "g?",
+      set_quickfix_list          = "mq",
+      indent                     = ">",
+      unindent                   = "<",
+      reset_context              = "rc",
+      reset_waypoint_indent      = "ri",
+      reset_all_indent           = "rI",
+      prev_waypoint              = "k",
+      next_waypoint              = "j",
+      first_waypoint             = "gg",
+      delete_waypoint            = "d",
+      jump_to_waypoint           = "<CR>",
+      move_to_waypoint           = "G",
+      move_waypoint_up           = "K",
+      move_waypoint_down         = "J",
+      move_waypoint_to_top       = "mgg",
+      move_waypoint_to_bottom    = "mG",
+      edit_waypoint_name         = "mc",
+      clear_waypoint_name        = "mx",
+      transfer_waypoints_to_file = "mT",
+      undo                       = "u",
+      redo                       = "<C-r>",
+      reselect_visual            = "gv",
     },
     help_keybindings = {
       exit_help = {"q", "<esc>", "g?"}
