@@ -433,7 +433,7 @@ local function draw_waypoint_window(action, reuse)
         else
           table.insert(row, tostring(i))
         end
-        table.insert(line_hlranges, {})
+        table.insert(line_hlranges, "Number")
       else
         -- if this is a line in the context around the waypoint
         table.insert(row, "")
@@ -444,7 +444,8 @@ local function draw_waypoint_window(action, reuse)
       if state.show_name and any_waypoint_has_name then
         if j == waypoint_linenr + 1 then
           table.insert(row, waypoint.annotation or "")
-          table.insert(line_hlranges, {})
+          -- table.insert(line_hlranges, "DiagnosticOk")
+          table.insert(line_hlranges, "DiagnosticInfo")
         else
           table.insert(row, "")
           table.insert(line_hlranges, {})
@@ -459,12 +460,14 @@ local function draw_waypoint_window(action, reuse)
             -- if we're showing the full path
             local path = uw.drawn_filepath_from_waypoint(waypoint, false)
             table.insert(row, path)
-            table.insert(line_hlranges, constants.hl_directory)
+            -- table.insert(line_hlranges, constants.hl_directory)
+            table.insert(line_hlranges, {})
           else
             -- if we're just showing the filename
             local path = uw.drawn_filepath_from_waypoint(waypoint, true)
             table.insert(row, path)
-            table.insert(line_hlranges, constants.hl_directory)
+            -- table.insert(line_hlranges, constants.hl_directory)
+            table.insert(line_hlranges, {})
           end
         else
           -- if this is a line in the context around the waypoint
@@ -475,38 +478,28 @@ local function draw_waypoint_window(action, reuse)
 
       -- line number
       if state.show_line_num then
-        if waypoint.annotation then
-          if j == waypoint_linenr + 1 then
-            table.insert(row, tostring(waypoint_linenr + 1))
-            table.insert(line_hlranges, constants.hl_linenr)
+        if j >= file_start_idx and j < file_end_idx then
+          -- this is a ridiculous hack to increase performance.
+          -- the tostring calls take a long time, so this avoids most of them
+          if is_in_view then
+            local linenr_str = tostring(context_start_linenr + j - file_start_idx)
+            if #linenr_str > longest_number_len then
+              longest_number_len = #linenr_str
+            end
+            table.insert(row, linenr_str)
           else
-            table.insert(row, "")
-            table.insert(line_hlranges, {})
+            local len = 1 + math.floor(math.log(context_start_linenr + j - file_start_idx, 10))
+            if len > longest_number_len then
+              longest_number_len = len
+              table.insert(row, string.rep(" ", len))
+            else
+              table.insert(row, "")
+            end
           end
         else
-          if j >= file_start_idx and j < file_end_idx then
-            -- this is a ridiculous hack to increase performance.
-            -- the tostring calls take a long time, so this avoids most of them
-            if is_in_view then
-              local linenr_str = tostring(context_start_linenr + j - file_start_idx)
-              if #linenr_str > longest_number_len then
-                longest_number_len = #linenr_str
-              end
-              table.insert(row, linenr_str)
-            else
-              local len = 1 + math.floor(math.log(context_start_linenr + j - file_start_idx, 10))
-              if len > longest_number_len then
-                longest_number_len = len
-                table.insert(row, string.rep(" ", len))
-              else
-                table.insert(row, "")
-              end
-            end
-          else
-            table.insert(row, "")
-          end
-          table.insert(line_hlranges, constants.hl_linenr)
+          table.insert(row, "")
         end
+        table.insert(line_hlranges, constants.hl_linenr)
       end
 
       -- file text

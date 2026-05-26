@@ -60,4 +60,12 @@ To see configurable properties, see [config.lua](lua/waypoint/config.lua)
 
 ## Default keymappings (also in waypoint window's help menu)
 
+TODO
+
 ## Related projects
+
+- [tomasky/bookmarks.nvim](https://github.com/tomasky/bookmarks.nvim)
+- [LintaoAmons/bookmarks.nvim](https://github.com/LintaoAmons/bookmarks.nvim)
+- [crusj/bookmarks.nvim](http://github.com/crusj/bookmarks.nvim)
+- [heilgar/bookmarks.nvim](https://github.com/heilgar/bookmarks.nvim)
+- [harpoon](https://github.com/ThePrimeagen/harpoon/tree/harpoon2)
