@@ -2,7 +2,7 @@
 -- run it from the base directory of the repo like this:
 -- nvim -u lua/waypoint/test/tests/nvim_clean/init.lua
 
--- add this repo's path to the lua module path manually.
+-- adds this repo's path to the lua module path manually.
 package.path = table.concat{
   package.path, ";",
   vim.fn.getcwd(), '/lua/?.lua;', ";",

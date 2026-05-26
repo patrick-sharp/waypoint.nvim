@@ -114,3 +114,28 @@ Keep in mind that somethings are difficult to test from within vim.
 For example, testing the VimResized autocmd callback without mocking out the
 window size requires resizing your terminal emulator, which can't be triggered
 from within vim.
+
+### Running with a clean config
+
+To make sure that waypoint works on a fresh installation of neovim, I also
+made a lua file that allows you to run the tests with a clean neovim config.
+
+To run it, start neovim with this command:
+
+```sh
+nvim -u lua/waypoint/test/tests/nvim_clean/init.lua
+```
+
+And then run `WaypointRunTests`
+
+### Running without stress tests
+
+The stress tests test the performance of waypoint in extreme conditions.
+In them, I assert that operations take less than a certain amount of milliseconds.
+Unfortunately, they are flaky. Sometimes, operations take longer than expected.
+I think this is due to thread scheduling concerns that are outside of my control.
+To give a more consistent experience, I also make a command called
+`WaypointRunTestsNoStress` that runs all tests except the stress tests.
+
+
+

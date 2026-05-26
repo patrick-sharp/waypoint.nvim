@@ -51,7 +51,8 @@ local border = "\n==============================================================
 local PASS = "✓ PASS"
 local FAIL = "𐄂 FAIL"
 
-local function log_test_output()
+---@param exclude_stress boolean?
+local function log_test_output(exclude_stress)
   local file = io.open(constants.test_output_file, "w")
   if not file then
     error("Could not open test output file for writing")
@@ -64,13 +65,15 @@ local function log_test_output()
   local test_time_length = 0
   local total_millis = 0
   for _,test in ipairs(test_list.tests) do
-    test_name_length = math.max(test_name_length, u.vislen(test.name))
-    test_time_length = math.max(test_time_length, 1 + math.floor(math.log(test.millis, 10)))
-    total_millis = total_millis + test.millis
-    if test.pass then
-      table.insert(pass, test)
-    else
-      table.insert(fail, test)
+    if exclude_stress and not test.is_stress then
+      test_name_length = math.max(test_name_length, u.vislen(test.name))
+      test_time_length = math.max(test_time_length, 1 + math.floor(math.log(test.millis, 10)))
+      total_millis = total_millis + test.millis
+      if test.pass then
+        table.insert(pass, test)
+      else
+        table.insert(fail, test)
+      end
     end
   end
 
@@ -170,7 +173,7 @@ function M.run_tests(exclude_stress)
   state.should_notify = true
   state.should_ignore_autocmds = false
 
-  log_test_output()
+  log_test_output(exclude_stress)
   vim.cmd.edit({args = {constants.test_output_file}, bang=true})
 end
 

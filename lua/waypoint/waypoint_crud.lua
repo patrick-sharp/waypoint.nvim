@@ -452,7 +452,6 @@ function M.remove_waypoints()
   local undo_msg = message.restored_waypoints .. tostring(split.top) .. "-" .. tostring(split.bottom)
   state.wpi = start_i
 
-  u.log(change_wpi)
   file.save_change(undo_msg, redo_msg, change_wpi, affected_wpis)
 end
 
