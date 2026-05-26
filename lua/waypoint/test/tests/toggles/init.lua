@@ -9,10 +9,12 @@ local wp_3_text = test_list.wp_3_text
 
 local floating_window = require("waypoint.floating_window")
 local file = require'waypoint.file'
+local state = require("waypoint.state")
 local u = require("waypoint.util")
 local tu = require'waypoint.test.util'
 
 describe('Toggles', function()
+  state.should_hide_icons = true
   assert(u.file_exists(file_0))
   assert(u.file_exists(file_1))
   assert(u.file_exists(waypoints_json))

@@ -49,22 +49,23 @@ end
 -- note that for speed, the path can be in a few different formats
 ---@param waypoint waypoint.Waypoint
 ---@param use_basename boolean
----@return string
+---@return string, string display path, path (may be relative path)
 function M.drawn_filepath_from_waypoint(waypoint, use_basename)
   if not waypoint.has_buffer and waypoint.filepath then
     if use_basename then
-      return vim.fn.fnamemodify(waypoint.filepath, ":t")
+      return vim.fn.fnamemodify(waypoint.filepath, ":t"), waypoint.filepath
     else
-      return waypoint.filepath
+      return waypoint.filepath, waypoint.filepath
     end
   end
   local path = vim.api.nvim_buf_get_name(waypoint.bufnr)
+  local display_path
   if use_basename then
-    path = vim.fn.fnamemodify(path, ":t")
+    display_path = vim.fn.fnamemodify(path, ":t")
   else
-    path = vim.fn.fnamemodify(path, ":.")
+    display_path = vim.fn.fnamemodify(path, ":.")
   end
-  return path
+  return display_path, path
 end
 
 ---@param waypoint waypoint.Waypoint

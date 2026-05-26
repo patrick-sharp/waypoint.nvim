@@ -65,7 +65,7 @@ local function log_test_output(exclude_stress)
   local test_time_length = 0
   local total_millis = 0
   for _,test in ipairs(test_list.tests) do
-    if exclude_stress and not test.is_stress then
+    if not (exclude_stress and test.is_stress) then
       test_name_length = math.max(test_name_length, u.vislen(test.name))
       test_time_length = math.max(test_time_length, 1 + math.floor(math.log(test.millis, 10)))
       total_millis = total_millis + test.millis

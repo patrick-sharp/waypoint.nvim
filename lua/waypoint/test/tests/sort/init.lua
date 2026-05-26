@@ -11,6 +11,7 @@ local tu = require'waypoint.test.util'
 local uw = require'waypoint.util_waypoint'
 
 describe('Sort', function()
+  state.should_hide_icons = true
   assert(u.file_exists(file_0))
   assert(u.file_exists(file_1))
 

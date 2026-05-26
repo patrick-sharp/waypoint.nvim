@@ -15,6 +15,7 @@ local function assert_fast(expected, actual)
 end
 
 describe('Stress', function()
+  state.should_hide_icons = true
   local total_lines = 1000000
   local lines_between_waypoints = 1000
 

@@ -12,6 +12,7 @@ local uw = require'waypoint.util_waypoint'
 -- This test is more complex than the basic missing_file, as it involves the text of the waypoints being slightly different from the text in the file.
 -- This causes the locate_waypoints_in_file function to use a levenshtein search
 describe('Missing file complex', function()
+  state.should_hide_icons = true
   file.load_from_file("lua/waypoint/test/tests/missing_file_complex/waypoints.json")
   tu.assert_eq(2, #state.waypoints)
 

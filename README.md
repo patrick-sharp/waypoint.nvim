@@ -24,15 +24,21 @@ It allows you to
 Neovim >=v0.11.7 built with LuaJIT (check :version).
 
 ## Recommended dependencies
-* [Telescope](https://github.com/nvim-telescope/telescope.nvim) makes moving waypoints between files easier
+* [Telescope](https://github.com/nvim-telescope/telescope.nvim) makes moving waypoints between files easier.
+* [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons) if you want file-specific icons to be shown in the waypoint window.
 
 ## Installation
-We recommend pinning to the latest release tag, e.g. using lazy.nvim
+
+I recommend installing some optional dependencies and pinning to the latest release tag, e.g. using lazy.nvim
 
 ```lua
 {
   'patrick-sharp/waypoint.nvim',
   version = '*',
+  dependencies = {
+    'nvim-telescope/telescope.nvim',
+    'nvim-tree/nvim-web-devicons',
+  },
   config = function()
     require("waypoint").setup{
       ...

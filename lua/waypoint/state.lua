@@ -55,6 +55,7 @@
 ---@field sort_by_file_and_line  boolean whether or not to show the context around the waypoint instead of just the line of text the waypoint is on
 ---@field should_notify          boolean whether or not to actually print when message.notify is called
 ---@field should_ignore_autocmds boolean whether or not to ignore autocmds. Useful for testing, where autocmd callbacks can't run until after the test is finished. Instead, during testing I manually fire autocmds at the appropriate point
+---@field should_hide_icons      boolean? whether or not to override config.show_file_icons. Useful for testing, where I often test equality for filenames and don't want to deal with the icon
 
 ---@type waypoint.State
 local M = {

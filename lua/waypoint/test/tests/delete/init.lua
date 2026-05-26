@@ -6,6 +6,7 @@ local waypoints_json = test_list.waypoints_json
 
 local floating_window = require("waypoint.floating_window")
 local file = require'waypoint.file'
+local state = require'waypoint.state'
 local u = require("waypoint.util")
 local tu = require'waypoint.test.util'
 
@@ -13,6 +14,8 @@ describe('Delete', function()
   assert(u.file_exists(file_0))
   assert(u.file_exists(file_1))
   assert(u.file_exists(waypoints_json))
+
+  state.should_hide_icons = true
 
   file.load_from_file(waypoints_json)
   floating_window.open()

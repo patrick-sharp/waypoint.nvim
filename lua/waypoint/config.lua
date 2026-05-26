@@ -12,10 +12,8 @@
 ---@field telescope_filename_width         integer
 ---@field telescope_linenr_width           integer
 ---@field indent_width                     integer
----@field scroll_increment                 integer
 ---@field enable_highlight                 boolean
 ---@field enable_relative_waypoint_numbers boolean
----@field waypoint_dir                     string
 ---@field keybindings                      waypoint.Keybindings
 ---@field max_undo_history                 integer
 ---@field max_msg_history                  integer
@@ -95,10 +93,8 @@
 ---@field telescope_filename_width         integer?
 ---@field telescope_linenr_width           integer?
 ---@field indent_width                     integer?
----@field scroll_increment                 integer?
 ---@field enable_highlight                 boolean?
 ---@field enable_relative_waypoint_numbers boolean?
----@field waypoint_dir                     string?
 ---@field keybindings                      waypoint.Keybindings?
 ---@field max_undo_history                 integer?
 ---@field max_msg_history                  integer?
@@ -174,10 +170,9 @@ local M = {
   telescope_filename_width = 30,
   telescope_linenr_width = 5,
   indent_width = 4,
-  scroll_increment = 6,
+  show_file_icons = true,
   enable_highlight = true,
   enable_relative_waypoint_numbers = false,
-  waypoint_dir = vim.fn.stdpath("state") .. "/waypoint/",
   keybindings = {
     global_keybindings = {
       open_waypoint_window      = "ms",

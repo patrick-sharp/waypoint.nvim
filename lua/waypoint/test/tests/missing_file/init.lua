@@ -14,6 +14,8 @@ describe('Missing file', function()
   file.load_from_file("lua/waypoint/test/tests/missing_file/waypoints.json")
   assert(#state.waypoints == 3)
 
+  state.should_hide_icons = true
+
   floating_window.open()
 
   local lines

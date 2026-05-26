@@ -13,6 +13,8 @@ local message = require"waypoint.message"
 local file = require"waypoint.file"
 local undo = require"waypoint.undo"
 
+local has_devicons, devicons = pcall(require, "nvim-web-devicons")
+
 -- these are some pieces of window state that don't belong in the main state
 -- table because they shouldn't be persisted to a file
 local is_open = false
@@ -456,19 +458,27 @@ local function draw_waypoint_window(action, reuse)
       if state.show_path then
         if j == waypoint_linenr + 1 then
           -- if this is line the waypoint is on
-          if state.show_full_path then
-            -- if we're showing the full path
-            local path = uw.drawn_filepath_from_waypoint(waypoint, false)
-            table.insert(row, path)
-            -- table.insert(line_hlranges, constants.hl_directory)
-            table.insert(line_hlranges, {})
-          else
-            -- if we're just showing the filename
-            local path = uw.drawn_filepath_from_waypoint(waypoint, true)
-            table.insert(row, path)
-            -- table.insert(line_hlranges, constants.hl_directory)
-            table.insert(line_hlranges, {})
+          local file_icon = ""
+          ---@type waypoint.HighlightRange?
+          local file_icon_hl = nil
+          local display_path, path = uw.drawn_filepath_from_waypoint(waypoint, not state.show_full_path)
+
+          if config.show_file_icons and not state.should_hide_icons and has_devicons then
+             local filetype = vim.filetype.match({ filename = path }) or ""
+
+            ---@type string, string
+            local icon, icon_hl = devicons.get_icon_by_filetype(filetype, { default = true })
+
+            file_icon = icon .. " "
+            file_icon_hl = {
+              nsid = constants.ns,
+              hl_group = vim.fn.hlID(icon_hl),
+              col_start = 1,
+              col_end = #icon,
+            }
           end
+          table.insert(row, file_icon .. display_path)
+          table.insert(line_hlranges, {file_icon_hl})
         else
           -- if this is a line in the context around the waypoint
           table.insert(row, "")
