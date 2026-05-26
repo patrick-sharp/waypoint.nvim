@@ -243,7 +243,8 @@
     - [x] add annotation as separate column
     - [x] add ability to edit an annotation
 - [x] fix that bug where undoing / redoing bulk delete of waypoints doesn't seem to restore the window
-- [ ] add file specific icons and an option to turn them off
+- [x] add file specific icons and an option to turn them off
+- [ ] add virtual text with waypoint name
 - [ ] write documentation
     - [ ] quickstart workflow
     - [ ] screenshot tutorial
