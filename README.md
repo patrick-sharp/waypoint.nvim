@@ -13,12 +13,12 @@ formatters
 It allows you to
 - nest and rearrange your bookmarks
 - view the context around lines of code
-    like grep -A -B or -C
+  - like grep -A -B or -C
 - move waypoints between files (to help with renaming)
 - name waypoints
 - search through waypoints and their context
-- 
 
+TODO: insert video
 
 ## Requirements
 Neovim >=v0.11.7 built with LuaJIT (check :version).
@@ -29,12 +29,11 @@ Neovim >=v0.11.7 built with LuaJIT (check :version).
 
 ## Installation
 
-I recommend installing some optional dependencies and pinning to the latest release tag, e.g. using lazy.nvim
+I recommend installing some optional dependencies, e.g. using lazy.nvim
 
 ```lua
 {
   'patrick-sharp/waypoint.nvim',
-  version = '*',
   dependencies = {
     'nvim-telescope/telescope.nvim',
     'nvim-tree/nvim-web-devicons',
@@ -46,7 +45,12 @@ I recommend installing some optional dependencies and pinning to the latest rele
   end
 }
 ```
-To see configurable properties, see [config.lua](lua/waypoint/config.lua)
+
+you can also install the plugin with no dependencies
+
+```lua
+'patrick-sharp/waypoint.nvim'
+```
 
 ## Usage
 
@@ -64,11 +68,13 @@ To see configurable properties, see [config.lua](lua/waypoint/config.lua)
 - Hit enter to jump to the location of a waypoint.
 - Open the waypoint window again with `ms` and hit `g?` to view all keybinds for waypoint.
 
-## Default keymappings (also in waypoint window's help menu)
+## Default keymappings
 
 TODO
 
 ## Default config values
+
+These are defined in [config.lua](lua/waypoint/config.lua)
 
 TODO
 
