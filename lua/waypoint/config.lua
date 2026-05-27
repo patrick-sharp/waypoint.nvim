@@ -28,7 +28,6 @@
 ---@class waypoint.GlobalKeybindings
 ---@field open_waypoint_window      waypoint.Keybinding
 ---@field append_waypoint           waypoint.Keybinding
------@field insert_waypoint           waypoint.Keybinding
 ---@field append_waypoint_end       waypoint.Keybinding
 ---@field insert_waypoint_beginning waypoint.Keybinding
 ---@field delete_waypoint           waypoint.Keybinding
@@ -107,7 +106,6 @@
 ---@class waypoint.GlobalKeybindingsOverride
 ---@field open_waypoint_window      waypoint.Keybinding?
 ---@field append_waypoint           waypoint.Keybinding?
------@field insert_waypoint           waypoint.Keybinding?
 ---@field append_waypoint_end       waypoint.Keybinding?
 ---@field insert_waypoint_beginning waypoint.Keybinding?
 ---@field delete_waypoint           waypoint.Keybinding?
