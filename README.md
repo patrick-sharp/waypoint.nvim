@@ -68,6 +68,10 @@ To see configurable properties, see [config.lua](lua/waypoint/config.lua)
 
 TODO
 
+## Default config values
+
+TODO
+
 ## Related projects
 
 - [tomasky/bookmarks.nvim](https://github.com/tomasky/bookmarks.nvim)
@@ -75,3 +79,4 @@ TODO
 - [crusj/bookmarks.nvim](http://github.com/crusj/bookmarks.nvim)
 - [heilgar/bookmarks.nvim](https://github.com/heilgar/bookmarks.nvim)
 - [harpoon](https://github.com/ThePrimeagen/harpoon/tree/harpoon2)
+- [arrow.nvim](https://neovimcraft.com/plugin/otavioschwanck/arrow.nvim/)
