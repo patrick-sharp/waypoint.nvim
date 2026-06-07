@@ -104,7 +104,7 @@ local function load_decoded_state_into_state(decoded)
         local line_count = vim.api.nvim_buf_line_count(bufnr)
 
         if waypoint.linenr <= line_count then
-          local extmark_id = uw.buf_set_extmark(bufnr, waypoint.linenr)
+          local extmark_id = uw.buf_set_extmark(bufnr, waypoint.linenr, { has_name = not not waypoint.annotation })
           waypoint.extmark_id = extmark_id
         else
           waypoint.extmark_id = -1
@@ -188,7 +188,7 @@ local function create_extmark(bufnr, waypoint, linenr)
   -- one-indexed line number
   local extmark_linenr = linenr or waypoint.linenr
   assert(extmark_linenr)
-  local extmark_id = uw.buf_set_extmark(bufnr, extmark_linenr)
+  local extmark_id = uw.buf_set_extmark(bufnr, extmark_linenr, { has_name = not not waypoint.annotation })
   return extmark_id
 end
 

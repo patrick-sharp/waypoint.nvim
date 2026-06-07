@@ -9,13 +9,15 @@ local uw = require("waypoint.util_waypoint")
 local kb_separator = " or "
 
 M.global_keybindings_description = {
-  {"append_waypoint"          ,  "Create a waypoint on the current line and add it to the waypoint list after the current waypoint"}           ,
-  {"append_waypoint_end"      ,  "Create a waypoint on the current line and add it to the end of the waypoint list"}                           ,
-  {"insert_waypoint_beginning",  "Create a waypoint on the current line and add it to the beginning of the waypoint list"}                     ,
-  {"edit_waypoint_name"       ,  "Edit the name of the waypoint on the current line"}                                                          ,
-  {"delete_waypoint"          ,  "Delete the waypoint on the current line"}                                                                    ,
-  {"open_waypoint_window"     ,  "Show the waypoint window"}                                                                                   ,
-  {"set_quickfix_list"        ,  "Set the quickfix list to locations of all waypoints"}                                                         ,
+  {"append_waypoint"          ,  "Create a waypoint on the current line and add it to the waypoint list after the current waypoint"}               ,
+  {"append_waypoint_end"      ,  "Create a waypoint on the current line and add it to the end of the waypoint list"}                               ,
+  {"insert_waypoint_beginning",  "Create a waypoint on the current line and add it to the beginning of the waypoint list"}                         ,
+  {"edit_waypoint_name"       ,  "Edit the name of the waypoint on the current line (if multiple are on the same line, priortizes bottom of list)"},
+  {"delete_waypoint"          ,  "Delete the waypoint on the current line (if multiple are on the same line, priortizes bottom of list)"}          ,
+  {"open_waypoint_window"     ,  "Show the waypoint window"}                                                                                       ,
+  {"set_quickfix_list"        ,  "Set the quickfix list to locations of all waypoints"}                                                            ,
+  {"undo_waypoint_action"     ,  "Undo the last change to any waypoint"}                                                                           ,
+  {"clear_waypoint_name"      ,  "Clear the name of the waypoint on the current line if multiple are on the same line, priortizes bottom of list"} ,
 }
 
 M.waypoint_window_keybindings_description = {

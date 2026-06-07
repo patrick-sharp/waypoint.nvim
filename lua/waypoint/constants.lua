@@ -8,7 +8,6 @@ local window_augroup = "waypoint.window"
 ---@field highlight_threshold_ms integer if calculating highlights for any individual waypoint takes longer than this, highlights will be disabled for that buffer in subsequent draws
 ---@field hl_group string
 ---@field hl_selected string
----@field hl_sign string
 ---@field hl_directory string
 ---@field hl_linenr string
 ---@field hl_footer_waypoint_nr string
@@ -42,7 +41,6 @@ local M = {
   hl_keybinding =            "waypoint_hl_keybinding",
   hl_linenr =                "waypoint_hl_linenr",
   hl_selected =              "waypoint_hl_selected",
-  hl_sign =                  "waypoint_hl_sign",
   hl_toggle_off =            "waypoint_hl_toggle_off",
   hl_toggle_on =             "waypoint_hl_toggle_on",
   is_release = false,

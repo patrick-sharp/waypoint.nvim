@@ -14,6 +14,7 @@ local save = require"waypoint.save"
 local test = require"waypoint.test"
 local global_keybindings = require"waypoint.global_keybindings"
 local buffer_callbacks = require"waypoint.buffer_callbacks"
+local undo = require"waypoint.undo"
 local uw = require"waypoint.util_waypoint"
 
 ---@param opts waypoint.ConfigOverride
@@ -109,7 +110,9 @@ function M.setup(opts)
   global_keybindings.bind_key(config.keybindings.global_keybindings, "append_waypoint_end",       crud.append_waypoint_end_wrapper)
   global_keybindings.bind_key(config.keybindings.global_keybindings, "insert_waypoint_beginning", crud.insert_waypoint_beginning_wrapper)
   global_keybindings.bind_key(config.keybindings.global_keybindings, "edit_waypoint_name",        crud.edit_waypoint_name_wrapper)
+  global_keybindings.bind_key(config.keybindings.global_keybindings, "clear_waypoint_name",       crud.clear_waypoint_name_wrapper)
   global_keybindings.bind_key(config.keybindings.global_keybindings, "set_quickfix_list",         uw.set_quickfix_list)
+  global_keybindings.bind_key(config.keybindings.global_keybindings, "undo_waypoint_action",      undo.undo)
 
   -- these commands should be run from the root directory of this git repo
   if not constants.is_release then

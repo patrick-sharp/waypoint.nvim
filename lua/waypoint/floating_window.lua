@@ -447,7 +447,7 @@ local function draw_waypoint_window(action, reuse)
         if j == waypoint_linenr + 1 then
           table.insert(row, waypoint.annotation or "")
           -- table.insert(line_hlranges, "DiagnosticOk")
-          table.insert(line_hlranges, "DiagnosticInfo")
+          table.insert(line_hlranges, config.hl_named_waypoint)
         else
           table.insert(row, "")
           table.insert(line_hlranges, {})
@@ -618,8 +618,8 @@ local function draw_waypoint_window(action, reuse)
         else
           for i,hlrange in ipairs(col_highlights) do
             vim.api.nvim_buf_set_extmark(wp_bufnr, constants.ns, linenr - 1, hlrange.col_start + indents[linenr], {
-              end_col = hlrange.col_end, -- 0-based exclusive column upper bound is the same as 1 based inclusive
-              hl_group = hlrange.hl_group,                 -- Highlight group to apply
+              end_col = hlrange.col_end,   -- 0-based exclusive column upper bound is the same as 1 based inclusive
+              hl_group = hlrange.hl_group, -- Highlight group to apply
               -- need to set priority here because extmarks don't override each
               -- other. I had a bug where the color of a highlighted range would
               -- change every n keypresses, where n was something like 10. I have

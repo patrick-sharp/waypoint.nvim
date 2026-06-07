@@ -108,6 +108,8 @@ function M.wp_set_extmark(waypoint, linenr)
     end
   end
 
+  opts.has_name = not not waypoint.annotation
+
   waypoint.extmark_id = M.buf_set_extmark(bufnr, extmark_linenr, opts)
   return true
 end
@@ -675,6 +677,7 @@ function M.set_wp_extmark_visible(wp, is_visible)
     M.buf_set_extmark(bufnr, extmark[1], {
       is_visible = is_visible,
       extmark_id = extmark_id,
+      has_name = not not wp.annotation,
     })
     return true
   end
@@ -706,6 +709,7 @@ end
 ---@class waypoint.ExtmarkOpts
 ---@field extmark_id integer?
 ---@field is_visible boolean?
+---@field has_name boolean?
 
 ---@param bufnr integer
 ---@param linenr integer one-indexed line number
@@ -718,13 +722,17 @@ function M.buf_set_extmark(bufnr, linenr, opts)
     sign_text = " "
     priority = 0
   end
+  if opts and opts.has_name then
+    priority = 2
+  end
+  local sign_hl_group = opts and opts.has_name and config.hl_named_waypoint or config.hl_waypoint_sign
   return vim.api.nvim_buf_set_extmark(
     bufnr, constants.ns, linenr - 1, -1,
     {
       id = opts and opts.extmark_id,
       sign_text = sign_text,
       priority = priority,
-      sign_hl_group = constants.hl_sign,
+      sign_hl_group = sign_hl_group,
       invalidate = true,
     }
   )

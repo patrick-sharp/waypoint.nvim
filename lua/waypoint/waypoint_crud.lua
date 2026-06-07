@@ -15,7 +15,7 @@ local message = require("waypoint.message")
 function M.append_waypoint_end(filepath, line_nr, annotation)
   if not u.is_file_buffer() then return end
   local bufnr = vim.fn.bufnr(filepath)
-  local extmark_id = uw.buf_set_extmark(bufnr, line_nr)
+  local extmark_id = uw.buf_set_extmark(bufnr, line_nr, { has_name = not not annotation } )
 
   ---@type waypoint.Waypoint
   local waypoint = {
@@ -43,7 +43,7 @@ end
 function M.insert_waypoint_beginning(filepath, line_nr, annotation)
   if not u.is_file_buffer() then return end
   local bufnr = vim.fn.bufnr(filepath)
-  local extmark_id = uw.buf_set_extmark(bufnr, line_nr)
+  local extmark_id = uw.buf_set_extmark(bufnr, line_nr, { has_name = not not annotation } )
 
   ---@type waypoint.Waypoint
   local waypoint = {
@@ -83,7 +83,7 @@ end
 function M.insert_waypoint(filepath, line_nr, annotation)
   if not u.is_file_buffer() then return end
   local bufnr = vim.fn.bufnr(filepath)
-  local extmark_id = uw.buf_set_extmark(bufnr, line_nr)
+  local extmark_id = uw.buf_set_extmark(bufnr, line_nr, { has_name = not not annotation } )
 
   ---@type waypoint.Waypoint
   local waypoint = {
@@ -132,7 +132,7 @@ end
 function M.append_waypoint(filepath, line_nr, annotation)
   if not u.is_file_buffer() then return end
   local bufnr = vim.fn.bufnr(filepath)
-  local extmark_id = uw.buf_set_extmark(bufnr, line_nr)
+  local extmark_id = uw.buf_set_extmark(bufnr, line_nr, { has_name = not not annotation } )
 
   ---@type waypoint.Waypoint
   local waypoint = {
@@ -214,20 +214,22 @@ function M.edit_waypoint_name(waypoint_idx)
     waypoints = state.waypoints
   end
   assert(waypoints)
+  local wp = waypoints[waypoint_idx]
   local args = {
     prompt = 'Enter a name for this waypoint: ',
-    default = waypoints[waypoint_idx].annotation
+    default = wp.annotation
   }
   vim.ui.input(args, function(input)
     if input then
       if input == "" then
-        waypoints[waypoint_idx].annotation = nil
+        wp.annotation = nil
       else
-        waypoints[waypoint_idx].annotation = input
+        wp.annotation = input
       end
       local redo_msg = message.edited_waypoint_name .. tostring(waypoint_idx)
       local undo_msg = message.edited_waypoint_name .. tostring(waypoint_idx)
 
+      uw.set_wp_extmark_visible(wp, true)
       file.save_change(undo_msg, redo_msg, waypoint_idx, { updated = { waypoint_idx } })
     end
   end)
@@ -252,34 +254,25 @@ function M.clear_waypoint_name(waypoint_idx)
     waypoints = state.waypoints
   end
   assert(waypoints)
-  waypoints[waypoint_idx].annotation = nil
-  local redo_msg = message.cleared_waypoint_name .. tostring(waypoint_idx)
-  local undo_msg = message.restored_waypoint_name .. tostring(waypoint_idx)
-  file.save_change(undo_msg, redo_msg, waypoint_idx, { updated = { waypoint_idx } })
+  local wp = waypoints[waypoint_idx]
+  if wp.annotation then
+    wp.annotation = nil
+    local redo_msg = message.cleared_waypoint_name .. tostring(waypoint_idx)
+    local undo_msg = message.restored_waypoint_name .. tostring(waypoint_idx)
+
+    uw.set_wp_extmark_visible(wp, true)
+    file.save_change(undo_msg, redo_msg, waypoint_idx, { updated = { waypoint_idx } })
+  end
 end
 
--- ---@param annotation string?
--- function M.append_annotated_waypoint(annotation)
---   if not u.is_file_buffer() then return end
---   local filepath = vim.fn.expand("%")
---   local cur_line_nr = vim.api.nvim_win_get_cursor(0)[1] -- Get current line number (one-indexed)
---   if not annotation then
---     annotation = vim.fn.input("Enter annotation for waypoint: ")
---   end
---   M.append_waypoint_end(filepath, cur_line_nr, annotation)
--- end
---
--- ---@param annotation string?
--- function M.insert_annotated_waypoint(annotation)
---   if not u.is_file_buffer() then return end
---   local filepath = vim.fn.expand("%")
---   local cur_line_nr = vim.api.nvim_win_get_cursor(0)[1] -- Get current line number (one-indexed)
---   if not annotation then
---     annotation = vim.fn.input("Enter annotation for waypoint: ")
---   end
---   M.append_waypoint(filepath, cur_line_nr, annotation)
--- end
+function M.clear_waypoint_name_wrapper()
+  if not u.is_file_buffer() then return end
+  local curr_linenr = vim.api.nvim_win_get_cursor(0)[1] -- Get current line number (one-indexed)
+  local existing_waypoint_i = M.find_waypoint(vim.fn.bufnr(), curr_linenr, true)
+  if existing_waypoint_i == -1 then return end
 
+  M.clear_waypoint_name(existing_waypoint_i)
+end
 
 function M.reset_current_indent()
   if not state.wpi then
@@ -325,14 +318,16 @@ end
 
 ---@param bufnr integer the path of the file to find the waypoint in
 ---@param linenr integer the one-indexed line number to look for the waypoint on
+---@param has_name boolean? whether to find a waypoint with a name
 ---@return integer the one-indexed index of the waypoint if found, or -1 if not
-function M.find_waypoint(bufnr, linenr)
+function M.find_waypoint(bufnr, linenr, has_name)
   for i = #state.waypoints, 1, -1 do
     local waypoint = state.waypoints[i]
     local is_eligible = u.all({
       waypoint.bufnr == bufnr,
       waypoint.extmark_id ~= -1,
       uw.should_draw_waypoint(waypoint),
+      has_name and not not waypoint.annotation,
     })
     if is_eligible then
       local extmark = uw.buf_get_extmark(bufnr, waypoint.extmark_id)

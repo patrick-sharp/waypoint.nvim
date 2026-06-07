@@ -17,6 +17,8 @@
 ---@field keybindings                      waypoint.Keybindings
 ---@field max_undo_history                 integer
 ---@field max_msg_history                  integer
+---@field hl_waypoint_sign                 string
+---@field hl_named_waypoint                string
 
 ---@class waypoint.Keybindings
 ---@field global_keybindings          waypoint.GlobalKeybindings
@@ -97,6 +99,8 @@
 ---@field keybindings                      waypoint.Keybindings?
 ---@field max_undo_history                 integer?
 ---@field max_msg_history                  integer?
+---@field hl_waypoint_sign                 string?
+---@field hl_named_waypoint                string?
 
 ---@class waypoint.KeybindingsOverride
 ---@field global_keybindings          waypoint.GlobalKeybindingsOverride?
@@ -171,6 +175,8 @@ local M = {
   show_file_icons = true,
   enable_highlight = true,
   enable_relative_waypoint_numbers = false,
+  hl_waypoint_sign = "Normal",
+  hl_named_waypoint = "DiagnosticInfo",
   keybindings = {
     global_keybindings = {
       open_waypoint_window      = "ms",
@@ -180,6 +186,8 @@ local M = {
       edit_waypoint_name        = "mc",
       delete_waypoint           = "md",
       set_quickfix_list         = "mq",
+      undo_waypoint_action      = "mu",
+      clear_waypoint_name       = "mx",
     },
     waypoint_window_keybindings = {
       exit_waypoint_window       = {"ms", "<esc>", "<C-c>"},
