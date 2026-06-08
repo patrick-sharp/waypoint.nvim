@@ -222,8 +222,7 @@ function M.get_help_window_lines()
   }
   local indents = { 2, 2 }
   local col_types = {"string", "string", "string", "string", "string", "string", "string", "string"}
-  local aligned_toggles = uw.align_waypoint_table(toggles, col_types, toggle_highlights, { indents = indents})
-  -- local aligned_toggles = uw.align_waypoint_table(toggles, {"string", "string"}, toggle_highlights, { indents = indents})
+  local aligned_toggles = uw.align_waypoint_table(toggles, col_types, toggle_highlights, { indents = indents })
   table.insert(lines, "Toggles")
   table.insert(highlights, {})
   for i=1,#toggles do

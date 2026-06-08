@@ -617,7 +617,7 @@ local function draw_waypoint_window(action, reuse)
           assert(false, "This should not happen, align_waypoint_table should change all column-wide highlights to a HighlightRange")
         else
           for i,hlrange in ipairs(col_highlights) do
-            vim.api.nvim_buf_set_extmark(wp_bufnr, constants.ns, linenr - 1, hlrange.col_start + indents[linenr], {
+            vim.api.nvim_buf_set_extmark(wp_bufnr, constants.ns, linenr - 1, hlrange.col_start, {
               end_col = hlrange.col_end,   -- 0-based exclusive column upper bound is the same as 1 based inclusive
               hl_group = hlrange.hl_group, -- Highlight group to apply
               -- need to set priority here because extmarks don't override each
