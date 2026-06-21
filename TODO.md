@@ -245,6 +245,8 @@
 - [x] fix that bug where undoing / redoing bulk delete of waypoints doesn't seem to restore the window
 - [x] add file specific icons and an option to turn them off
 - [x] fix bug where indentation messes up highlights
+- [ ] handle when window separator is the same as waypoint window background
+- [ ] add non-release-only util to markdown print the default keybindings
 - [ ] write documentation
     - [ ] quickstart workflow
     - [ ] screenshot tutorial
