@@ -351,7 +351,7 @@ end
 
 local concat = table.concat
 local s_rep = string.rep
-local win_separator = vim.fn.hlID('WinSeparator')
+local hl_separator_id = vim.fn.hlID(constants.hl_separator)
 
 -- if you include top_view_threshold and bottom_view_threshold in opts, only align what's in view
 ---@param t string[][] rows x columns x content
@@ -451,7 +451,7 @@ function M.align_waypoint_table(t, table_cell_types, highlights, opts)
             assert(type(row_highlights_j) ~= "string")
             row_highlights_j[#row_highlights_j+1] = {
               nsid = constants.ns,
-              hl_group = win_separator,
+              hl_group = hl_separator_id,
               col_start = sep_start,
               col_end = sep_start + col_sep_len
             }

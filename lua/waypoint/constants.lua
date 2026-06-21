@@ -14,6 +14,7 @@ local window_augroup = "waypoint.window"
 ---@field hl_toggle_on string
 ---@field hl_toggle_off string
 ---@field hl_keybinding string
+---@field hl_separator string
 ---@field ns integer
 ---@field max_indent integer
 ---@field table_separator string
@@ -43,6 +44,7 @@ local M = {
   hl_selected =              "waypoint_hl_selected",
   hl_toggle_off =            "waypoint_hl_toggle_off",
   hl_toggle_on =             "waypoint_hl_toggle_on",
+  hl_separator =             "WinSeparator",
   is_release = false,
   max_indent = 16,
   ns = vim.api.nvim_create_namespace(augroup),

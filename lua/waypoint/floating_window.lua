@@ -578,12 +578,6 @@ local function draw_waypoint_window(action, reuse)
       use_line_cache = reuse == "lines",
     }
   )
-  -- for i, line in pairs(waypoint_window_lines) do
-  --   local is_in_view = top_view_threshold <= i and i <= bottom_view_threshold
-  --   if is_in_view then
-  --     waypoint_window_lines[i] = string.rep(" ", indents[i]) .. line
-  --   end
-  -- end
   assert(waypoint_window_lines)
 
   if action == M.WINDOW_ACTIONS.exit_visual_mode then
@@ -1151,29 +1145,6 @@ function M.move_to_waypoint(count)
     state.wpi = wpi
     draw_waypoint_window(M.WINDOW_ACTIONS.move_to_waypoint, "lines")
   end
-
-  -- local waypoint
-  -- if waypoint.bufnr == -1 or 0 == vim.fn.bufloaded(waypoint.bufnr) then
-  --   message.notify(message.missing_file_err_msg, vim.log.levels.ERROR)
-  --   return
-  -- end
-  --
-  -- local extmark = uw.extmark_from_waypoint(waypoint)
-  -- if not extmark then
-  --   message.notify(constants.error_line_oob, vim.log.levels.ERROR)
-  --   return
-  -- end
-  --
-  -- if extmark == nil then
-  --   return
-  -- end
-  --
-  -- if wp_bufnr then M.leave() end
-  --
-  -- local waypoint_bufnr = uw.bufnr_from_waypoint(waypoint)
-  -- vim.api.nvim_win_set_buf(0, waypoint_bufnr)
-  -- vim.api.nvim_win_set_cursor(0, { extmark[1], 0 })
-  -- vim.api.nvim_command("normal! zz")
 end
 
 local function reduce_context_to_fit_window()
