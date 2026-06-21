@@ -9,6 +9,9 @@ local counter = 0
 
 -- appends the message to the debug file
 local function log(...)
+  if constants.is_release then
+    error("This is a debug function, set constants.is_release to false before you use it")
+  end
   if constants.is_release then return end
   local args_table = { n = select('#', ...), ... }
   local inspected = {}
@@ -27,15 +30,11 @@ local function log(...)
   })
 
   local file = io.open(constants.debug_file, "a")
-  if not constants.is_release then
-    if file then
-      file:write(message)
-      file:close()
-    else
-      print("Could not open debug file for writing")
-    end
+  if file then
+    file:write(message)
+    file:close()
   else
-    print(message)
+    print("Could not open debug file for writing")
   end
 end
 
