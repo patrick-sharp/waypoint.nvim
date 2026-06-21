@@ -5,10 +5,9 @@ local help = require'waypoint.help_window'
 local u = require'waypoint.util'
 
 local kb_header = '| Keybinding | Action |\n| --- | --- |\n'
-local filename = './keybindings.md'
+local config_header = '| Config Field | Value |\n| --- | --- |\n'
 
 function M.add_rows(message, keybindings_description, config_keybindings)
-
   message[#message+1] = kb_header
 
   for _,kb in ipairs(keybindings_description) do
@@ -28,8 +27,11 @@ function M.add_rows(message, keybindings_description, config_keybindings)
 end
 
 function M.print_keybindings()
+  local filename = './keybindings.md'
   local file = io.open(filename, "w")
-  u.log(file)
+  if not file then
+    error("Could not open file for writing")
+  end
 
   ---@type string[]
   local message = {}
@@ -50,12 +52,52 @@ function M.print_keybindings()
 
   M.add_rows(message, help.help_keybindings_description, config.keybindings.help_keybindings)
 
-  if file then
-    file:write(table.concat(message))
-    file:close()
-  else
-    print("Could not open file for writing")
+  file:write(table.concat(message))
+  file:close()
+end
+
+function M.sorted_config()
+  local t = config
+  local result = {}
+
+  for k, v in pairs(t) do
+    if k ~= 'keybindings' then
+      table.insert(result, {k, v})
+    end
   end
+
+  table.sort(result, function(a, b)
+    return tostring(a[1]) < tostring(b[1])
+  end)
+
+  return result
+end
+
+function M.print_config()
+  local filename = 'config.md'
+  local file = io.open(filename, "w")
+  if not file then
+    error("Could not open file for writing")
+  end
+
+  ---@type string[]
+  local message = {}
+
+  local sorted_config = M.sorted_config()
+
+  u.log(sorted_config)
+
+  message[#message+1] = config_header
+
+  for _, field_value in ipairs(sorted_config) do
+    local field = field_value[1]
+    local value = field_value[2]
+
+    message[#message+1] = '|`' .. field .. '`|`' .. tostring(value) .. '`|\n'
+  end
+
+  file:write(table.concat(message))
+  file:close()
 end
 
 return M

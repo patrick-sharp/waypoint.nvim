@@ -10,7 +10,7 @@ local file = require"waypoint.file"
 local constants = require"waypoint.constants"
 local config = require"waypoint.config"
 local filter = require"waypoint.filter"
-local print_keybindings = require"waypoint.print_keybindings"
+local print_readme_tables = require"waypoint.print_readme_tables"
 local save = require"waypoint.save"
 local test = require"waypoint.test"
 local global_keybindings = require"waypoint.global_keybindings"
@@ -120,7 +120,8 @@ function M.setup(opts)
     vim.api.nvim_create_user_command('WaypointRunTests', function() test.run_tests(false) end, {})
     vim.api.nvim_create_user_command('WaypointRunTest', test.run_test, {nargs = 1})
     vim.api.nvim_create_user_command('WaypointRunTestsNoStress', function() test.run_tests(true) end, {})
-    vim.api.nvim_create_user_command('WaypointPrintKeybindings', print_keybindings.print_keybindings, {})
+    vim.api.nvim_create_user_command('WaypointPrintKeybindings', print_readme_tables.print_keybindings, {})
+    vim.api.nvim_create_user_command('WaypointPrintConfig', print_readme_tables.print_config, {})
   end
 
   -- Unfortunately, neovim doesn't allow for quoted args, so 
