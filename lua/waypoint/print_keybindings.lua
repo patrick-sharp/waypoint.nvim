@@ -7,6 +7,26 @@ local u = require'waypoint.util'
 local kb_header = '| Keybinding | Action |\n| --- | --- |\n'
 local filename = './keybindings.md'
 
+function M.add_rows(message, keybindings_description, config_keybindings)
+
+  message[#message+1] = kb_header
+
+  for _,kb in ipairs(keybindings_description) do
+    if type(config_keybindings[kb[1]]) == 'table' then
+      local kba = config_keybindings[kb[1]]
+      assert(type(kba) == 'table')
+
+      local kbs = {}
+      for _,kb_ in ipairs(kba) do
+        kbs[#kbs+1] = '`' .. kb_ .. '`'
+      end
+      message[#message+1] = '|' .. table.concat(kbs, ' or ') .. '|' .. kb[2] .. '|\n'
+    else
+      message[#message+1] = '|`' .. config_keybindings[kb[1]] .. '`|' .. kb[2] .. '|\n'
+    end
+  end
+end
+
 function M.print_keybindings()
   local file = io.open(filename, "w")
   u.log(file)
@@ -14,12 +34,21 @@ function M.print_keybindings()
   ---@type string[]
   local message = {}
 
-  message[#message+1] = '### Global Keybindings\n'
-  message[#message+1] = kb_header
+  message[#message+1] = '### Global Keybindings\n\n'
 
-  for _,kb in ipairs(help.global_keybindings_description) do
-    message[#message+1] = '|' .. config.keybindings.global_keybindings[kb[1]] .. '|' .. kb[2] .. '|\n'
-  end
+  M.add_rows(message, help.global_keybindings_description, config.keybindings.global_keybindings)
+
+  message[#message+1] = '\n'
+
+  message[#message+1] = '### Waypoint Window Keybindings\n\n'
+
+  M.add_rows(message, help.waypoint_window_keybindings_description, config.keybindings.waypoint_window_keybindings)
+
+  message[#message+1] = '\n'
+
+  message[#message+1] = '### Help Keybindings\n\n'
+
+  M.add_rows(message, help.help_keybindings_description, config.keybindings.help_keybindings)
 
   if file then
     file:write(table.concat(message))
