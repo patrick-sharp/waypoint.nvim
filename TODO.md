@@ -247,23 +247,10 @@
 - [x] fix bug where indentation messes up highlights
 - [x] add non-release-only util to markdown print the default keybindings
 - [x] add non-release-only util to markdown print the config
+- [ ] fix bug where waypoints sometimes aren't shown
 - [ ] write documentation
     - [ ] quickstart workflow
     - [ ] screenshot tutorial
-    - [ ] drawn vs not drawn waypoints
-    - [ ] undo and file changes
-    - [ ] buffer vs bufferless waypoints
-    - [ ] serialization/persistence
-        - [ ] when the file is saved
-    - [ ] immediate mode model of rendering
-    - [ ] highlighting
-    - [ ] extmarks
-    - [ ] tutorial
-    - [ ] things I'm not happy with in the codebase
-        - [ ] all the hoops I had to jump through since I don't do virtualization of the buffer (so search with / works)
-             - [ ] this makes perf pretty slow for large amounts of waypoints
-        - [ ] zero and one indexed variables, no standard
-        - [ ] tagged union vs megastruct 
 
 ### ADVANCED FEATURES:
 
