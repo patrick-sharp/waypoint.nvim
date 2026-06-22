@@ -194,7 +194,7 @@ local function get_win_opts(split)
     col      = col,
     style    = "minimal",
     border   = "rounded",
-    title    = {{" Waypoints ", "FloatBorder"}},
+    title    = {{" Waypoints ", constants.hl_footer_waypoint_nr}},
   }
 
   local hpadding = constants.background_window_hpadding
@@ -214,9 +214,9 @@ local function get_win_opts(split)
   -- between the A, B, and C indicators
   local sep = {" ─── ", 'FloatBorder' } -- give it the background of the rest of the floating window
   local spc = {" ", 'FloatBorder' } -- give it the background of the rest of the floating window
-  local a = {"A:" .. state.after_context, 'FloatBorder' }
-  local b = {"B:" .. state.before_context, 'FloatBorder' }
-  local c = {"C:" .. state.context, 'FloatBorder' }
+  local a = {"A:" .. state.after_context, constants.hl_footer_waypoint_nr}
+  local b = {"B:" .. state.before_context, constants.hl_footer_waypoint_nr}
+  local c = {"C:" .. state.context, constants.hl_footer_waypoint_nr}
 
   -- toggles
   local name =       {"N", get_toggle_hl(state.show_name) }
@@ -244,8 +244,8 @@ local function get_win_opts(split)
   bg_win_opts.footer = {
     { "─ ", 'FloatBorder'},
     wpi_info, sep,
-    {"Context ", 'FloatBorder'}, a, spc, b, spc, c, sep,
-    {"Toggles ", 'FloatBorder'}, name, path, line_num, text, spc, full_path, context, sort, sep,
+    {"Context ", constants.hl_footer_waypoint_nr}, a, spc, b, spc, c, sep,
+    {"Toggles ", constants.hl_footer_waypoint_nr}, name, path, line_num, text, spc, full_path, context, sort, sep,
     { "Press g? for help", constants.hl_selected },
     { " ", 'FloatBorder'},
   }
