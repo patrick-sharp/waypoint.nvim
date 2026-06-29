@@ -85,8 +85,6 @@ function M.print_config()
 
   local sorted_config = M.sorted_config()
 
-  u.log(sorted_config)
-
   message[#message+1] = config_header
 
   for _, field_value in ipairs(sorted_config) do

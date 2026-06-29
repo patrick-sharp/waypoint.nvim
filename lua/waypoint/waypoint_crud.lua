@@ -148,17 +148,14 @@ function M.append_waypoint(filepath, line_nr, annotation)
   local change_wpi
 
   if not state.wpi then
-    u.log("HERE A")
     state.waypoints = {waypoint}
     state.wpi = 1
     change_wpi = 1
   elseif state.wpi == #state.waypoints then
-    u.log("HERE B")
     state.wpi = state.wpi + 1
     state.waypoints[state.wpi] = waypoint
     change_wpi = #state.waypoints
   else
-    u.log("HERE C")
     ---@type waypoint.Waypoint[]
     local new_waypoints = {}
     for i = 1,state.wpi do
