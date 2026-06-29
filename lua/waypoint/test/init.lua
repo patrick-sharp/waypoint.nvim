@@ -9,6 +9,7 @@ local Timer = require'waypoint.timer'
 local u = require'waypoint.util'
 
 -- these files call test_list.describe, which adds tests to the list
+local _ = require'waypoint.test.tests.add_delete_add'
 local _ = require'waypoint.test.tests.annotation'
 local _ = require'waypoint.test.tests.bad_load'
 local _ = require'waypoint.test.tests.buffer_callbacks'

@@ -148,14 +148,17 @@ function M.append_waypoint(filepath, line_nr, annotation)
   local change_wpi
 
   if not state.wpi then
+    u.log("HERE A")
     state.waypoints = {waypoint}
     state.wpi = 1
     change_wpi = 1
   elseif state.wpi == #state.waypoints then
+    u.log("HERE B")
     state.wpi = state.wpi + 1
     state.waypoints[state.wpi] = waypoint
     change_wpi = #state.waypoints
   else
+    u.log("HERE C")
     ---@type waypoint.Waypoint[]
     local new_waypoints = {}
     for i = 1,state.wpi do
@@ -321,8 +324,17 @@ end
 ---@param has_name boolean? whether to find a waypoint with a name
 ---@return integer the one-indexed index of the waypoint if found, or -1 if not
 function M.find_waypoint(bufnr, linenr, has_name)
-  for i = #state.waypoints, 1, -1 do
-    local waypoint = state.waypoints[i]
+  ---@type waypoint.Waypoint[]?
+  local waypoints
+  if state.sort_by_file_and_line then
+    waypoints = state.sorted_waypoints
+  else
+    waypoints = state.waypoints
+  end
+  assert(waypoints)
+
+  for i = #waypoints, 1, -1 do
+    local waypoint = waypoints[i]
     local is_eligible = u.all({
       waypoint.bufnr == bufnr,
       waypoint.extmark_id ~= -1,
@@ -363,6 +375,7 @@ function M.remove_waypoint(existing_waypoint_i)
     end
   end
   state.waypoints = waypoints_new
+  state.wpi = math.min(state.wpi, #state.waypoints)
 
   local redo_msg = message.deleted_waypoint .. tostring(existing_waypoint_i)
   local undo_msg = message.restored_waypoint .. tostring(existing_waypoint_i)
